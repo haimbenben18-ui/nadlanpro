@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NadlanPro — חיים בן סימון</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#090805;font-family:'Heebo',Arial,sans-serif;direction:rtl;color:#f0e6cc;}
+input,textarea,select,button{font-family:'Heebo',Arial,sans-serif;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState}=React;
+const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c";
+const S={
+  app:{minHeight:"100vh",background:"#090805",paddingBottom:80},
+  header:{background:"rgba(9,8,5,0.98)",borderBottom:"1px solid rgba(201,168,76,0.15)",padding:"14px 18px",position:"sticky",top:0,zIndex:200},
+  card:{background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:16,marginBottom:10},
+  inp:{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(201,168,76,0.22)",borderRadius:10,padding:"9px 13px",color:"#f0e6cc",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"},
+  nav:{position:"fixed",bottom:0,left:0,right:0,background:"rgba(6,5,3,0.98)",borderTop:"1px solid rgba(201,168,76,0.12)",display:"flex",zIndex:200,paddingBottom:8},
+};
+function Tag({c,children}){var col=c||G;return <span style={{background:col+"18",color:col,border:"1px solid "+col+"33",borderRadius:6,padding:"2px 9px",fontSize:11,fontWeight:700}}>{children}</span>;}
+function Btn({children,onClick,col,ghost,small,full,disabled}){var c=col||G;return <button onClick={onClick} disabled={disabled} style={{background:ghost?"transparent":"linear-gradient(135deg,"+c+","+c+"bb)",color:ghost?c:(c===G?"#1a1208":"#fff"),border:ghost?"1px solid "+c+"44":"none",borderRadius:9,padding:small?"6px 14px":full?"12px":"10px 20px",fontSize:small?12:14,fontWeight:700,cursor:disabled?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:disabled?0.5:1}}>{children}</button>;}
+function Pill({children,active,onClick,col}){var c=col||G;return <button onClick={onClick} style={{background:active?c+"18":"rgba(255,255,255,0.03)",border:"1px solid "+(active?c+"44":"rgba(255,255,255,0.07)"),borderRadius:20,padding:"6px 14px",color:active?c:"#555",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{children}</button>;}
+
+var BUYERS=[
+  {id:1,name:"דוד כהן",phone:"050-1234567",budget:"1.5-2M",rooms:"4",area:"תל אביב",status:"חיפוש פעיל",actions:["שיחה ראשונית","פרטים נשלחו","סיור בוצע"]},
+  {id:2,name:"שירה לוי",phone:"052-9876543",budget:"2-3M",rooms:"5",area:"רמת גן",status:"הצעה בתהליך",actions:["שיחה ראשונית","פרטים נשלחו"]},
+  {id:3,name:"משה אברהם",phone:"054-5551234",budget:"1-1.5M",rooms:"3",area:"גבעתיים",status:"סיור נקבע",actions:["שיחה ראשונית"]},
+];
+var PROPS=[
+  {id:1,address:"דיזנגוף 45, תל אביב",rooms:"4",size:"110",floor:"3",price:"1,800,000",images:8},
+  {id:2,address:"ירושלים 12, רמת גן",rooms:"5",size:"140",floor:"6",price:"2,400,000",images:12},
+];
+var TASKS=[
+  {id:1,text:"להתקשר לדוד כהן לגבי הנכס החדש",time:"10:00",done:false,type:"call"},
+  {id:2,text:"סיור עם שירה לוי — דיזנגוף 45",time:"12:30",done:false,type:"tour"},
+  {id:3,text:"לשלוח דיווח שבועי ליוסף מזרחי",time:"14:00",done:false,type:"send"},
+  {id:4,text:"לפרסם נכס חדש ביד2",time:"16:00",done:true,type:"publish"},
+];
+
+function Dashboard(){
+  var stats=[{l:"נכסים פעילים",v:"12",i:"🏠",c:G},{l:"קונים פעילים",v:"47",i:"👥",c:BL},{l:"עסקאות החודש",v:"3",i:"🤝",c:"#7ec97e"},{l:"לידים חדשים",v:"8",i:"⚡",c:OR}];
+  return <div style={{padding:"16px 14px"}}>
+    <div style={{color:G,fontSize:13,fontWeight:700,marginBottom:14}}>שלום חיים, בוקר טוב ☀️</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+      {stats.map(s=><div key={s.l} style={{...S.card,padding:16}}>
+        <div style={{fontSize:24}}>{s.i}</div>
+        <div style={{fontSize:28,fontWeight:800,color:s.c,lineHeight:1.1}}>{s.v}</div>
+        <div style={{fontSize:11,color:"#666",marginTop:2}}>{s.l}</div>
+      </div>)}
+    </div>
+    <div style={{...S.card,background:"rgba(201,168,76,0.06)",border:"1px solid rgba(201,168,76,0.2)"}}>
+      <div style={{fontWeight:700,color:G,fontSize:13,marginBottom:10}}>🤖 התאמה אוטומטית</div>
+      <div style={{background:"rgba(0,0,0,0.2)",borderRadius:10,padding:12}}>
+        <div style={{color:"#f0e6cc",fontWeight:600,fontSize:13}}>דוד כהן מתאים לנכס חדש!</div>
+        <div style={{color:"#888",fontSize:12,marginTop:3}}>דיזנגוף 45 · 4 חד · 110 מ · 1.8M</div>
+        <div style={{display:"flex",gap:8,marginTop:10}}>
+          <Btn small col={GR}>שלח ווטסאפ</Btn>
+          <Btn small ghost col={G}>דחה</Btn>
+        </div>
+      </div>
+    </div>
+    <div style={{...S.card,marginTop:10}}>
+      <div style={{fontWeight:700,color:G,fontSize:13,marginBottom:10}}>📅 אירועים קרובים</div>
+      {[{t:"יום הולדת — דוד כהן",c:G,d:"היום"},{t:"דיווח שבועי — יוסף מזרחי",c:BL,d:"מחר"},{t:"חג שמח — 12 לקוחות",c:OR,d:"בשבוע"}].map((e,i)=>
+        <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<2?"1px solid rgba(255,255,255,0.04)":"none"}}>
+          <span style={{fontSize:13,color:"#d0c090"}}>{e.t}</span>
+          <Tag c={e.c}>{e.d}</Tag>
+        </div>
+      )}
+    </div>
+  </div>;
+}
+
+function DailyPlan(){
+  var [tasks,setTasks]=useState(TASKS);
+  var [newTask,setNewTask]=useState("");
+  function toggle(id){setTasks(p=>p.map(t=>t.id===id?{...t,done:!t.done}:t));}
+  function add(){if(!newTask)return;setTasks(p=>[...p,{id:Date.now(),text:newTask,time:"—",done:false,type:"call"}]);setNewTask("");}
+  var icons={call:"📞",tour:"🏠",send:"📤",publish:"📣"};
+  var done=tasks.filter(t=>t.done).length;
+  return <div style={{padding:"16px 14px"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div style={{fontWeight:700,color:G,fontSize:15}}>תוכנית יום</div>
+      <Tag c={done===tasks.length?"#7ec97e":G}>{done}/{tasks.length} בוצעו</Tag>
+    </div>
+    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:12,overflow:"hidden",marginBottom:14}}>
+      {tasks.map((t,i)=><div key={t.id} onClick={()=>toggle(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<tasks.length-1?"1px solid rgba(255,255,255,0.04)":"none",cursor:"pointer"}}>
+        <div style={{width:22,height:22,borderRadius:"50%",border:"2px solid "+(t.done?"#7ec97e":G+"44"),background:t.done?"#7ec97e":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#1a1208",flexShrink:0}}>{t.done?"✓":""}</div>
+        <div style={{flex:1,fontSize:13,color:t.done?"#555":"#e0d0b0",textDecoration:t.done?"line-through":"none"}}>{icons[t.type]} {t.text}</div>
+        <div style={{color:"#555",fontSize:12}}>{t.time}</div>
+      </div>)}
+    </div>
+    <div style={S.card}>
+      <div style={{display:"flex",gap:8,marginBottom:8}}>
+        <input placeholder="משימה חדשה..." value={newTask} onChange={e=>setNewTask(e.target.value)} style={{...S.inp,flex:1}}/>
+      </div>
+      <Btn full onClick={add} disabled={!newTask}>הוסף משימה</Btn>
+    </div>
+  </div>;
+}
+
+function CRM(){
+  var [tab,setTab]=useState("buyers");
+  var [sel,setSel]=useState(null);
+  var bActs=["שיחה ראשונית","פרטים נשלחו","סיור בוצע","הצעת מחיר","עסקה נסגרה"];
+  var sActs=["שיחה ראשונית","פגישה בנכס","הסכם שיווק","צולמו תמונות","פורסם","עסקה נסגרה"];
+  var SELLERS2=[{id:1,name:"יוסף מזרחי",phone:"050-111",address:"דיזנגוף 45, תל אביב",price:"1.8M",actions:["שיחה ראשונית","פגישה בנכס","הסכם שיווק"]},{id:2,name:"רחל בן דוד",phone:"052-222",address:"ירושלים 12, רמת גן",price:"2.4M",actions:["שיחה ראשונית"]}];
+  var sc=s=>s==="חיפוש פעיל"?BL:s==="הצעה בתהליך"?OR:s==="סיור נקבע"?G:"#7ec97e";
+  return <div style={{padding:"16px 14px"}}>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      <Pill active={tab==="buyers"} onClick={()=>{setTab("buyers");setSel(null);}} col={BL}>קונים</Pill>
+      <Pill active={tab==="sellers"} onClick={()=>{setTab("sellers");setSel(null);}} col={OR}>מוכרים</Pill>
+    </div>
+    {!sel&&tab==="buyers"&&BUYERS.map(b=><div key={b.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+        <div><div style={{fontWeight:700,color:"#f0e6cc"}}>{b.name}</div><div style={{color:"#666",fontSize:12}}>{b.phone} · {b.area} · {b.budget}</div></div>
+        <Tag c={sc(b.status)}>{b.status}</Tag>
+      </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+        {bActs.map(a=>{var d=b.actions.includes(a);return <span key={a} style={{fontSize:11,color:d?"#7ec97e":"#444"}}>{d?"✓":"○"} {a}</span>;})}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn small col={BL} onClick={()=>setSel({type:"buyer",data:b})}>כרטיסייה</Btn>
+        <Btn small ghost col={GR}>ווטסאפ</Btn>
+      </div>
+    </div>)}
+    {!sel&&tab==="sellers"&&SELLERS2.map(s=><div key={s.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+        <div><div style={{fontWeight:700,color:"#f0e6cc"}}>{s.name}</div><div style={{color:"#666",fontSize:12}}>{s.address}</div></div>
+        <Tag c={OR}>{s.price}</Tag>
+      </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+        {sActs.map(a=>{var d=s.actions.includes(a);return <span key={a} style={{fontSize:11,color:d?"#7ec97e":"#444"}}>{d?"✓":"○"} {a}</span>;})}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn small col={OR} onClick={()=>setSel({type:"seller",data:s})}>כרטיסייה</Btn>
+        <Btn small ghost col={GR}>דיווח שבועי</Btn>
+      </div>
+    </div>)}
+    {sel&&<div>
+      <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:G,fontSize:13,cursor:"pointer",fontFamily:"inherit",marginBottom:12,fontWeight:600}}>חזור</button>
+      <div style={{...S.card,border:"1px solid rgba(201,168,76,0.3)"}}>
+        <div style={{fontWeight:800,color:"#f0e6cc",fontSize:17,marginBottom:2}}>{sel.data.name}</div>
+        <div style={{color:"#666",fontSize:13,marginBottom:12}}>{sel.data.phone}</div>
+        <div style={{color:G,fontSize:11,fontWeight:700,marginBottom:8}}>מעקב פעולות</div>
+        {(sel.type==="buyer"?bActs:sActs).map(a=>{var done=sel.data.actions.includes(a);return <div key={a} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:20,height:20,borderRadius:"50%",background:done?"#7ec97e":"transparent",border:"2px solid "+(done?"#7ec97e":"#444"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#1a1208"}}>{done?"✓":""}</div>
+            <span style={{fontSize:13,color:done?"#7ec97e":"#888"}}>{a}</span>
+          </div>
+          {!done&&<Btn small ghost col={G}>בצע</Btn>}
+        </div>;})}
+        <div style={{display:"flex",gap:8,marginTop:14}}>
+          <Btn small col={GR}>ווטסאפ</Btn>
+          <Btn small col={BL}>יומן</Btn>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+function Properties(){
+  var [showAdd,setShowAdd]=useState(false);
+  var [addr,setAddr]=useState("");
+  var [rooms,setRooms]=useState("");
+  var [price,setPrice]=useState("");
+  var [done,setDone]=useState(false);
+  function publish(){setDone(true);setTimeout(()=>{setDone(false);setShowAdd(false);setAddr("");setRooms("");setPrice("");},2500);}
+  return <div style={{padding:"16px 14px"}}>
+    {PROPS.map(p=><div key={p.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+        <div><div style={{fontWeight:700,color:"#f0e6cc"}}>{p.address}</div><div style={{color:"#666",fontSize:12}}>{p.rooms} חד · {p.size} מ · קומה {p.floor}</div></div>
+        <Tag c={G}>{p.price}</Tag>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn small ghost col={G}>📸 {p.images}</Btn>
+        <Btn small ghost col={BL}>🤖 מודעה</Btn>
+        <Btn small ghost col={GR}>📤 פרסם</Btn>
+      </div>
+    </div>)}
+    {!showAdd&&<Btn full onClick={()=>setShowAdd(true)}>+ הוסף נכס חדש</Btn>}
+    {showAdd&&!done&&<div style={{...S.card,border:"1px solid rgba(201,168,76,0.3)"}}>
+      <div style={{fontWeight:700,color:G,marginBottom:14}}>🏠 נכס חדש</div>
+      <input placeholder="כתובת" value={addr} onChange={e=>setAddr(e.target.value)} style={{...S.inp,marginBottom:10}}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+        <input placeholder="חדרים" value={rooms} onChange={e=>setRooms(e.target.value)} style={S.inp}/>
+        <input placeholder="מחיר" value={price} onChange={e=>setPrice(e.target.value)} style={S.inp}/>
+      </div>
+      <div style={{color:"#7ec97e",fontSize:12,marginBottom:12}}>AI יצור מודעה ויתאים לקונים אוטומטית</div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn full onClick={publish}>הוסף ופרסם</Btn>
+        <button onClick={()=>setShowAdd(false)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:9,padding:"12px 20px",color:"#555",cursor:"pointer",fontFamily:"inherit"}}>ביטול</button>
+      </div>
+    </div>}
+    {done&&<div style={{...S.card,background:"rgba(126,201,126,0.08)",border:"1px solid rgba(126,201,126,0.3)",textAlign:"center"}}>
+      <div style={{fontSize:36,marginBottom:8}}>✅</div>
+      <div style={{color:"#7ec97e",fontWeight:700}}>פורסם בהצלחה!</div>
+      <div style={{color:"#666",fontSize:12,marginTop:6}}>נשלחו הודעות ל-3 קונים · פורסם ביד2 ופייסבוק</div>
+    </div>}
+  </div>;
+}
+
+function Whatsapp(){
+  var [name,setName]=useState("");
+  var [msg,setMsg]=useState("");
+  var [sent,setSent]=useState(false);
+  var [selB,setSelB]=useState(null);
+  var [bMsg,setBMsg]=useState("");
+  var [bSent,setBSent]=useState(false);
+  var [waTab,setWaTab]=useState("sellers");
+  function gen(){
+    var n=name?" "+name:"";
+    setMsg("שלום"+n+" 👋\n\nחיים בן סימון מרימקס.\n\nיש לי שני קונים מוכנים עם הון עצמי שמחפשים באזורכם.\n\nהנכס שלכם מושכר?\n\nשווה שיחה של 5 דקות? 📞");
+    setSent(false);
+  }
+  function genB(b){
+    setSelB(b);setBSent(false);
+    setBMsg("שלום "+b.name+" 😊\n\nחיים בן סימון.\n\nנכנסה אלי דירה ב"+b.area+" שמיד חשבתי עליך!\n\n🏠 "+b.rooms+" חדרים · "+b.budget+"\n🚗 חניה · 🌿 מרפסת\n\nלא פרסמתי אותה עדיין בשום מקום.\n\nאשלח תמונות? 📸");
+  }
+  return <div style={{padding:"16px 14px"}}>
+    <div style={{display:"flex",gap:8,marginBottom:16}}>
+      <Pill active={waTab==="sellers"} onClick={()=>setWaTab("sellers")}>📤 מוכרים</Pill>
+      <Pill active={waTab==="buyers"} onClick={()=>setWaTab("buyers")} col={BL}>💬 קונים</Pill>
+    </div>
+    {waTab==="sellers"&&<div style={S.card}>
+      <div style={{color:G,fontSize:11,fontWeight:700,marginBottom:10}}>שם המוכר (אופציונלי)</div>
+      <input placeholder="שם פרטי" value={name} onChange={e=>{setName(e.target.value);setMsg("");}} style={{...S.inp,marginBottom:12}}/>
+      <Btn full onClick={gen}>הכן הודעה</Btn>
+      {msg&&<div style={{background:"rgba(37,211,102,0.06)",border:"1px solid rgba(37,211,102,0.18)",borderRadius:12,padding:14,marginTop:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+          <div style={{color:"#555",fontSize:11}}>ערוך לפני שליחה</div>
+          <button onClick={gen} style={{background:"none",border:"none",color:G,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>החלף גרסה</button>
+        </div>
+        <textarea value={msg} onChange={e=>{setMsg(e.target.value);setSent(false);}} rows={7} style={{...S.inp,resize:"none",color:"#c0e8c0",background:"rgba(0,0,0,0.2)",border:"1px solid rgba(37,211,102,0.15)",marginBottom:10}}/>
+        {!sent?<Btn full col={GR} onClick={()=>setSent(true)}>שלח בווטסאפ</Btn>:<div style={{textAlign:"center",color:"#7ec97e",fontWeight:700}}>✓ נשלח!</div>}
+      </div>}
+    </div>}
+    {waTab==="buyers"&&<div>
+      {BUYERS.map(b=>{var a=selB&&selB.id===b.id;return <div key={b.id} style={{...S.card,border:a?"1px solid rgba(126,184,201,0.35)":S.card.border}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:a?10:0}}>
+          <div><div style={{fontWeight:700,color:"#f0e6cc"}}>{b.name}</div><div style={{color:"#666",fontSize:12}}>{b.area} · {b.budget}</div></div>
+          <Btn small col={BL} onClick={()=>genB(b)}>הכן הודעה</Btn>
+        </div>
+        {a&&<div style={{marginTop:10}}>
+          <textarea value={bMsg} onChange={e=>{setBMsg(e.target.value);setBSent(false);}} rows={7} style={{...S.inp,resize:"none",color:"#c0e8c0",background:"rgba(37,211,102,0.06)",border:"1px solid rgba(37,211,102,0.15)",marginBottom:10}}/>
+          {!bSent?<Btn full col={GR} onClick={()=>setBSent(true)}>שלח בווטסאפ</Btn>:<div style={{textAlign:"center",color:"#7ec97e",fontWeight:700}}>✓ נשלח!</div>}
+        </div>}
+      </div>;})}
+    </div>}
+  </div>;
+}
+
+function Tiktok(){
+  var DAYS=[
+    {day:"ראשון",topics:[{id:"r1",title:"מה מקבלים על מיליון וחצי בתל אביב לעומת רמת גן?"},{id:"r2",title:"אחרי 10 שנות חיסכון קניתי חניה בתל אביב"},{id:"r3",title:"כמה עולה דירה 3 חדרים בכל עיר בישראל"}]},
+    {day:"שלישי",topics:[{id:"s1",title:"סיפור עסקה שלא תאמינו שקרתה לי"},{id:"s2",title:"לקוח סירב להצעה — שבוע אחר כך בכה לי"},{id:"s3",title:"הדירה הכי מוזרה שנכנסתי אליה בחיים"}]},
+    {day:"חמישי",topics:[{id:"h1",title:"מה שמוכרים לא רוצים שתדעו לפני שקונים"},{id:"h2",title:"3 דברים שאני בודק בכל דירה לפני שאני ממליץ"},{id:"h3",title:"Q&A — שאלתם על נדלן, אני עונה בלי להסתיר"}]},
+    {day:"שבת",topics:[{id:"sh1",title:"שאלה אחת שצריך לשאול כל מוכר דירה"},{id:"sh2",title:"לפני ואחרי שיפוץ — אותה דירה, הבדל של 400 אלף"},{id:"sh3",title:"למה ישראלים שמים כסף בבנק ומפסידים"}]},
+  ];
+  var [selDay,setSelDay]=useState(null);
+  var [selT,setSelT]=useState(null);
+  var [script,setScript]=useState("");
+  var [loading,setLoading]=useState(false);
+  var [copied,setCopied]=useState(false);
+
+  async function gen(day,topic){
+    setSelT(topic);setLoading(true);setScript("");setCopied(false);
+    try{
+      var res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:"אתה עוזר לחיים בן סימון מרימקס לצלם טיקטוק. נושא: "+topic.title+". ספק: סקריפט מלא, הנחיות אנרגיה, B-Roll לקאפקאט, האשטגים. הכל בעברית."}]})});
+      var data=await res.json();
+      setScript(data.content.map(i=>i.text||"").join("").trim());
+    }catch(e){setScript("שגיאה, נסה שוב");}
+    setLoading(false);
+  }
+
+  return <div style={{padding:"16px 14px"}}>
+    <div style={{color:G,fontSize:11,fontWeight:700,marginBottom:14}}>📅 תוכנית תוכן שבועית</div>
+    {DAYS.map(day=>{var active=selDay&&selDay.day===day.day;return <div key={day.day} style={{marginBottom:10}}>
+      <button onClick={()=>{setSelDay(active?null:day);setSelT(null);setScript("");}} style={{width:"100%",background:active?"rgba(155,142,196,0.1)":"rgba(255,255,255,0.03)",border:"1px solid "+(active?"rgba(155,142,196,0.35)":"rgba(255,255,255,0.07)"),borderRadius:12,padding:"12px 16px",cursor:"pointer",fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><Tag c={PU}>{day.day}</Tag><span style={{color:"#888",fontSize:11}}>{day.topics.length} נושאים</span></div>
+        <span style={{color:active?PU:"#444"}}>{active?"▲":"▼"}</span>
+      </button>
+      {active&&<div style={{border:"1px solid rgba(155,142,196,0.2)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:14,background:"rgba(255,255,255,0.02)"}}>
+        {day.topics.map(topic=>{var isSel=selT&&selT.id===topic.id;return <div key={topic.id} style={{...S.card,border:isSel?"1px solid rgba(155,142,196,0.4)":"1px solid rgba(255,255,255,0.06)",marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+            <div style={{fontWeight:700,color:"#f0e6cc",fontSize:13,flex:1}}>{topic.title}</div>
+            <Btn small col={PU} onClick={()=>gen(day,topic)}>סקריפט</Btn>
+          </div>
+          {isSel&&<div style={{marginTop:12}}>
+            {loading?<div style={{color:"#666",textAlign:"center",padding:16}}>מכין סקריפט...</div>:
+            script&&<div>
+              <div style={{background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.18)",borderRadius:10,padding:14,marginBottom:10,color:"#d0c8e8",fontSize:13,lineHeight:1.85,whiteSpace:"pre-wrap"}}>{script}</div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>{navigator.clipboard.writeText(script);setCopied(true);setTimeout(()=>setCopied(false),2000);}} style={{flex:1,background:copied?"rgba(126,201,126,0.15)":"rgba(155,142,196,0.15)",border:"1px solid "+(copied?"rgba(126,201,126,0.3)":"rgba(155,142,196,0.3)"),borderRadius:8,padding:"9px",color:copied?"#7ec97e":PU,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{copied?"הועתק":"העתק"}</button>
+                <button onClick={()=>gen(day,topic)} style={{flex:1,background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:8,padding:"9px",color:G,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>החלף</button>
+              </div>
+            </div>}
+          </div>}
+        </div>;})}
+      </div>}
+    </div>;})}
+  </div>;
+}
+
+var TABS=[{k:"dashboard",l:"בית",i:"🏠"},{k:"daily",l:"יומי",i:"📅"},{k:"crm",l:"לקוחות",i:"👥"},{k:"props",l:"נכסים",i:"🏢"},{k:"wa",l:"ווטסאפ",i:"💬"},{k:"tiktok",l:"טיקטוק",i:"🎬"}];
+
+function App(){
+  var [tab,setTab]=useState("dashboard");
+  var pages={dashboard:<Dashboard/>,daily:<DailyPlan/>,crm:<CRM/>,props:<Properties/>,wa:<Whatsapp/>,tiktok:<Tiktok/>};
+  return <div style={S.app}>
+    <div style={S.header}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:18,color:G}}>NadlanPro</div>
+          <div style={{fontSize:10,color:"#444",marginTop:1}}>RE/MAX · חיים בן סימון · מערכת חכמה</div>
+        </div>
+        <div style={{background:"rgba(126,201,126,0.12)",border:"1px solid rgba(126,201,126,0.25)",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#7ec97e",fontWeight:700}}>פעיל</div>
+      </div>
+    </div>
+    <div>{pages[tab]}</div>
+    <div style={S.nav}>
+      {TABS.map(t=>{var active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"8px 2px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+        <span style={{fontSize:18}}>{t.i}</span>
+        <span style={{fontSize:9,fontWeight:700,color:active?G:"#3a3a3a",fontFamily:"inherit"}}>{t.l}</span>
+        {active&&<div style={{width:4,height:4,borderRadius:"50%",background:G}}/>}
+      </button>;})}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
