@@ -1,20 +1,25 @@
+bash
+
+cat /mnt/user-data/outputs/nadlanpro_v5.html
+Output
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 <title>NadlanPro — חיים בן סימון</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px}
+body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px;line-height:1.5}
 input,textarea,select,button{font-family:'Heebo',sans-serif;font-size:15px}
 input[type=date]{color-scheme:dark}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:#2a2040}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#2a2040;border-radius:4px}
 .fade{animation:fu .2s ease both}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
@@ -22,6 +27,8 @@ input[type=date]{color-scheme:dark}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(201,126,126,.4)}50%{box-shadow:0 0 0 10px rgba(201,126,126,0)}}
 .rec{animation:pring 1.5s infinite}
+@keyframes mglow{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.3)}50%{box-shadow:0 0 20px rgba(37,211,102,.15)}}
+.mglow{animation:mglow 2s infinite}
 </style>
 </head>
 <body>
@@ -29,14 +36,18 @@ input[type=date]{color-scheme:dark}
 <script type="text/babel" data-presets="react">
 const {useState,useRef,useEffect}=React;
 const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c",RE="#c97e7e",TE="#4cc9a8";
-function sv(k,v){try{localStorage.setItem("np4_"+k,JSON.stringify(v))}catch(e){}}
-function lv(k,d){try{var v=localStorage.getItem("np4_"+k);return v?JSON.parse(v):d}catch(e){return d}}
+
+// ── STORAGE ──────────────────────────────────────────────
+function sv(k,v){try{localStorage.setItem("np5_"+k,JSON.stringify(v))}catch(e){}}
+function lv(k,d){try{var v=localStorage.getItem("np5_"+k);return v?JSON.parse(v):d}catch(e){return d}}
+
+// ── SELLERS DATA ─────────────────────────────────────────
 const IS=[
 {id:1,name:"תומר פולק",phone:"0545226691",address:"שרעבי 6/21",city:"באר שבע",rooms:"4",size:"77",floor:"2",price:"820000",reducedPrice:"800000",exclusiveStart:"03/06/25",exclusiveEnd:"03/12/25",notes:"מושכרת 3500 אחמד 0503037464",actions:[],images:[]},
 {id:2,name:"גבי הורביץ",phone:"0505385504",address:"אליעזר בן יאיר 10/3",city:"באר שבע",rooms:"4",size:"74",floor:"3",price:"590000",reducedPrice:"570000",exclusiveStart:"06/01/26",exclusiveEnd:"06/04/26",notes:"מושכרת לריטה 2200 0507104103",actions:[],images:[]},
 {id:3,name:"שלומי",phone:"0544770318",address:"בר גיורא 6/9",city:"באר שבע",rooms:"3",size:"42",floor:"3",price:"599000",reducedPrice:"570000",exclusiveStart:"06/01/26",exclusiveEnd:"06/04/26",notes:"מושכרת לרנין 0549220198 ב2500",actions:[],images:[]},
 {id:4,name:"ליזה",phone:"0523124345",address:"בנימין מינץ 32 שכונה ה",city:"באר שבע",rooms:"4",size:"67",floor:"2",price:"800000",reducedPrice:"739000",exclusiveStart:"14/01/26",exclusiveEnd:"14/04/26",notes:"מושכרת להדר 052-4638335 ב2800",actions:[],images:[]},
-{id:5,name:"אלמוג כליפא",phone:"0503929933",address:"אלכסנדר ינאי 17",city:"באר שבע",rooms:"2",size:"42",floor:"12",price:"859000",reducedPrice:"840000",exclusiveStart:"15/01/26",exclusiveEnd:"15/04/26",notes:"שוכרים חסאן 0537153865 חלאד 0549969717",actions:[],images:[]},
+{id:5,name:"אלמוג כליפא",phone:"0503929933",address:"אלכסנדר ינאי 17",city:"באר שבע",rooms:"2",size:"42",floor:"12",price:"859000",reducedPrice:"840000",exclusiveStart:"15/01/26",exclusiveEnd:"15/04/26",notes:"שוכרים חסאן 0537153865",actions:[],images:[]},
 {id:6,name:"פאבל קימוחרפ",phone:"0548882678",address:"התלמוד 44/14",city:"באר שבע",rooms:"3",size:"55",floor:"3",price:"589000",reducedPrice:"540000",exclusiveStart:"18/01/26",exclusiveEnd:"18/05/26",notes:"מושכרת לבוריס 0544249747 ב2000",actions:[],images:[]},
 {id:7,name:"צבי",phone:"0509251669",address:"ראובן רובין 7 שכונה ד",city:"באר שבע",rooms:"2",size:"73",floor:"3",price:"1429000",reducedPrice:"1415000",exclusiveStart:"20/01/26",exclusiveEnd:"20/04/26",notes:"מושכרת לאלון 0529533033 קוד 1597",actions:[],images:[]},
 {id:8,name:"לימור",phone:"0523442181",address:"בורלא 21",city:"באר שבע",rooms:"3",size:"74",floor:"1",price:"789000",reducedPrice:"789000",exclusiveStart:"26/01/26",exclusiveEnd:"26/05/26",notes:"בית 76 כניסה 21",actions:[],images:[]},
@@ -53,95 +64,1106 @@ const IS=[
 {id:19,name:"שי שטרן",phone:"0505599259",address:"יעקב דורי 15/2",city:"באר שבע",rooms:"3",size:"60",floor:"1",price:"739000",exclusiveStart:"",exclusiveEnd:"",notes:"מושכרת ב2400 לאסולין 0544407200",actions:[],images:[]},
 {id:20,name:"מתן ירכי",phone:"0556651055",address:"מבצע עובדה 62",city:"באר שבע",price:"649000",exclusiveStart:"19/03/26",exclusiveEnd:"19/07/26",notes:"לקחת מפתח מרנית",actions:[],images:[]},
 {id:21,name:"אדם מזון",phone:"0507777410",address:"דוד המלך 25",city:"באר שבע",rooms:"3",price:"720000",exclusiveStart:"29/03/26",exclusiveEnd:"29/07/26",notes:"לבצע הורדות דחוף",actions:[],images:[]},
-{id:22,name:"אסף מויאל",phone:"",address:"",city:"באר שבע",rooms:"2",size:"55",price:"650000",exclusiveStart:"18/03/26",notes:"מושכרת 2450 ליניב 0508775767",actions:[],images:[]},
+{id:22,name:"אסף מויאל",phone:"",address:"",city:"באר שבע",rooms:"2",size:"55",price:"650000",notes:"מושכרת 2450 ליניב 0508775767",actions:[],images:[]},
 ];
-const C={card:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:16,marginBottom:10},cg:{background:"rgba(201,168,76,0.06)",border:"1px solid rgba(201,168,76,0.22)",borderRadius:16,padding:16,marginBottom:10},inp:{width:"100%",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:12,padding:"12px 16px",color:"#ede8f5",fontSize:15,fontFamily:"inherit",outline:"none",boxSizing:"border-box"},p:"16px 14px 24px"};
-function Tag({c,ch}){return <span style={{background:(c||G)+"18",color:c||G,border:"1px solid "+(c||G)+"33",borderRadius:8,padding:"4px 12px",fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>{ch}</span>}
-function Btn({ch,onClick,c,ghost,sm,full,dis}){var col=c||G;return <button onClick={onClick} disabled={dis} style={{background:ghost?"transparent":"linear-gradient(135deg,"+col+","+col+"cc)",color:ghost?col:col===G?"#1a1208":"#fff",border:ghost?"2px solid "+col+"55":"none",borderRadius:12,padding:sm?"10px 18px":full?"14px":"12px 22px",fontSize:sm?13:15,fontWeight:700,cursor:dis?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.5:1,boxShadow:ghost?"none":"0 3px 12px "+col+"33"}}>{ch}</button>}
-function Pill({ch,active,onClick,c}){var col=c||G;return <button onClick={onClick} style={{background:active?col+"18":"rgba(255,255,255,0.04)",border:"1px solid "+(active?col+"66":"rgba(255,255,255,0.08)"),borderRadius:22,padding:"8px 18px",color:active?col:"#888",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{ch}</button>}
-function Lbl({t}){return <div style={{color:G,fontSize:12,fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>{t}</div>}
-function Inp({label,ph,val,set,type,rows,mb}){return <div style={{marginBottom:mb||14}}>{label&&<Lbl t={label}/>}{rows?<textarea placeholder={ph} value={val} onChange={e=>set(e.target.value)} rows={rows} style={{...C.inp,resize:"none"}}/>:<input type={type||"text"} placeholder={ph} value={val} onChange={e=>set(e.target.value)} style={C.inp}/>}</div>}
-function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb||14}}>{label&&<Lbl t={label}/>}<select value={val} onChange={e=>set(e.target.value)} style={{...C.inp,background:"#110f1a"}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>}
-function openWA(phone,msg){var p=(phone||"").replace(/^0/,"972").replace(/-/g,"").replace(/\s/g,"");if(!p){alert("אין מספר טלפון");return}window.open("https://wa.me/"+p+(msg?"?text="+encodeURIComponent(msg):""),"_blank")}
-function ImgUp({images=[],onAdd,onRemove}){var fr=useRef();var[prev,setPrev]=useState(null);function handle(files){Array.from(files).forEach(f=>{var r=new FileReader();r.onload=e=>onAdd({id:Date.now()+Math.random(),url:e.target.result});r.readAsDataURL(f)})}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}><img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:14}}/></div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} onClick={()=>setPrev(img.url)} style={{width:90,height:72,objectFit:"cover",borderRadius:10,border:"2px solid rgba(201,168,76,0.3)",cursor:"pointer"}}/>{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-7,left:-7,width:22,height:22,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:90,height:72,borderRadius:10,border:"2px dashed rgba(201,168,76,0.35)",background:"rgba(201,168,76,0.05)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:22}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
-async function aiCall(prompt,max=900){var r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:max,system:"אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX בבאר שבע 13 שנה. ענה תמיד בעברית.",messages:[{role:"user",content:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);return d.content.map(i=>i.text||"").join("").trim()}
-function VoiceBtn({onText,size}){var[rec,setRec]=useState(false);var[secs,setSecs]=useState(0);var mr=useRef();var ti=useRef();var s=size||52;async function start(){try{var st=await navigator.mediaDevices.getUserMedia({audio:true});var m=new MediaRecorder(st);mr.current=m;m.onstop=()=>{st.getTracks().forEach(t=>t.stop());onText("__voice__")};m.start();setRec(true);setSecs(0);ti.current=setInterval(()=>setSecs(x=>x+1),1000)}catch(e){alert("אשר גישה למיקרופון")}}function stop(){clearInterval(ti.current);if(mr.current&&mr.current.state!=="inactive")mr.current.stop();setRec(false)}return rec?<button onClick={stop} className="rec" style={{width:s,height:s,borderRadius:"50%",background:"rgba(201,126,126,0.2)",border:"3px solid "+RE,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}><span style={{fontSize:20}}>⏹</span><span style={{fontSize:10,color:RE,fontWeight:700}}>{secs}ש</span></button>:<button onClick={start} style={{width:s,height:s,borderRadius:"50%",background:"linear-gradient(135deg,"+RE+",#e09090)",border:"none",cursor:"pointer",fontSize:22,boxShadow:"0 4px 18px "+RE+"55",display:"flex",alignItems:"center",justifyContent:"center"}}>🎙️</button>}
-function Dashboard({buyers,sellers,tasks}){var today=new Date();var bdays=buyers.filter(b=>{if(!b.birthday)return false;var d=new Date(b.birthday);return d.getMonth()===today.getMonth()&&d.getDate()===today.getDate()});var pending=tasks.filter(t=>!t.done).length;var expiring=sellers.filter(s=>{if(!s.exclusiveEnd)return false;var p=s.exclusiveEnd.split("/");if(p.length<3)return false;var y=p[2].length===2?"20"+p[2]:p[2];return(new Date(y,p[1]-1,p[0])-today)/86400000<=14&&(new Date(y,p[1]-1,p[0])-today)/86400000>=0});return <div style={{padding:C.p}} className="fade"><div style={{marginBottom:22}}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:28,fontWeight:900}}><span className="shimmer">שלום חיים 👋</span></div><div style={{color:"#888",fontSize:15,marginTop:4}}>{today.toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long"})}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>{[{l:"מוכרים",v:sellers.length,i:"🏡",c:OR},{l:"קונים",v:buyers.length,i:"👥",c:BL},{l:"בלעדיויות",v:sellers.filter(s=>s.exclusiveEnd).length,i:"📋",c:G},{l:"משימות",v:pending,i:"⚡",c:PU}].map(s=><div key={s.l} style={{...C.card,padding:18}}><div style={{fontSize:26,marginBottom:6}}>{s.i}</div><div style={{fontSize:32,fontWeight:900,color:s.c,fontFamily:"'Frank Ruhl Libre',serif",lineHeight:1}}>{s.v}</div><div style={{fontSize:13,color:"#666",marginTop:6,fontWeight:600}}>{s.l}</div></div>)}</div>{expiring.length>0&&<div style={{...C.card,border:"1px solid rgba(232,168,76,0.35)",marginBottom:12}}><div style={{fontWeight:700,color:OR,marginBottom:10,fontSize:15}}>⚠️ בלעדיויות שפגות ({expiring.length})</div>{expiring.map(s=>{var p=s.exclusiveEnd.split("/");var y=p[2]?.length===2?"20"+p[2]:p[2];var days=Math.ceil((new Date(y,p[1]-1,p[0])-today)/86400000);return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{s.name}</div><div style={{color:"#888",fontSize:13}}>{s.address}</div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><Tag c={days<=7?RE:OR} ch={days===0?"היום!":days+"ימ"}/>{s.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(s.phone,"שלום "+s.name+", חיים בן סימון מרימקס. רצינו לעדכן אותך לגבי הבלעדיות.")}/>}</div></div>})}</div>}{bdays.length>0&&<div style={{...C.card,border:"1px solid rgba(201,168,76,0.4)",background:"rgba(201,168,76,0.06)"}}><div style={{fontWeight:700,color:G,marginBottom:8,fontSize:15}}>🎂 יום הולדת היום!</div>{bdays.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{color:"#d0c090",fontSize:15}}>{b.name} · {b.phone}</div>{b.phone&&<Btn sm ch="🎉 ברך" c={G} onClick={()=>openWA(b.phone,"יום הולדת שמח "+b.name+"! 🎂 חיים בן סימון מרימקס מאחל לך יום נפלא!")}/>}</div>)}</div>}</div>}
-function DailyPlan({tasks,setTasks}){var[nt,setNt]=useState("");var[ntime,setNtime]=useState("");var[ntype,setNtype]=useState("call");function toggle(id){var t=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);setTasks(t);sv("tasks",t)}function add(){if(!nt)return;var t=[...tasks,{id:Date.now(),text:nt,time:ntime||"—",done:false,type:ntype}];setTasks(t);sv("tasks",t);setNt("");setNtime("")}function del(id){var t=tasks.filter(t=>t.id!==id);setTasks(t);sv("tasks",t)}var icons={call:"📞",tour:"🏠",send:"📤",publish:"📣",meeting:"🤝",remind:"⏰"};var done=tasks.filter(t=>t.done).length;var pct=tasks.length?Math.round(done/tasks.length*100):0;return <div style={{padding:C.p}} className="fade"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G}}>תוכנית יום</div><Tag c={done===tasks.length&&tasks.length>0?"#7ec97e":G} ch={done+"/"+tasks.length+" · "+pct+"%"}/></div>{tasks.length>0&&<div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,"+G+",#f0d888)",borderRadius:4,transition:"width .4s"}}/></div>}{tasks.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:36,marginBottom:10}}>📋</div>אין משימות</div>}<div style={{marginBottom:14}}>{tasks.map(t=><div key={t.id} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:t.done?"rgba(126,201,126,0.05)":"rgba(255,255,255,0.04)",borderRadius:14,marginBottom:8,border:"1px solid "+(t.done?"rgba(126,201,126,0.2)":"rgba(255,255,255,0.08)")}}><div onClick={()=>toggle(t.id)} style={{width:26,height:26,borderRadius:"50%",border:"2px solid "+(t.done?"#7ec97e":G+"55"),background:t.done?"#7ec97e":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#1a1208",cursor:"pointer",flexShrink:0}}>{t.done?"✓":""}</div><div style={{flex:1,fontSize:15,color:t.done?"#666":"#ede8f5",textDecoration:t.done?"line-through":"none"}}>{icons[t.type]||"📌"} {t.text}</div><div style={{color:"#666",fontSize:13,flexShrink:0,fontWeight:600}}>{t.time}</div><button onClick={()=>del(t.id)} style={{background:"none",border:"none",color:"#444",cursor:"pointer",fontSize:20}}>×</button></div>)}</div><div style={C.card}><Lbl t="+ משימה חדשה"/><input placeholder="תיאור המשימה..." value={nt} onChange={e=>setNt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} style={{...C.inp,marginBottom:10}}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><input type="time" value={ntime} onChange={e=>setNtime(e.target.value)} style={C.inp}/><select value={ntype} onChange={e=>setNtype(e.target.value)} style={{...C.inp,background:"#110f1a"}}><option value="call">📞 שיחה</option><option value="tour">🏠 סיור</option><option value="meeting">🤝 פגישה</option><option value="send">📤 שליחה</option><option value="publish">📣 פרסום</option><option value="remind">⏰ תזכורת</option></select></div><Btn full ch="+ הוסף" onClick={add} dis={!nt}/></div></div>}
+
+// ── STYLES ────────────────────────────────────────────────
+const C={
+  card:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:16,marginBottom:10},
+  cg:{background:"rgba(201,168,76,0.06)",border:"1px solid rgba(201,168,76,0.22)",borderRadius:16,padding:16,marginBottom:10},
+  inp:{width:"100%",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:12,padding:"12px 16px",color:"#ede8f5",fontSize:15,fontFamily:"inherit",outline:"none",boxSizing:"border-box"},
+  p:"16px 14px 24px",
+};
+
+// ── ATOMS ─────────────────────────────────────────────────
+function Tag({c,ch}){return <span style={{background:(c||G)+"18",color:c||G,border:"1px solid "+(c||G)+"33",borderRadius:8,padding:"4px 12px",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>{ch}</span>}
+
+function Btn({ch,onClick,c,ghost,sm,full,dis,style:st}){
+  var col=c||G;
+  return <button onClick={onClick} disabled={dis} style={{
+    background:ghost?"transparent":"linear-gradient(135deg,"+col+","+col+"cc)",
+    color:ghost?col:col===G?"#1a1208":"#fff",
+    border:ghost?"2px solid "+col+"55":"none",
+    borderRadius:12,padding:sm?"9px 16px":full?"14px":"11px 20px",
+    fontSize:sm?13:15,fontWeight:700,cursor:dis?"not-allowed":"pointer",
+    fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.5:1,
+    boxShadow:ghost?"none":"0 3px 12px "+col+"33",...st
+  }}>{ch}</button>
+}
+
+function Pill({ch,active,onClick,c}){
+  var col=c||G;
+  return <button onClick={onClick} style={{
+    background:active?col+"18":"rgba(255,255,255,0.04)",
+    border:"1px solid "+(active?col+"66":"rgba(255,255,255,0.1)"),
+    borderRadius:22,padding:"8px 18px",color:active?col:"#888",
+    fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"
+  }}>{ch}</button>
+}
+
+function Lbl({t}){return <div style={{color:G,fontSize:12,fontWeight:700,marginBottom:7,textTransform:"uppercase",letterSpacing:.5}}>{t}</div>}
+
+function Inp({label,ph,val,set,type,rows,mb}){
+  return <div style={{marginBottom:mb!==undefined?mb:14}}>
+    {label&&<Lbl t={label}/>}
+    {rows?<textarea placeholder={ph} value={val} onChange={e=>set(e.target.value)} rows={rows} style={{...C.inp,resize:"none",lineHeight:1.6}}/>
+    :<input type={type||"text"} placeholder={ph} value={val} onChange={e=>set(e.target.value)} style={C.inp}/>}
+  </div>
+}
+
+function Sel({label,val,set,opts,mb}){
+  return <div style={{marginBottom:mb!==undefined?mb:14}}>
+    {label&&<Lbl t={label}/>}
+    <select value={val} onChange={e=>set(e.target.value)} style={{...C.inp,background:"#110f1a"}}>
+      {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  </div>
+}
+
+// ── WA HELPER ─────────────────────────────────────────────
+function openWA(phone,msg){
+  var p=(phone||"").replace(/^0/,"972").replace(/-/g,"").replace(/\s/g,"");
+  if(!p){alert("אין מספר טלפון");return}
+  window.open("https://wa.me/"+p+(msg?"?text="+encodeURIComponent(msg):""),"_blank");
+}
+
+// ── GOOGLE CALENDAR ───────────────────────────────────────
+function addToCalendar(title,date,time){
+  var dt=date||(new Date().toISOString().split("T")[0]);
+  var t=time||"09:00";
+  var start=dt.replace(/-/g,"")+"T"+t.replace(":","")+"00";
+  var end=dt.replace(/-/g,"")+"T"+String(parseInt(t.split(":")[0])+1).padStart(2,"0")+t.split(":")[1]+"00";
+  window.open("https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+start+"/"+end,"_blank");
+}
+
+// ── IMAGE UPLOADER ────────────────────────────────────────
+function ImgUp({images=[],onAdd,onRemove}){
+  var fr=useRef();var[prev,setPrev]=useState(null);
+  function handle(files){Array.from(files).forEach(f=>{var r=new FileReader();r.onload=e=>onAdd({id:Date.now()+Math.random(),url:e.target.result});r.readAsDataURL(f)})}
+  return <div>
+    {prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:14}}/>
+    </div>}
+    <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+      {images.map(img=><div key={img.id} style={{position:"relative"}}>
+        <img src={img.url} onClick={()=>setPrev(img.url)} style={{width:90,height:72,objectFit:"cover",borderRadius:10,border:"2px solid rgba(201,168,76,0.3)",cursor:"pointer"}}/>
+        {onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-7,left:-7,width:22,height:22,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}
+      </div>)}
+      {onAdd&&<button onClick={()=>fr.current.click()} style={{width:90,height:72,borderRadius:10,border:"2px dashed rgba(201,168,76,0.35)",background:"rgba(201,168,76,0.05)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}>
+        <span style={{fontSize:24}}>📷</span>הוסף
+      </button>}
+    </div>
+    {onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}
+  </div>
+}
+
+// ── AI CALL ───────────────────────────────────────────────
+async function aiCall(prompt,max=900){
+  var key=localStorage.getItem("np5_apikey")||"";
+  if(!key){
+    alert("חסר API Key! לחץ על ⚙️ הגדרות בתפריט והכנס את המפתח שקיבלת מ-Anthropic");
+    throw new Error("no key");
+  }
+  var r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:max,
+      system:"אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX בבאר שבע עם 13 שנות ניסיון. ענה תמיד בעברית.",
+      messages:[{role:"user",content:prompt}]})
+  });
+  var d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content.map(i=>i.text||"").join("").trim();
+}
+
+// ── VOICE BUTTON ──────────────────────────────────────────
+function VoiceBtn({onText,size}){
+  var[rec,setRec]=useState(false);var[secs,setSecs]=useState(0);
+  var mr=useRef();var ti=useRef();var s=size||52;
+  async function start(){
+    try{
+      var st=await navigator.mediaDevices.getUserMedia({audio:true});
+      var m=new MediaRecorder(st);mr.current=m;
+      m.onstop=()=>{st.getTracks().forEach(t=>t.stop());onText("__voice__")};
+      m.start();setRec(true);setSecs(0);
+      ti.current=setInterval(()=>setSecs(x=>x+1),1000);
+    }catch(e){alert("אשר גישה למיקרופון בהגדרות הדפדפן")}
+  }
+  function stop(){clearInterval(ti.current);if(mr.current&&mr.current.state!=="inactive")mr.current.stop();setRec(false)}
+  return rec
+    ?<button onClick={stop} className="rec" style={{width:s,height:s,borderRadius:"50%",background:"rgba(201,126,126,0.2)",border:"3px solid "+RE,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
+      <span style={{fontSize:22}}>⏹</span><span style={{fontSize:11,color:RE,fontWeight:700}}>{secs}ש</span>
+    </button>
+    :<button onClick={start} style={{width:s,height:s,borderRadius:"50%",background:"linear-gradient(135deg,"+RE+",#e09090)",border:"none",cursor:"pointer",fontSize:s>44?24:18,boxShadow:"0 4px 20px "+RE+"55",display:"flex",alignItems:"center",justifyContent:"center"}}>🎙️</button>
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function Settings({onClose}){
+  var[key,setKey]=useState(localStorage.getItem("np5_apikey")||"");
+  var[saved,setSaved]=useState(false);
+  function save(){localStorage.setItem("np5_apikey",key.trim());setSaved(true);setTimeout(()=>setSaved(false),2000)}
+  return <div style={{...C.p,padding:"20px 16px"}} className="fade">
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G}}>⚙️ הגדרות</div>
+      {onClose&&<button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:24,cursor:"pointer"}}>×</button>}
+    </div>
+
+    <div style={C.card}>
+      <Lbl t="🔑 Anthropic API Key"/>
+      <div style={{color:"#888",fontSize:14,marginBottom:12,lineHeight:1.6}}>
+        המפתח מאפשר לאתר לעבוד עם AI (אוניברסיטה, סקריפטים, פרסום, עוזר אישי).
+        <br/>קבל מפתח חינמי ב: <span style={{color:BL}}>console.anthropic.com</span>
+      </div>
+      <input
+        type="password"
+        placeholder="sk-ant-api03-..."
+        value={key}
+        onChange={e=>setKey(e.target.value)}
+        style={{...C.inp,marginBottom:12,fontFamily:"monospace"}}
+      />
+      <Btn full ch={saved?"✅ נשמר!":"שמור API Key"} onClick={save} c={saved?"#7ec97e":G}/>
+      {key&&<div style={{marginTop:10,color:"#7ec97e",fontSize:13,textAlign:"center"}}>✓ מפתח מוגדר — כל הפיצ'רים זמינים</div>}
+      {!key&&<div style={{marginTop:10,color:RE,fontSize:13,textAlign:"center"}}>⚠️ ללא מפתח — AI לא יעבוד</div>}
+    </div>
+
+    <div style={C.card}>
+      <Lbl t="📅 סנכרון Google Calendar"/>
+      <div style={{color:"#888",fontSize:14,lineHeight:1.6}}>
+        כל משימה בתוכנית היום כוללת כפתור 📅 שפותח את Google Calendar עם הפגישה מוכנה — פשוט לחץ "שמור" ביומן.
+      </div>
+    </div>
+
+    <div style={C.card}>
+      <Lbl t="💡 גרסה"/>
+      <div style={{color:"#888",fontSize:14}}>NadlanPro v5 · RE/MAX חיים בן סימון · באר שבע</div>
+    </div>
+  </div>
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function Dashboard({buyers,sellers,tasks}){
+  var today=new Date();
+  var bdays=buyers.filter(b=>{if(!b.birthday)return false;var d=new Date(b.birthday);return d.getMonth()===today.getMonth()&&d.getDate()===today.getDate()});
+  var pending=tasks.filter(t=>!t.done).length;
+  var expiring=sellers.filter(s=>{
+    if(!s.exclusiveEnd)return false;
+    var p=s.exclusiveEnd.split("/");if(p.length<3)return false;
+    var y=p[2].length===2?"20"+p[2]:p[2];
+    var diff=(new Date(y,parseInt(p[1])-1,parseInt(p[0]))-today)/86400000;
+    return diff>=0&&diff<=14;
+  });
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{marginBottom:22}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:28,fontWeight:900}}><span className="shimmer">שלום חיים 👋</span></div>
+      <div style={{color:"#888",fontSize:15,marginTop:4}}>{today.toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long"})}</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      {[{l:"מוכרים",v:sellers.length,i:"🏡",c:OR},{l:"קונים",v:buyers.length,i:"👥",c:BL},{l:"בלעדיויות",v:sellers.filter(s=>s.exclusiveEnd).length,i:"📋",c:G},{l:"משימות",v:pending,i:"⚡",c:PU}].map(s=><div key={s.l} style={{...C.card,padding:18}}>
+        <div style={{fontSize:28,marginBottom:6}}>{s.i}</div>
+        <div style={{fontSize:32,fontWeight:900,color:s.c,fontFamily:"'Frank Ruhl Libre',serif",lineHeight:1}}>{s.v}</div>
+        <div style={{fontSize:13,color:"#666",marginTop:6,fontWeight:600}}>{s.l}</div>
+      </div>)}
+    </div>
+    {expiring.length>0&&<div style={{...C.card,border:"1px solid rgba(232,168,76,0.35)",marginBottom:12}}>
+      <div style={{fontWeight:700,color:OR,marginBottom:10,fontSize:15}}>⚠️ בלעדיויות שפגות ({expiring.length})</div>
+      {expiring.map(s=>{
+        var p=s.exclusiveEnd.split("/");var y=p[2]?.length===2?"20"+p[2]:p[2];
+        var days=Math.ceil((new Date(y,parseInt(p[1])-1,parseInt(p[0]))-today)/86400000);
+        return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+          <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{s.name}</div><div style={{color:"#888",fontSize:13}}>{s.address}</div></div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <Tag c={days<=7?RE:OR} ch={days===0?"היום!":days+"ימ"}/>
+            {s.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(s.phone,"שלום "+s.name+", חיים בן סימון מרימקס. רצינו לעדכן אותך לגבי הבלעדיות של הנכס.")}/>}
+          </div>
+        </div>
+      })}
+    </div>}
+    {bdays.length>0&&<div style={{...C.card,border:"1px solid rgba(201,168,76,0.4)",background:"rgba(201,168,76,0.06)"}}>
+      <div style={{fontWeight:700,color:G,marginBottom:8,fontSize:15}}>🎂 יום הולדת היום!</div>
+      {bdays.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+        <div style={{color:"#d0c090",fontSize:15}}>{b.name} · {b.phone}</div>
+        {b.phone&&<Btn sm ch="🎉 ברך" c={G} onClick={()=>openWA(b.phone,"יום הולדת שמח "+b.name+"! 🎂🥳\nחיים בן סימון מרימקס מאחל לך יום נפלא!")}/>}
+      </div>)}
+    </div>}
+  </div>
+}
+
+// ── DAILY PLAN ────────────────────────────────────────────
+function DailyPlan({tasks,setTasks}){
+  var[nt,setNt]=useState("");var[ntime,setNtime]=useState("");var[ntype,setNtype]=useState("call");
+  function toggle(id){var t=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);setTasks(t);sv("tasks",t)}
+  function add(){if(!nt)return;var t=[...tasks,{id:Date.now(),text:nt,time:ntime||"—",done:false,type:ntype}];setTasks(t);sv("tasks",t);setNt("");setNtime("")}
+  function del(id){var t=tasks.filter(t=>t.id!==id);setTasks(t);sv("tasks",t)}
+  var icons={call:"📞",tour:"🏠",send:"📤",publish:"📣",meeting:"🤝",remind:"⏰"};
+  var done=tasks.filter(t=>t.done).length;
+  var pct=tasks.length?Math.round(done/tasks.length*100):0;
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G}}>תוכנית יום</div>
+      <Tag c={done===tasks.length&&tasks.length>0?"#7ec97e":G} ch={done+"/"+tasks.length+" · "+pct+"%"}/>
+    </div>
+    {tasks.length>0&&<div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4,marginBottom:16,overflow:"hidden"}}>
+      <div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,"+G+",#f0d888)",borderRadius:4,transition:"width .4s"}}/>
+    </div>}
+    {tasks.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:36,marginBottom:10}}>📋</div>אין משימות</div>}
+    <div style={{marginBottom:14}}>
+      {tasks.map(t=><div key={t.id} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:t.done?"rgba(126,201,126,0.05)":"rgba(255,255,255,0.04)",borderRadius:14,marginBottom:8,border:"1px solid "+(t.done?"rgba(126,201,126,0.2)":"rgba(255,255,255,0.08)")}}>
+        <div onClick={()=>toggle(t.id)} style={{width:26,height:26,borderRadius:"50%",border:"2px solid "+(t.done?"#7ec97e":G+"55"),background:t.done?"#7ec97e":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#1a1208",cursor:"pointer",flexShrink:0}}>{t.done?"✓":""}</div>
+        <div style={{flex:1,fontSize:15,color:t.done?"#666":"#ede8f5",textDecoration:t.done?"line-through":"none"}}>{icons[t.type]||"📌"} {t.text}</div>
+        <div style={{color:"#666",fontSize:13,flexShrink:0,fontWeight:600}}>{t.time}</div>
+        <button onClick={()=>addToCalendar(t.text)} title="הוסף ליומן Google" style={{background:"none",border:"none",cursor:"pointer",fontSize:18}}>📅</button>
+        <button onClick={()=>del(t.id)} style={{background:"none",border:"none",color:"#444",cursor:"pointer",fontSize:20}}>×</button>
+      </div>)}
+    </div>
+    <div style={C.card}>
+      <Lbl t="+ משימה חדשה"/>
+      <input placeholder="תיאור המשימה..." value={nt} onChange={e=>setNt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} style={{...C.inp,marginBottom:10}}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+        <input type="time" value={ntime} onChange={e=>setNtime(e.target.value)} style={C.inp}/>
+        <select value={ntype} onChange={e=>setNtype(e.target.value)} style={{...C.inp,background:"#110f1a"}}>
+          <option value="call">📞 שיחה</option><option value="tour">🏠 סיור</option>
+          <option value="meeting">🤝 פגישה</option><option value="send">📤 שליחה</option>
+          <option value="publish">📣 פרסום</option><option value="remind">⏰ תזכורת</option>
+        </select>
+      </div>
+      <Btn full ch="+ הוסף" onClick={add} dis={!nt}/>
+    </div>
+  </div>
+}
+
+// ── GRADE BADGE ───────────────────────────────────────────
+const GRADES={A:{c:"#7ec97e",l:"A — חם 🔥"},B:{c:OR,l:"B — פוטנציאל"},C:{c:"#888",l:"C — קר ❄️"}};
+function GradeBadge({grade,onChange}){
+  var[open,setOpen]=useState(false);
+  var g=GRADES[grade||"C"];
+  return <div style={{position:"relative"}}>
+    <button onClick={()=>setOpen(!open)} style={{background:g.c+"22",border:"1px solid "+g.c+"55",borderRadius:8,padding:"4px 12px",color:g.c,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.l} ▾</button>
+    {open&&<div style={{position:"absolute",top:"110%",right:0,background:"#1a1820",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,zIndex:100,minWidth:140,overflow:"hidden"}}>
+      {Object.entries(GRADES).map(([k,v])=><div key={k} onClick={()=>{onChange(k);setOpen(false)}} style={{padding:"10px 16px",cursor:"pointer",color:v.c,fontSize:14,fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{v.l}</div>)}
+    </div>}
+  </div>
+}
+
+// ── RECRUIT MODAL — גיוס מוכרים ────────────────────────────
+function RecruitModal({seller,onClose}){
+  var templates=[
+    "שלום "+seller.name+" 👋\n\nחיים בן סימון מרימקס באר שבע.\n\nיש לי קונים רציניים עם הון עצמי שמחפשים בדיוק באזורכם — ואני חושב שהנכס שלכם יכול להתאים להם מאוד.\n\nהנכס מושכר? שווה שיחה קצרה של 5 דקות? 📞\n\nחיים בן סימון | RE/MAX | 13 שנות ניסיון",
+    "שלום "+seller.name+" 😊\n\nחיים בן סימון מרימקס.\n\n13 שנה שאני מוכר נכסים בבאר שבע ויש לי קונה עם מזומן שמחפש בדיוק ברחוב שלכם.\n\nאתם שוקלים למכור? בואו נדבר — אני מכיר את השוק כאף אחד אחר. 🤝\n\nחיים | 13 שנות ניסיון | RE/MAX",
+    "שלום "+seller.name+" 🏠\n\nחיים בן סימון מתווך רימקס באר שבע.\n\nמחפש נכסים בשביל זוג צעיר מאוד רציני שמוכן לסגור מהר.\n\nהאם הנכס שלכם בין השיקולים? ממליץ שנדבר לפני שמחפשים מתווך אחר. 📲\n\nחיים בן סימון | RE/MAX בע\"מ"
+  ];
+  var[sel,setSel]=useState(0);
+  var[msg,setMsg]=useState(templates[0]);
+  var[loading,setLoading]=useState(false);
+  async function aiRewrite(){
+    setLoading(true);
+    try{var txt=await aiCall("שכתב את הודעת הגיוס הבאה בצורה יותר אישית ומשכנעת עבור "+seller.name+". שמור על שם חיים בן סימון מרימקס באר שבע:\n\n"+msg,300);setMsg(txt)}
+    catch(e){}setLoading(false)
+  }
+  function pickTemplate(i){setSel(i);setMsg(templates[i])}
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16}}>
+    <div style={{width:"100%",maxWidth:500,background:"#12101a",borderRadius:"20px 20px 16px 16px",padding:20,maxHeight:"85vh",overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontWeight:800,color:OR,fontSize:17}}>📤 גיוס בלעדיות</div>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:24,cursor:"pointer"}}>×</button>
+      </div>
+      <div style={{color:"#888",fontSize:14,marginBottom:14}}>בחר אופציית הודעה לשליחה ל{seller.name}:</div>
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        {[1,2,3].map(i=><button key={i} onClick={()=>pickTemplate(i-1)} style={{flex:1,background:sel===i-1?"rgba(232,168,76,0.2)":"rgba(255,255,255,0.04)",border:"1px solid "+(sel===i-1?OR+"66":"rgba(255,255,255,0.1)"),borderRadius:10,padding:"10px",cursor:"pointer",color:sel===i-1?OR:"#888",fontSize:14,fontWeight:700,fontFamily:"inherit"}}>אופציה {i}</button>)}
+      </div>
+      <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.75,color:"#ede8f5",marginBottom:12}}/>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {seller.phone&&<Btn full ch="📱 שלח ווטסאפ" c={GR} onClick={()=>openWA(seller.phone,msg)}/>}
+        <Btn sm ghost ch={loading?"🤖...":"🤖 שכתב AI"} onClick={aiRewrite} dis={loading}/>
+      </div>
+    </div>
+  </div>
+}
+
+// ── SEND PROPERTY MODAL ─────────────────────────────────────
+function SendPropertyModal({buyer,sellers,onClose}){
+  var[selSeller,setSelSeller]=useState(null);
+  var[msg,setMsg]=useState("");
+  var[loading,setLoading]=useState(false);
+  function selectSeller(s){
+    setSelSeller(s);
+    setMsg("שלום "+buyer.name+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך — נכנסה אלי דירה ב"+s.address+" שמיד אמרתי זה בשביל "+buyer.name+"!\n\n🏠 "+(s.rooms||"?")+" חדרים | "+(s.size||"?")+"מ״ר\n🏢 קומה "+(s.floor||"?")+"\n💰 "+(s.price?Number(s.price).toLocaleString():"?")+"₪\n\nלא פרסמתי אותה עדיין בשום מקום.\nאשלח תמונות? 📸\n\nחיים | RE/MAX | באר שבע");
+  }
+  async function aiRewrite(){
+    setLoading(true);
+    try{var txt=await aiCall("שכתב את הודעת הנכס הבאה בצורה יותר אישית ומשכנעת:\n\n"+msg,300);setMsg(txt)}
+    catch(e){}setLoading(false)
+  }
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16}}>
+    <div style={{width:"100%",maxWidth:500,background:"#12101a",borderRadius:"20px 20px 16px 16px",padding:20,maxHeight:"85vh",overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontWeight:800,color:BL,fontSize:17}}>🏠 שלח דירה ל{buyer.name}</div>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:24,cursor:"pointer"}}>×</button>
+      </div>
+      <Lbl t="בחר נכס לשליחה"/>
+      <select value={selSeller?selSeller.id:""} onChange={e=>selectSeller(sellers.find(s=>s.id===parseInt(e.target.value)))} style={{...C.inp,background:"#110f1a",marginBottom:14}}>
+        <option value="">— בחר נכס —</option>
+        {sellers.map(s=><option key={s.id} value={s.id}>{s.name} — {s.address||"כתובת לא הוזנה"} ({s.rooms||"?"}חד, {s.price?Number(s.price).toLocaleString():"?"}₪)</option>)}
+      </select>
+      {selSeller&&selSeller.images&&selSeller.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>
+        {selSeller.images.map(img=><img key={img.id} src={img.url} style={{width:90,height:72,objectFit:"cover",borderRadius:10,flexShrink:0,border:"1px solid rgba(201,168,76,0.2)"}}/>)}
+      </div>}
+      {msg&&<textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.75,marginBottom:12}}/>}
+      {msg&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {buyer.phone&&<Btn full ch="📱 שלח ווטסאפ" c={GR} onClick={()=>openWA(buyer.phone,msg)}/>}
+        <Btn sm ghost ch={loading?"🤖...":"🤖 שכתב AI"} onClick={aiRewrite} dis={loading}/>
+      </div>}
+    </div>
+  </div>
+}
+
+// ── QUICK CALLER ─────────────────────────────────────────────
+function QuickCaller({buyers,setBuyers,sellers}){
+  var[phone,setPhone]=useState("");
+  var[recording,setRecording]=useState(false);
+  var[secs,setSecs]=useState(0);
+  var[transcript,setTranscript]=useState("");
+  var[analyzing,setAnalyzing]=useState(false);
+  var[result,setResult]=useState(null);
+  var mr=useRef();var ti=useRef();var chunks=useRef([]);
+
+  async function startRec(){
+    try{
+      var st=await navigator.mediaDevices.getUserMedia({audio:true});
+      var m=new MediaRecorder(st);mr.current=m;chunks.current=[];
+      m.ondataavailable=e=>chunks.current.push(e.data);
+      m.onstop=async()=>{
+        st.getTracks().forEach(t=>t.stop());
+        setRecording(false);
+        setAnalyzing(true);
+        try{
+          var summary=await aiCall("ניתחת שיחה עם קונה פוטנציאלי. על סמך ההקלטה (לא זמינה לתמלול אוטומטי — ידני):\n\nתאר מה קונה טיפוסי מחפש ועזור לחיים לסווג אותו.\n\nהמידע שנאמר:\n"+transcript+"\n\nספק JSON:\n{\"name\":\"שם אם צוין\",\"area\":\"אזור\",\"rooms\":\"חדרים\",\"budget\":\"תקציב\",\"grade\":\"A|B|C\",\"notes\":\"הערות\",\"summary\":\"סיכום קצר\"}",400);
+          var clean=summary.replace(/```json|```/g,"").trim();
+          var r=JSON.parse(clean);
+          setResult(r);
+        }catch(e){setResult({summary:"לא ניתן לנתח — הכנס פרטים ידנית",grade:"B",area:"באר שבע",rooms:"3-4",budget:"600K-1M"})}
+        setAnalyzing(false);
+      };
+      m.start();setRecording(true);setSecs(0);
+      ti.current=setInterval(()=>setSecs(x=>x+1),1000);
+    }catch(e){alert("אשר גישה למיקרופון")}
+  }
+
+  function stopRec(){clearInterval(ti.current);if(mr.current&&mr.current.state!=="inactive")mr.current.stop()}
+
+  function saveAsBuyer(){
+    if(!result)return;
+    var b={
+      id:Date.now(),name:result.name||"קונה "+phone,phone:phone||"",
+      budget:result.budget||"600K-1M",rooms:result.rooms||"3-4",
+      area:result.area||"באר שבע",notes:result.notes||result.summary||"",
+      grade:result.grade||"B",status:"חדש",actions:[],
+      created:new Date().toLocaleDateString("he")
+    };
+    var nb=[...buyers,b];setBuyers(nb);sv("buyers",nb);
+    setPhone("");setTranscript("");setResult(null);setSecs(0);
+    alert("✅ קונה נוסף למאגר!");
+  }
+
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>📞 קונה מהירה</div>
+    <div style={{color:"#888",fontSize:14,marginBottom:16}}>קיבלת שיחה? הכנס מספר, הקלט, AI מסווג אוטומטית</div>
+
+    <div style={C.card}>
+      <Inp label="📱 מספר טלפון של הקונה" ph="050-0000000" val={phone} set={setPhone} mb={14}/>
+
+      <Lbl t="🎙️ הקלט את השיחה / פרטים"/>
+      <div style={{textAlign:"center",padding:"20px 0"}}>
+        {!recording&&!analyzing&&<button onClick={startRec} style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,"+RE+",#e09090)",border:"none",cursor:"pointer",fontSize:32,boxShadow:"0 6px 24px "+RE+"55",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>🎙️</button>}
+        {recording&&<button onClick={stopRec} className="rec" style={{width:80,height:80,borderRadius:"50%",background:"rgba(201,126,126,0.2)",border:"3px solid "+RE,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>
+          <span style={{fontSize:28}}>⏹</span><span style={{fontSize:12,color:RE,fontWeight:700}}>{secs}ש׳</span>
+        </button>}
+        {analyzing&&<div style={{color:G,fontWeight:700,fontSize:16,padding:20}}>🤖 מנתח...</div>}
+        {!recording&&!analyzing&&<div style={{color:"#666",fontSize:13}}>לחץ להקלטה</div>}
+        {recording&&<div style={{color:RE,fontWeight:700,fontSize:15}}>מקליט... לחץ לעצור</div>}
+      </div>
+
+      <div style={{marginBottom:12}}>
+        <Lbl t="📝 תאר מה הקונה רצה (אחרי השיחה)"/>
+        <textarea placeholder="לדוגמה: מחפש 3 חד בשכונה ד, תקציב עד 750K, צריך חניה, לא רוצה קרקע..." value={transcript} onChange={e=>setTranscript(e.target.value)} rows={3} style={{...C.inp,resize:"none"}}/>
+      </div>
+      {transcript&&!result&&<Btn full ch="🤖 נתח וסווג" onClick={()=>{setAnalyzing(true);aiCall("ניתח את הדרישות של הקונה הבא ב-JSON בלבד (ללא markdown):\n{\"name\":\"שם\",\"area\":\"אזור\",\"rooms\":\"חדרים\",\"budget\":\"תקציב\",\"grade\":\"A|B|C\",\"notes\":\"הערות\",\"summary\":\"סיכום\"}\n\nדרישות: "+transcript,300).then(txt=>{try{setResult(JSON.parse(txt.replace(/```json|```/g,"").trim()))}catch(e){setResult({summary:transcript,grade:"B",area:"באר שבע",rooms:"3-4",budget:"600K-1M"})}setAnalyzing(false)}).catch(()=>{setAnalyzing(false)})}} dis={analyzing}/>}
+    </div>
+
+    {result&&<div style={{...C.cg,border:"1px solid rgba(37,211,102,0.3)"}} className="fade">
+      <div style={{fontWeight:800,color:GR,fontSize:16,marginBottom:14}}>✅ ניתוח הקונה</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {[{l:"אזור",v:result.area},{l:"חדרים",v:result.rooms},{l:"תקציב",v:result.budget},{l:"דירוג",v:result.grade}].map(x=><div key={x.l} style={{background:"rgba(0,0,0,0.2)",borderRadius:10,padding:12}}>
+          <div style={{color:"#666",fontSize:11,marginBottom:4}}>{x.l}</div>
+          <div style={{color:"#ede8f5",fontWeight:700,fontSize:15}}>{x.v||"—"}</div>
+        </div>)}
+      </div>
+      {result.summary&&<div style={{background:"rgba(0,0,0,0.2)",borderRadius:10,padding:12,marginBottom:14,color:"#bbb",fontSize:14,lineHeight:1.6}}>{result.summary}</div>}
+
+      <div style={{marginBottom:14}}>
+        <Lbl t="📱 שלח דירות מתאימות"/>
+        {sellers.filter(s=>s.city&&result.area&&(s.city.includes(result.area.split(" ")[0])||result.area.includes(s.city))).slice(0,3).map(s=><div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+          <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{s.address}</div><div style={{color:"#888",fontSize:13}}>{s.rooms}חד · {s.price?Number(s.price).toLocaleString()+"₪":""}</div></div>
+          {phone&&<Btn sm ch="💬 שלח" c={GR} onClick={()=>openWA(phone,"שלום! חיים בן סימון מרימקס.\n\nיש לי נכס שחשבתי עליך:\n🏠 "+s.address+"\n"+s.rooms+" חדרים | "+s.size+"מ | קומה "+s.floor+"\n💰 "+Number(s.price||0).toLocaleString()+"₪\n\nאשלח פרטים נוספים? 📸")}/>}
+        </div>)}
+        {sellers.filter(s=>s.city&&result.area&&(s.city.includes(result.area.split(" ")[0])||result.area.includes(s.city))).length===0&&<div style={{color:"#555",fontSize:14}}>אין נכסים מתאימים באזור זה</div>}
+      </div>
+
+      <Btn full ch="💾 שמור כקונה במאגר" onClick={saveAsBuyer} c={G}/>
+    </div>}
+  </div>
+}
+
+// ── CRM ───────────────────────────────────────────────────
 function CRM({buyers,setBuyers,sellers,setSellers}){
-var[tab,setTab]=useState("sellers");var[mode,setMode]=useState("list");var[sel,setSel]=useState(null);var[search,setSearch]=useState("");var[showWA,setShowWA]=useState(false);var[waMsg,setWaMsg]=useState("");var[aiLoading,setAiLoading]=useState(false);
-var[sn,setSn]=useState("");var[sp,setSp]=useState("");var[sa,setSa]=useState("");var[sc,setSc]=useState("באר שבע");var[sr,setSr]=useState("");var[ss,setSs]=useState("");var[sf,setSf]=useState("");var[sprice,setSprice]=useState("");var[sred,setSred]=useState("");var[ses,setSes]=useState("");var[see,setSee]=useState("");var[snotes,setSnotes]=useState("");var[simgs,setSimgs]=useState([]);
-var[bn,setBn]=useState("");var[bp,setBp]=useState("");var[bb,setBb]=useState("600K-1M");var[br,setBr]=useState("3-4");var[ba,setBa]=useState("באר שבע");var[bday,setBday]=useState("");var[bnotes,setBnotes]=useState("");
-function addSeller(){if(!sn||!sp)return;var s={id:Date.now(),name:sn,phone:sp,address:sa,city:sc,rooms:sr,size:ss,floor:sf,price:sprice,reducedPrice:sred,exclusiveStart:ses,exclusiveEnd:see,notes:snotes,images:simgs,actions:[],created:new Date().toLocaleDateString("he")};var ns=[...sellers,s];setSellers(ns);sv("sellers",ns);setSn("");setSp("");setSa("");setSc("באר שבע");setSr("");setSs("");setSf("");setSprice("");setSred("");setSes("");setSee("");setSnotes("");setSimgs([]);setMode("list")}
-function addBuyer(){if(!bn||!bp)return;var b={id:Date.now(),name:bn,phone:bp,budget:bb,rooms:br,area:ba,birthday:bday,notes:bnotes,status:"חדש",actions:[],created:new Date().toLocaleDateString("he")};var nb=[...buyers,b];setBuyers(nb);sv("buyers",nb);setBn("");setBp("");setBa("באר שבע");setBday("");setBnotes("");setMode("list")}
-function delS(id){var ns=sellers.filter(s=>s.id!==id);setSellers(ns);sv("sellers",ns);setSel(null);setMode("list")}
-function delB(id){var nb=buyers.filter(b=>b.id!==id);setBuyers(nb);sv("buyers",nb);setSel(null);setMode("list")}
-function addImg(id,img){var ns=sellers.map(s=>s.id===id?{...s,images:[...(s.images||[]),img]}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
-function remImg(id,iid){var ns=sellers.map(s=>s.id===id?{...s,images:(s.images||[]).filter(i=>i.id!==iid)}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
-function updF(id,f,v){var ns=sellers.map(s=>s.id===id?{...s,[f]:v}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
-function toggleAct(type,id,action){if(type==="s"){var ns=sellers.map(s=>{if(s.id!==id)return s;var a=s.actions.includes(action)?s.actions.filter(x=>x!==action):[...s.actions,action];return{...s,actions:a}});setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}else{var nb=buyers.map(b=>{if(b.id!==id)return b;var a=b.actions.includes(action)?b.actions.filter(x=>x!==action):[...b.actions,action];return{...b,actions:a}});setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}}
-var sActs=["שיחה ראשונית","פגישה בנכס","הסכם שיווק","צולמו תמונות","פורסם","הצעה התקבלה","עסקה נסגרה"];
-var bActs=["שיחה ראשונית","נשלחו פרטים","נשלחו תמונות","סיור בוצע","הצעת מחיר","עסקה נסגרה"];
-function genSellerWA(s){return "שלום "+s.name+" 👋\n\nחיים בן סימון מרימקס באר שבע.\n\nיש לי קונים רציניים עם הון עצמי שמחפשים בדיוק באזורכם.\n\nהנכס שלכם מושכר? שווה שיחה קצרה של 5 דקות? 📞\n\nחיים בן סימון | RE/MAX | 13 שנות ניסיון בבאר שבע"}
-function genBuyerWA(b,s){if(s)return "שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך — נכנסה אלי דירה ב"+s.address+" שמיד אמרתי זה בשביל "+b.name+"!\n\n🏠 "+s.rooms+" חד | "+s.size+"מ\n🏢 קומה "+s.floor+"\n💰 "+Number(s.price||0).toLocaleString()+"₪\n\nלא פרסמתי אותה עדיין. אשלח תמונות? 📸\n\nחיים | RE/MAX";return "שלום "+b.name+" 😊\nחיים בן סימון מרימקס. יש עדכון בשבילך!"}
-async function aiRewrite(){setAiLoading(true);try{var txt=await aiCall("שכתב את ההודעה הבאה בצורה יותר אישית, חמה ומשכנעת. שמור על שם חיים בן סימון מרימקס:\n\n"+waMsg,300);setWaMsg(txt)}catch(e){}setAiLoading(false)}
-var fS=sellers.filter(s=>!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase()));
-var fB=buyers.filter(b=>!search||(b.name+b.area+b.phone).toLowerCase().includes(search.toLowerCase()));
-if(mode==="view"&&sel){var isS=tab==="sellers";return <div style={{padding:C.p}} className="fade">
-<button onClick={()=>{setSel(null);setMode("list");setShowWA(false)}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button>
-<div style={{...C.card,border:"1px solid "+(isS?OR:BL)+"55"}}>
-<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-<div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:"#ede8f5"}}>{sel.name}</div><div style={{color:"#888",fontSize:15,marginTop:4}}>{sel.phone}</div></div>
-<Btn sm ch="🗑" c={RE} ghost onClick={()=>{if(isS)delS(sel.id);else delB(sel.id)}}/>
-</div>
-{isS&&<div>
-<div style={{marginBottom:16}}><Lbl t="📷 תמונות נכס"/><ImgUp images={sel.images||[]} onAdd={img=>addImg(sel.id,img)} onRemove={iid=>remImg(sel.id,iid)}/></div>
-{(sel.rooms||sel.size||sel.floor)&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>{[{l:"חדרים",v:sel.rooms},{l:"מ״ר",v:sel.size},{l:"קומה",v:sel.floor}].filter(x=>x.v).map(x=><div key={x.l} style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontSize:20,fontWeight:800,color:OR}}>{x.v}</div><div style={{fontSize:12,color:"#666",marginTop:4}}>{x.l}</div></div>)}</div>}
-{sel.price&&<div style={{display:"flex",gap:20,marginBottom:16}}><div><div style={{color:"#666",fontSize:12}}>מחיר מבוקש</div><div style={{color:OR,fontWeight:800,fontSize:20}}>{Number(sel.price||0).toLocaleString()}₪</div></div>{sel.reducedPrice&&<div><div style={{color:"#666",fontSize:12}}>מחיר מוזל</div><div style={{color:"#7ec97e",fontWeight:800,fontSize:20}}>{Number(sel.reducedPrice||0).toLocaleString()}₪</div></div>}</div>}
-<div style={{background:"rgba(201,168,76,0.06)",borderRadius:12,padding:14,marginBottom:16,border:"1px solid rgba(201,168,76,0.2)"}}>
-<Lbl t="📋 בלעדיות"/>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-<div><div style={{color:"#666",fontSize:11,marginBottom:4}}>תחילה</div><input value={sel.exclusiveStart||""} onChange={e=>updF(sel.id,"exclusiveStart",e.target.value)} placeholder="DD/MM/YY" style={{...C.inp,fontSize:14}}/></div>
-<div><div style={{color:"#666",fontSize:11,marginBottom:4}}>סיום</div><input value={sel.exclusiveEnd||""} onChange={e=>updF(sel.id,"exclusiveEnd",e.target.value)} placeholder="DD/MM/YY" style={{...C.inp,fontSize:14}}/></div>
-</div>
-</div>
-</div>}
-{sel.notes&&<div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"12px 16px",fontSize:14,color:"#bbb",lineHeight:1.7,marginBottom:16}}>{sel.notes}</div>}
-<Lbl t="מעקב פעולות"/>
-{(isS?sActs:bActs).map(a=>{var done=sel.actions.includes(a);return <div key={a} onClick={()=>toggleAct(isS?"s":"b",sel.id,a)} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",cursor:"pointer"}}><div style={{width:24,height:24,borderRadius:"50%",background:done?"#7ec97e":"transparent",border:"2px solid "+(done?"#7ec97e":"#444"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#1a1208",flexShrink:0}}>{done?"✓":""}</div><span style={{fontSize:15,color:done?"#7ec97e":"#aaa"}}>{a}</span></div>})}
-<div style={{marginTop:18,display:"flex",gap:10,flexWrap:"wrap"}}>
-{sel.phone&&<Btn sm ch="💬 ווטסאפ" c={GR} onClick={()=>openWA(sel.phone)}/>}
-{isS&&<Btn sm ch="📤 גיוס בלעדיות" c={OR} onClick={()=>{setWaMsg(genSellerWA(sel));setShowWA(true)}}/>}
-{!isS&&<Btn sm ch="🏠 שלח דירה" c={BL} onClick={()=>{setWaMsg(genBuyerWA(sel,sellers[0]));setShowWA(true)}}/>}
-</div>
-{showWA&&<div style={{marginTop:14,...C.cg,border:"1px solid rgba(37,211,102,0.3)"}}>
-<Lbl t="✏️ ערוך ושלח"/>
-<textarea value={waMsg} onChange={e=>setWaMsg(e.target.value)} rows={8} style={{...C.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",marginBottom:10,lineHeight:1.7,fontSize:14}}/>
-<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-{sel.phone&&<Btn full ch="📱 שלח ווטסאפ" c={GR} onClick={()=>openWA(sel.phone,waMsg)}/>}
-<Btn sm ghost ch={aiLoading?"🤖...":"🤖 שכתב AI"} onClick={aiRewrite} dis={aiLoading}/>
-<Btn sm ghost ch="סגור" onClick={()=>setShowWA(false)}/>
-</div>
-</div>}
-</div>
-<PublishCard seller={sel} buyers={buyers}/>
-</div>}
-if(mode==="add"&&tab==="sellers"){return <div style={{padding:C.p}} className="fade"><button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button><div style={{...C.card,border:"1px solid "+OR+"55"}}><div style={{fontWeight:800,color:OR,fontSize:17,marginBottom:18}}>🏡 מוכר חדש</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="שם *" ph="ישראל ישראלי" val={sn} set={setSn} mb={10}/><Inp label="טלפון *" ph="050-0000000" val={sp} set={setSp} mb={10}/></div><Inp label="כתובת" ph="רחוב הרצל 10" val={sa} set={setSa} mb={10}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="עיר" ph="באר שבע" val={sc} set={setSc} mb={10}/><Inp label="מחיר" ph="800000" val={sprice} set={setSprice} mb={10}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><Inp label="חדרים" ph="4" val={sr} set={setSr} mb={10}/><Inp label="מ״ר" ph="80" val={ss} set={setSs} mb={10}/><Inp label="קומה" ph="3" val={sf} set={setSf} mb={10}/></div><Inp label="מחיר מוזל" ph="750000" val={sred} set={setSred} mb={10}/><div style={{background:"rgba(201,168,76,0.06)",borderRadius:14,padding:14,marginBottom:14,border:"1px solid rgba(201,168,76,0.2)"}}><Lbl t="📋 בלעדיות"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="תחילה" ph="01/01/26" val={ses} set={setSes} mb={0}/><Inp label="סיום" ph="01/04/26" val={see} set={setSee} mb={0}/></div></div><Inp label="הערות" ph="מושכרת, שוכרים, קוד כניסה..." val={snotes} set={setSnotes} rows={3} mb={14}/><div style={{marginBottom:16}}><Lbl t="📷 תמונות"/><ImgUp images={simgs} onAdd={img=>setSimgs(p=>[...p,img])} onRemove={id=>setSimgs(p=>p.filter(i=>i.id!==id))}/></div><div style={{display:"flex",gap:10}}><Btn full ch="שמור מוכר" onClick={addSeller} dis={!sn||!sp} c={OR}/><button onClick={()=>setMode("list")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px 18px",color:"#888",cursor:"pointer",fontFamily:"inherit",fontSize:14}}>ביטול</button></div></div></div>}
-if(mode==="add"&&tab==="buyers"){return <div style={{padding:C.p}} className="fade"><button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button><div style={{...C.card,border:"1px solid "+BL+"55"}}><div style={{fontWeight:800,color:BL,fontSize:17,marginBottom:18}}>👤 קונה חדש</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="שם *" ph="ישראל ישראלי" val={bn} set={setBn} mb={10}/><Inp label="טלפון *" ph="050-0000000" val={bp} set={setBp} mb={10}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Sel label="תקציב" val={bb} set={setBb} opts={[{v:"עד-600K",l:"עד 600K"},{v:"600K-1M",l:"600K-1M"},{v:"1M-1.5M",l:"1-1.5M"},{v:"1.5M+",l:"1.5M+"}]} mb={10}/><Sel label="חדרים" val={br} set={setBr} opts={[{v:"1-2",l:"1-2"},{v:"2-3",l:"2-3"},{v:"3-4",l:"3-4"},{v:"4-5",l:"4-5"},{v:"5+",l:"5+"}]} mb={10}/></div><Inp label="אזור" ph="באר שבע, שכונה ד..." val={ba} set={setBa} mb={10}/><div style={{marginBottom:14}}><Lbl t="יום הולדת"/><input type="date" value={bday} onChange={e=>setBday(e.target.value)} style={C.inp}/></div><Inp label="הערות" ph="חניה חובה, קומה גבוהה..." val={bnotes} set={setBnotes} rows={2} mb={14}/><div style={{display:"flex",gap:10}}><Btn full ch="שמור קונה" onClick={addBuyer} dis={!bn||!bp} c={BL}/><button onClick={()=>setMode("list")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px 18px",color:"#888",cursor:"pointer",fontFamily:"inherit",fontSize:14}}>ביטול</button></div></div></div>}
-return <div style={{padding:C.p}} className="fade">
-<div style={{display:"flex",gap:10,marginBottom:14,overflowX:"auto",paddingBottom:4}}><Pill ch={"🏡 מוכרים ("+sellers.length+")"} active={tab==="sellers"} onClick={()=>{setTab("sellers");setMode("list");setSel(null)}} c={OR}/><Pill ch={"👥 קונים ("+buyers.length+")"} active={tab==="buyers"} onClick={()=>{setTab("buyers");setMode("list");setSel(null)}} c={BL}/></div>
-<div style={{display:"flex",gap:10,marginBottom:14}}><input placeholder="🔍 חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={{...C.inp,flex:1}}/><Btn sm ch="+ הוסף" onClick={()=>setMode("add")} c={tab==="sellers"?OR:BL}/></div>
-{tab==="sellers"&&<div>{fS.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:40,marginBottom:10}}>🏡</div>אין מוכרים</div>}{fS.map(s=><div key={s.id} style={C.card}>{s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:110,height:80,objectFit:"cover",borderRadius:10,border:"1px solid rgba(201,168,76,0.2)",flexShrink:0}}/>)}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#888",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#777",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}{s.size?" · "+s.size+"מ":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={s.price?Number(s.price||0).toLocaleString()+"₪":"—"}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>{s.notes&&<div style={{color:"#777",fontSize:13,marginBottom:10,background:"rgba(0,0,0,0.15)",borderRadius:10,padding:"8px 12px",lineHeight:1.5}}>{s.notes.substring(0,90)}{s.notes.length>90?"...":""}</div>}<div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div></div>)}</div>}
-{tab==="buyers"&&<div>{fB.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:40,marginBottom:10}}>👥</div>אין קונים</div>}{fB.map(b=><div key={b.id} style={C.card}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div><div style={{color:"#888",fontSize:14,marginTop:3}}>{b.phone} · {b.area} · {b.budget}</div></div><Tag c={BL} ch={b.status}/></div>{b.notes&&<div style={{color:"#777",fontSize:13,marginBottom:10,background:"rgba(0,0,0,0.15)",borderRadius:10,padding:"8px 12px"}}>{b.notes}</div>}<div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={BL} onClick={()=>{setSel(b);setMode("view")}}/>{b.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(b.phone)}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delB(b.id)}/></div></div>)}</div>}
-</div>}
-function PublishCard({seller,buyers}){var[platform,setPlatform]=useState("whatsapp");var[loading,setLoading]=useState(false);var[result,setResult]=useState(null);var[open,setOpen]=useState(false);var s=seller;var pls=[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}];async function gen(){setLoading(true);setResult(null);var prompts={whatsapp:"כתוב הודעת ווטסאפ שיווקית. חם, אישי, עם אמוג'י. עד 8 שורות.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, קומה "+s.floor+", "+s.price+"₪"+(s.notes?", "+s.notes:""),yad2:"כתוב מודעת יד2. כותרת + תיאור + פרטים טכניים. עד 150 מילה.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪",facebook:"כתוב פוסט פייסבוק שיווקי. 6-8 שורות עם אמוג'י.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",instagram:"כתוב קפשן אינסטגרם. 3-5 שורות + האשטגים.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",tiktok:"סקריפט טיקטוק 45 שניות. HOOK + גוף + CTA.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪"};try{var txt=await aiCall(prompts[platform],500);setResult(txt)}catch(e){setResult("שגיאה — נסה שוב")}setLoading(false)}if(!open)return <button onClick={()=>setOpen(true)} style={{width:"100%",background:"rgba(155,142,196,0.08)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:14,padding:"14px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit",marginTop:10}}>📣 צור פרסום לנכס</button>;return <div style={{marginTop:12}}><Lbl t="📣 פרסום לנכס"/><div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto",paddingBottom:4}}>{pls.map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={platform===p.k} onClick={()=>{setPlatform(p.k);setResult(null)}} c={p.c}/>)}</div><Btn full ch={loading?"🤖 מייצר...":"🤖 צור "+(pls.find(p=>p.k===platform)?.l||"")} onClick={gen} dis={loading}/>{result&&<div style={{marginTop:12}}><textarea value={result} onChange={e=>setResult(e.target.value)} rows={7} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:10}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button onClick={()=>navigator.clipboard.writeText(result)} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:10,padding:"10px 16px",color:G,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 העתק</button>{platform==="whatsapp"&&<button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(result),"_blank")} style={{background:"rgba(37,211,102,0.12)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:10,padding:"10px 16px",color:GR,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📱 שלח</button>}{platform==="whatsapp"&&buyers.slice(0,3).map(b=><button key={b.id} onClick={()=>b.phone&&openWA(b.phone,result)} style={{background:"rgba(126,184,201,0.1)",border:"1px solid rgba(126,184,201,0.3)",borderRadius:10,padding:"10px 14px",color:BL,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>→ {b.name}</button>)}<button onClick={gen} style={{background:"rgba(155,142,196,0.1)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:10,padding:"10px 16px",color:PU,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄</button></div></div>}</div>}
-function Broker({buyers}){var[rawText,setRawText]=useState("");var[rawImgs,setRawImgs]=useState([]);var[result,setResult]=useState(null);var[loading,setLoading]=useState(false);var imgRef=useRef();async function rewrite(){setLoading(true);setResult(null);try{var txt=await aiCall("שכתב את פרטי הנכס הבאים כהודעת ווטסאפ אישית של חיים בן סימון מרימקס באר שבע לקונה. כלול פרטים טכניים עם אמוג'י. עד 10 שורות.\n\n"+rawText,500);setResult(txt)}catch(e){setResult("שגיאה — נסה שוב")}setLoading(false)}function addImg(files){Array.from(files).forEach(f=>{var r=new FileReader();r.onload=e=>setRawImgs(p=>[...p,{id:Date.now()+Math.random(),url:e.target.result}]);r.readAsDataURL(f)})}return <div style={{padding:C.p}} className="fade"><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🤝 מתווכים</div><div style={{color:"#888",fontSize:14,marginBottom:16}}>קיבלת נכס ממתווך? המר לשפה שלך ושלח לקונים</div><div style={C.card}><Lbl t="📋 הדבק פרטי נכס"/><textarea placeholder="4 חד 110מ דיזנגוף באר שבע קומה 3 מחיר 850K חניה מרפסת..." value={rawText} onChange={e=>{setRawText(e.target.value);setResult(null)}} rows={4} style={{...C.inp,resize:"none",marginBottom:12}}/><div style={{marginBottom:12}}><Lbl t="📷 תמונות שקיבלת"/><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>{rawImgs.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} style={{width:90,height:72,objectFit:"cover",borderRadius:10,border:"1px solid rgba(201,168,76,0.2)"}}/><button onClick={()=>setRawImgs(p=>p.filter(i=>i.id!==img.id))} style={{position:"absolute",top:-7,left:-7,width:22,height:22,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>)}<button onClick={()=>imgRef.current.click()} style={{width:90,height:72,borderRadius:10,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:22}}>📷</span>הוסף</button></div><input ref={imgRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>addImg(e.target.files)}/></div><Btn full ch={loading?"🤖 משכתב...":"🤖 שכתב בשפה שלי"} onClick={rewrite} dis={!rawText.trim()||loading}/></div>{result&&<div style={{...C.cg,border:"1px solid rgba(37,211,102,0.3)"}}><Lbl t="✏️ ערוך ושלח"/><textarea value={result} onChange={e=>setResult(e.target.value)} rows={9} style={{...C.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",marginBottom:12,lineHeight:1.7,fontSize:14}}/>{rawImgs.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{rawImgs.map(img=><img key={img.id} src={img.url} style={{width:100,height:80,objectFit:"cover",borderRadius:10,flexShrink:0}}/>)}</div>}<Lbl t="שלח לקונים:"/>{buyers.length===0&&<div style={{color:"#555",fontSize:14}}>אין קונים במאגר</div>}{buyers.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#888",fontSize:13}}>{b.phone} · {b.area} · {b.budget}</div></div>{b.phone&&<Btn sm ch="💬 שלח" c={GR} onClick={()=>openWA(b.phone,result)}/>}</div>)}</div>}</div>}
-function Tiktok(){var[script,setScript]=useState("");var[loading,setLoading]=useState(false);var[custom,setCustom]=useState("");var[selDay,setSelDay]=useState(null);var[selT,setSelT]=useState(null);var plan=[{day:"ראשון",time:"18:00",type:"השוואה",dur:"45שנ",icon:"📊",color:BL,why:"תוכן השוואה מקבל 3X שיתופים",topics:["כמה עולה דירה 3 חדרים בכל שכונה בבאר שבע?","שכונה ד vs שכונה ה — איפה כדאי?","מה מקבלים ב700K בבאר שבע ב-2026?"]},{day:"שלישי",time:"20:00",type:"סיפור",dur:"60-90שנ",icon:"🎭",color:PU,why:"סיפורי לפני/אחרי מגיעים ל300K צפיות",topics:["לקוח שסירב לדירה — 3 חודשים אחר כך בכה לי","הדירה שנמכרה ב+200K ממה שביקשו","סיור בדירה שלא תאמינו מה מצאתי"]},{day:"חמישי",time:"19:00",type:"חינוך",dur:"45שנ",icon:"🎓",color:G,why:"תוכן חינוכי = 40% יותר עוקבים",topics:["3 טעויות שקונה דירה עושה ואיך להימנע","מה לשאול מוכר דירה לפני שמציעים","מה זה בלעדיות ולמה זה טוב לך"]},{day:"שבת",time:"10:00",type:"Quick tip",dur:"30שנ",icon:"⚡",color:OR,why:"תוכן קצר בשבת = פי 2 engagement",topics:["שאלה אחת שחוסכת לך 50K","הסוד שמתווכים לא מספרים על תמחור","לפני ואחרי שיפוץ — באר שבע 2026"]}];async function gen(topic,type,dur){setLoading(true);setScript("");try{var txt=await aiCall("צור סקריפט טיקטוק מלא לחיים בן סימון מתווך רימקס באר שבע 13 שנה.\nנושא: \""+topic+"\" | סוג: "+type+" | אורך: "+dur+"\n\nכלול:\n🎬 HOOK שנ׳ 0-3\n---\n📢 גוף שנ׳ 3-35 מילה במילה\n---\n🎯 CTA שנ׳ 35-45\n---\n🎥 B-ROLL\n---\n✂️ קאפקאט\n---\n#האשטגים (10)",1400);setScript(txt)}catch(e){setScript("שגיאה — ודא חיבור לאינטרנט")}setLoading(false)}return <div style={{padding:C.p}} className="fade"><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🎬 תוכנית טיקטוק</div><div style={{color:"#888",fontSize:14,marginBottom:16}}>מבוססת אלגוריתם טיקטוק לנדל״ן ישראל</div>{plan.map(d=>{var open=selDay&&selDay.day===d.day;return <div key={d.day} style={{marginBottom:12}}><button onClick={()=>{setSelDay(open?null:d);setSelT(null);setScript("")}} style={{width:"100%",background:open?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)",border:"1px solid "+(open?d.color+"55":"rgba(255,255,255,0.08)"),borderRadius:open?"14px 14px 0 0":14,padding:"16px 18px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:26}}>{d.icon}</span><div style={{textAlign:"right"}}><div style={{display:"flex",gap:8,marginBottom:4}}><Tag c={d.color} ch={d.day}/><Tag c="#555" ch={d.time}/><Tag c={G} ch={d.dur}/></div><div style={{color:"#888",fontSize:13}}>{d.type}</div></div></div><span style={{color:open?d.color:"#444",fontSize:20}}>{open?"▲":"▼"}</span></button>{open&&<div style={{border:"1px solid "+d.color+"22",borderTop:"none",borderRadius:"0 0 14px 14px",padding:16,background:"rgba(0,0,0,0.2)"}}><div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:14,color:"#888"}}>💡 {d.why}</div>{d.topics.map((t,i)=>{var isSel=selT===t;return <div key={i} style={{...C.card,border:isSel?"1px solid "+d.color+"55":"1px solid rgba(255,255,255,0.08)",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center"}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:15,flex:1,lineHeight:1.4}}>{t}</div><Btn sm ch="סקריפט" c={d.color} onClick={()=>{setSelT(t);gen(t,d.type,d.dur)}}/></div>{isSel&&<div style={{marginTop:14}}>{loading&&<div style={{textAlign:"center",padding:20,color:"#888",fontSize:15}}>🤖 מכין...</div>}{script&&!loading&&<div><div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:16,marginBottom:12,color:"#d0c8e8",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{script}</div><div style={{display:"flex",gap:10}}><button onClick={()=>navigator.clipboard.writeText(script)} style={{flex:1,background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:10,padding:"11px",color:G,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 העתק</button><button onClick={()=>gen(t,d.type,d.dur)} style={{flex:1,background:"rgba(155,142,196,0.1)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:10,padding:"11px",color:PU,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄 גרסה חדשה</button></div></div>}</div>}</div>})}</div>}</div>})}<div style={{...C.card,marginTop:8}}><Lbl t="✏️ נושא חופשי"/><input placeholder="נושא לסרטון..." value={custom} onChange={e=>setCustom(e.target.value)} style={{...C.inp,marginBottom:10}}/><Btn full ch={loading?"🤖 מכין...":"🎬 צור סקריפט"} onClick={()=>{if(custom.trim()){setSelT("c");gen(custom,"חופשי","45-60שנ")}}} dis={!custom.trim()||loading}/></div></div>}
-function University(){var[topic,setTopic]=useState("");var[loading,setLoading]=useState(false);var[content,setContent]=useState(null);var[cat,setCat]=useState("market");var cats=[{k:"market",l:"שוק נדל\"ן",i:"📈",c:G},{k:"law",l:"דיני מקרקעין",i:"⚖️",c:BL},{k:"sales",l:"מכירות",i:"💬",c:GR},{k:"finance",l:"מימון",i:"💰",c:OR},{k:"marketing",l:"שיווק",i:"📱",c:PU},{k:"ai",l:"כלי AI",i:"🤖",c:TE},{k:"general",l:"ידע כללי",i:"🌍",c:RE}];var topics={market:["מגמות מחירים בבאר שבע 2026","השפעת הריבית על שוק הנדלן","שכונות בצמיחה — איפה לקנות","מדד מחירי דירות — איך לקרוא"],law:["מה זה טאבו ולמה חשוב לבדוק","הסכם בלעדיות — מה כדאי לדעת","חובות הגילוי של מוכר דירה","מסמכי העברת בעלות"],sales:["SPIN Selling לנדל\"ן","איך להתמודד עם 'אני צריך לחשוב'","בניית rapport עם לקוחות","מו\"מ — מתי לוותר ומתי להחזיק"],finance:["מסלולי משכנתא — פריים vs קבוע","מה זה LTV ואיך הוא משפיע","מענקים לרוכשי דירה ראשונה","מחזור משכנתא — מתי כדאי?"],marketing:["אלגוריתם טיקטוק 2026 לנדלן","כתיבה שיווקית שמוכרת דירות","בניית מותג אישי כמתווך","SEO לדפי נכסים"],ai:["ChatGPT לכתיבת מודעות נדלן","Claude AI — איך להשתמש נכון","Midjourney ליצירת תמונות נכסים","Make.com — אוטומציות פשוטות","כלים AI לשיווק נדלן 2026"],general:["כלכלה ישראלית 2026 — מה שמתווך חייב לדעת","פסיכולוגיה של קבלת החלטות קנייה","ניהול זמן יעיל ליום עמוס","בינה מלאכותית ועתיד שוק הנדלן"]};async function learn(t){setLoading(true);setContent(null);try{var txt=await aiCall("מרצה מומחה שמלמד חיים בן סימון מתווך רימקס באר שבע.\nנושא: \""+t+"\"\n\nצור שיעור:\n📚 תקציר מנהלים (3 משפטים)\n---\n🔑 5 נקודות מפתח\n---\n💼 יישום מעשי יומיומי\n---\n📖 מקורות מומלצים\n---\n✅ שאלה לחשוב עליה",1200);setContent({topic:t,text:txt})}catch(e){setContent({topic:t,text:"שגיאה — ודא חיבור לאינטרנט ונסה שוב"})}setLoading(false)}return <div style={{padding:C.p}} className="fade"><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🎓 אוניברסיטת נדל"ן</div><div style={{color:"#888",fontSize:14,marginBottom:16}}>למידה יומית · העשרה מקצועית · צמיחה עסקית</div><div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:16}}>{cats.map(c=><Pill key={c.k} ch={c.i+" "+c.l} active={cat===c.k} onClick={()=>setCat(c.k)} c={c.c}/>)}</div>{!content&&!loading&&<div><div style={{color:"#666",fontSize:13,fontWeight:700,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>נושאים מומלצים</div><div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>{(topics[cat]||[]).map((t,i)=><button key={i} onClick={()=>learn(t)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,fontFamily:"inherit",textAlign:"right"}}><span style={{fontSize:22,flexShrink:0}}>{cats.find(c=>c.k===cat)?.i}</span><span style={{color:"#d0c090",fontSize:15,flex:1,fontWeight:600}}>{t}</span><span style={{color:"#444",fontSize:18}}>←</span></button>)}</div><div style={C.card}><Lbl t="נושא שלי"/><input placeholder="כתוב נושא..." value={topic} onChange={e=>setTopic(e.target.value)} onKeyDown={e=>e.key==="Enter"&&topic.trim()&&learn(topic)} style={{...C.inp,marginBottom:10}}/><Btn full ch="🎓 למד עכשיו" onClick={()=>learn(topic)} dis={!topic.trim()}/></div></div>}{loading&&<div style={{...C.card,textAlign:"center",padding:40}}><div style={{fontSize:44,marginBottom:14}}>🎓</div><div style={{color:G,fontWeight:700,fontSize:17}}>מכין שיעור...</div></div>}{content&&!loading&&<div className="fade"><button onClick={()=>setContent(null)} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזרה</button><div style={C.cg}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:18,color:G,marginBottom:14}}>{content.topic}</div><div style={{color:"#d0c8e8",fontSize:15,lineHeight:2,whiteSpace:"pre-wrap"}}>{content.text}</div><div style={{display:"flex",gap:10,marginTop:18}}><button onClick={()=>navigator.clipboard.writeText(content.text)} style={{flex:1,background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:12,padding:"12px",color:G,fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 שמור</button><button onClick={()=>setContent(null)} style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"12px",color:"#888",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>נושא חדש</button></div></div></div>}</div>}
-function Assistant({buyers,setBuyers,sellers,setSellers,tasks,setTasks}){var[msgs,setMsgs]=useState([{role:"ai",text:"שלום חיים! 👋\n\nאני העוזר האישי שלך.\nדבר אלי בחופשיות — מה תרצה?"}]);var[cmd,setCmd]=useState("");var[loading,setLoading]=useState(false);var[showV,setShowV]=useState(false);var[vt,setVt]=useState("");var bot=useRef();useEffect(()=>{bot.current?.scrollIntoView({behavior:"smooth"})},[msgs]);function addMsg(r,t){setMsgs(m=>[...m,{role:r,text:t}])}async function run(input){var c=input||cmd;if(!c.trim())return;setCmd("");addMsg("user",c);setLoading(true);try{var sl=sellers.slice(0,15).map(s=>s.name+"|"+s.phone+"|"+s.address+"|"+s.city+"|"+s.rooms+"חד|"+s.price+"₪|בלע׳:"+s.exclusiveEnd).join("\n");var bl=buyers.slice(0,10).map(b=>b.name+"|"+b.phone+"|"+b.area+"|"+b.budget).join(", ");var prompt="עוזר של חיים בן סימון רימקס באר שבע 13 שנה.\n\nמוכרים:\n"+sl+"\n\nקונים: "+bl+"\n\nפקודה: \""+c+"\"\n\nענה JSON:\n{\"action\":\"INFO|SCHEDULE|WHATSAPP|FIND_MATCH\",\"response\":\"תשובה ברורה\",\"details\":\"\",\"waMessage\":\"\",\"taskText\":\"\",\"taskTime\":\"\"}";var txt=await aiCall(prompt,600);var r=JSON.parse(txt.replace(/```json|```/g,"").trim());if(r.action==="SCHEDULE"&&r.taskText){var t=[...tasks,{id:Date.now(),text:r.taskText,time:r.taskTime||"—",done:false,type:"remind"}];setTasks(t);sv("tasks",t)}addMsg("ai",r.response+(r.details?"\n\n"+r.details:"")+(r.waMessage?"\n\n💬 הודעה:\n"+r.waMessage:""))}catch(e){addMsg("ai","שגיאה — ודא חיבור לאינטרנט")}setLoading(false)}var examples=["מי מהקונים מתאים ל-3 חדרים עד 700K?","מה המוכרים עם בלעדיות שפגה?","תזכורת להתקשר לירדן מחר 10:00","כמה מוכרים יש לי בשכונה ד?"];return <div style={{...{padding:C.p},paddingBottom:160}} className="fade"><div style={{marginBottom:16}}>{msgs.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-start":"flex-end",marginBottom:12}}><div style={{maxWidth:"90%",background:m.role==="user"?"rgba(201,168,76,0.12)":"rgba(255,255,255,0.06)",border:"1px solid "+(m.role==="user"?"rgba(201,168,76,0.28)":"rgba(255,255,255,0.1)"),borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"14px 18px",fontSize:15,color:m.role==="user"?"#f0d888":"#d0c8e8",lineHeight:1.75,whiteSpace:"pre-wrap"}}>{m.role==="ai"&&<span style={{fontSize:12,color:G,fontWeight:700,display:"block",marginBottom:6}}>🤖 עוזר AI</span>}{m.text}</div></div>)}{loading&&<div style={{display:"flex",justifyContent:"flex-end"}}><div style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"16px 16px 16px 4px",padding:"14px 18px",color:"#888",fontSize:15}}>🤖 מעבד...</div></div>}<div ref={bot}/></div>{msgs.length===1&&<div style={{marginBottom:16}}>{examples.map((ex,i)=><button key={i} onClick={()=>run(ex)} style={{display:"block",width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"12px 16px",cursor:"pointer",fontFamily:"inherit",textAlign:"right",color:"#bbb",fontSize:14,marginBottom:8}}>→ {ex}</button>)}</div>}<div style={{position:"fixed",bottom:82,right:0,left:0,padding:"12px 14px",background:"rgba(7,6,13,0.97)",borderTop:"1px solid rgba(201,168,76,0.15)",backdropFilter:"blur(20px)"}}>{showV&&<div style={{marginBottom:10}} className="fade"><div style={{color:G,fontSize:13,fontWeight:700,marginBottom:6}}>מה אמרת? כתוב:</div><div style={{display:"flex",gap:8}}><input placeholder="כתוב..." value={vt} onChange={e=>setVt(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&vt.trim()){run(vt);setShowV(false);setVt("")}}} style={{...C.inp,flex:1}}/><Btn sm ch="▶" c={G} onClick={()=>{run(vt);setShowV(false);setVt("")}} dis={!vt.trim()}/></div></div>}<div style={{display:"flex",gap:10,alignItems:"center"}}><VoiceBtn size={52} onText={t=>{if(t==="__voice__")setShowV(v=>!v)}}/><input placeholder="כתוב פקודה..." value={cmd} onChange={e=>setCmd(e.target.value)} onKeyDown={e=>e.key==="Enter"&&cmd.trim()&&run()} style={{...C.inp,flex:1}}/><Btn sm ch="שלח" onClick={()=>run()} dis={!cmd.trim()||loading} c={G}/></div></div></div>}
-function WeeklyReport({sellers}){var DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פרסום פעיל בכל הפלטפורמות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n📅 בלעדיות בתוקף עד: {סיום}\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";var[template,setTemplate]=useState(lv("report_tpl",DEF));var[sel,setSel]=useState(null);var[preview,setPreview]=useState("");var[loading,setLoading]=useState(false);function genPrev(){if(!sel)return;var s=sel;var msg=template.replace("{כתובת}",s.address||"").replace("{שם}",s.name||"").replace("{מחיר}",s.price?Number(s.price||0).toLocaleString():"").replace("{סיום}",s.exclusiveEnd||"").replace(/{מספר}/g,Math.floor(Math.random()*5+2)).replace("{המלצה}","להוריד מחיר ב-20,000₪ לפי מחירי השוק");setPreview(msg)}async function aiGen(){if(!sel)return;setLoading(true);try{var s=sel;var txt=await aiCall("כתוב דיווח שבועי מקצועי וחם של חיים בן סימון מרימקס לבעל נכס "+s.name+". נכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪, בלעדיות עד "+s.exclusiveEnd+". כלול מצב שיווקי, פניות, המלצה. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}return <div style={{padding:C.p}} className="fade"><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>📊 דיווח שבועי</div><div style={{color:"#888",fontSize:14,marginBottom:16}}>ערוך תבנית ושלח בלחיצה</div><div style={C.card}><Lbl t="תבנית (עריכה חופשית)"/><textarea value={template} onChange={e=>{setTemplate(e.target.value);sv("report_tpl",e.target.value)}} rows={12} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:10}}/><div style={{color:"#888",fontSize:12,marginBottom:12}}>משתנים: {"{שם}"} {"{כתובת}"} {"{מחיר}"} {"{סיום}"}</div><Sel label="בחר מוכר" val={sel?String(sel.id):""} set={v=>{setSel(sellers.find(s=>s.id===parseInt(v))||null);setPreview("")}} opts={[{v:"",l:"— בחר מוכר —"},...sellers.map(s=>({v:String(s.id),l:s.name+" — "+(s.address||"")}))]}/>{sel&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Btn sm ch="👁 תצוגה מקדימה" onClick={genPrev} c={BL}/><Btn sm ch={loading?"🤖...":"🤖 AI דיווח"} onClick={aiGen} dis={loading} c={PU}/></div>}</div>{preview&&<div style={{...C.cg,border:"1px solid rgba(37,211,102,0.3)"}}><Lbl t="תצוגה — ערוך לפני שליחה"/><textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={12} style={{...C.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",fontSize:14,lineHeight:1.7,marginBottom:12}}/>{sel&&sel.phone&&<Btn full ch="📱 שלח בווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)}/>}</div>}</div>}
-var TABS=[{k:"home",l:"בית",i:"🏠"},{k:"daily",l:"יומי",i:"📅"},{k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווכים",i:"🤝"},{k:"report",l:"דיווח",i:"📊"},{k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"ai",l:"עוזר",i:"🤖"},{k:"uni",l:"אוניברסיטה",i:"🎓"}];
-function App(){var[tab,setTab]=useState("home");var[buyers,setBuyers]=useState(()=>lv("buyers",[]));var[sellers,setSellers]=useState(()=>{var s=lv("sellers",null);return s&&s.length>0?s:IS});var[tasks,setTasks]=useState(()=>lv("tasks",[]));return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:90}}><div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 70% 50% at 15% 10%,rgba(120,80,200,0.09) 0%,transparent 60%)",pointerEvents:"none",zIndex:0}}/><div style={{position:"relative",zIndex:1}}><div style={{background:"rgba(7,6,13,0.96)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(201,168,76,0.14)",padding:"14px 16px",position:"sticky",top:0,zIndex:100}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:G}}>NadlanPro</div><div style={{fontSize:11,color:"#555",marginTop:1}}>RE/MAX · חיים בן סימון · באר שבע</div></div><div style={{background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",borderRadius:20,padding:"4px 12px",fontSize:11,color:GR,fontWeight:700,display:"flex",alignItems:"center",gap:5}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div></div></div>{tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks}/>}{tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}{tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers}/>}{tab==="broker"&&<Broker buyers={buyers}/>}{tab==="report"&&<WeeklyReport sellers={sellers}/>}{tab==="tiktok"&&<Tiktok/>}{tab==="ai"&&<Assistant buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} tasks={tasks} setTasks={setTasks}/>}{tab==="uni"&&<University/>}<nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(20px)",borderTop:"1px solid rgba(201,168,76,0.14)",display:"flex",zIndex:200,padding:"6px 0 10px"}}>{TABS.map(t=>{var active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"6px 4px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,minWidth:44,position:"relative"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:2.5,background:G,borderRadius:2}}/>}<span style={{fontSize:17}}>{t.i}</span><span style={{fontSize:9,fontWeight:700,color:active?G:"#333",fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span></button>})}</nav></div></div>}
+  var[tab,setTab]=useState("sellers");
+  var[mode,setMode]=useState("list");
+  var[sel,setSel]=useState(null);
+  var[search,setSearch]=useState("");
+  var[recruitSeller,setRecruitSeller]=useState(null);
+  var[sendToBuyer,setSendToBuyer]=useState(null);
+
+  // seller form
+  var[sn,setSn]=useState("");var[sp,setSp]=useState("");var[sa,setSa]=useState("");
+  var[sc,setSc]=useState("באר שבע");var[sr,setSr]=useState("");var[ss,setSs]=useState("");
+  var[sf,setSf]=useState("");var[sprice,setSprice]=useState("");var[sred,setSred]=useState("");
+  var[ses,setSes]=useState("");var[see,setSee]=useState("");var[snotes,setSnotes]=useState("");
+  var[simgs,setSimgs]=useState([]);
+
+  // buyer form
+  var[bn,setBn]=useState("");var[bp,setBp]=useState("");var[bb,setBb]=useState("600K-1M");
+  var[br,setBr]=useState("3-4");var[ba,setBa]=useState("באר שבע");
+  var[bday,setBday]=useState("");var[bnotes,setBnotes]=useState("");
+
+  function addSeller(){
+    if(!sn||!sp)return;
+    var s={id:Date.now(),name:sn,phone:sp,address:sa,city:sc,rooms:sr,size:ss,floor:sf,price:sprice,reducedPrice:sred,exclusiveStart:ses,exclusiveEnd:see,notes:snotes,images:simgs,actions:[],created:new Date().toLocaleDateString("he")};
+    var ns=[...sellers,s];setSellers(ns);sv("sellers",ns);
+    setSn("");setSp("");setSa("");setSc("באר שבע");setSr("");setSs("");setSf("");setSprice("");setSred("");setSes("");setSee("");setSnotes("");setSimgs([]);setMode("list");
+  }
+  function addBuyer(){
+    if(!bn||!bp)return;
+    var b={id:Date.now(),name:bn,phone:bp,budget:bb,rooms:br,area:ba,birthday:bday,notes:bnotes,grade:"B",status:"חדש",actions:[],created:new Date().toLocaleDateString("he")};
+    var nb=[...buyers,b];setBuyers(nb);sv("buyers",nb);
+    setBn("");setBp("");setBa("באר שבע");setBday("");setBnotes("");setMode("list");
+  }
+  function delS(id){var ns=sellers.filter(s=>s.id!==id);setSellers(ns);sv("sellers",ns);setSel(null);setMode("list")}
+  function delB(id){var nb=buyers.filter(b=>b.id!==id);setBuyers(nb);sv("buyers",nb);setSel(null);setMode("list")}
+  function addImg(id,img){var ns=sellers.map(s=>s.id===id?{...s,images:[...(s.images||[]),img]}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
+  function remImg(id,iid){var ns=sellers.map(s=>s.id===id?{...s,images:(s.images||[]).filter(i=>i.id!==iid)}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
+  function updF(id,f,v){var ns=sellers.map(s=>s.id===id?{...s,[f]:v}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
+  function updBuyer(id,f,v){var nb=buyers.map(b=>b.id===id?{...b,[f]:v}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
+  function toggleAct(type,id,action){
+    if(type==="s"){var ns=sellers.map(s=>{if(s.id!==id)return s;var a=s.actions.includes(action)?s.actions.filter(x=>x!==action):[...s.actions,action];return{...s,actions:a}});setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
+    else{var nb=buyers.map(b=>{if(b.id!==id)return b;var a=b.actions.includes(action)?b.actions.filter(x=>x!==action):[...b.actions,action];return{...b,actions:a}});setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
+  }
+
+  var sActs=["שיחה ראשונית","פגישה בנכס","הסכם שיווק","צולמו תמונות","פורסם","הצעה התקבלה","עסקה נסגרה"];
+  var bActs=["שיחה ראשונית","נשלחו פרטים","נשלחו תמונות","סיור בוצע","הצעת מחיר","עסקה נסגרה"];
+
+  var fS=sellers.filter(s=>!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase()));
+  var fB=buyers.filter(b=>!search||(b.name+b.area+b.phone).toLowerCase().includes(search.toLowerCase()));
+
+  // VIEW
+  if(mode==="view"&&sel){
+    var isS=tab==="sellers";
+    return <div style={{padding:C.p}} className="fade">
+      {recruitSeller&&<RecruitModal seller={recruitSeller} onClose={()=>setRecruitSeller(null)}/>}
+      {sendToBuyer&&<SendPropertyModal buyer={sendToBuyer} sellers={sellers} onClose={()=>setSendToBuyer(null)}/>}
+      <button onClick={()=>{setSel(null);setMode("list")}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button>
+      <div style={{...C.card,border:"1px solid "+(isS?OR:BL)+"55"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+          <div>
+            <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:"#ede8f5"}}>{sel.name}</div>
+            <div style={{color:"#888",fontSize:15,marginTop:4}}>{sel.phone}</div>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            {!isS&&<GradeBadge grade={sel.grade} onChange={v=>updBuyer(sel.id,"grade",v)}/>}
+            <Btn sm ch="🗑" c={RE} ghost onClick={()=>{if(isS)delS(sel.id);else delB(sel.id)}}/>
+          </div>
+        </div>
+
+        {isS&&<div>
+          <div style={{marginBottom:16}}><Lbl t="📷 תמונות נכס"/><ImgUp images={sel.images||[]} onAdd={img=>addImg(sel.id,img)} onRemove={iid=>remImg(sel.id,iid)}/></div>
+          {(sel.rooms||sel.size||sel.floor)&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+            {[{l:"חדרים",v:sel.rooms},{l:"מ״ר",v:sel.size},{l:"קומה",v:sel.floor}].filter(x=>x.v).map(x=><div key={x.l} style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontSize:20,fontWeight:800,color:OR}}>{x.v}</div><div style={{fontSize:12,color:"#666",marginTop:4}}>{x.l}</div></div>)}
+          </div>}
+          {sel.price&&<div style={{display:"flex",gap:20,marginBottom:16}}>
+            <div><div style={{color:"#666",fontSize:12}}>מחיר מבוקש</div><div style={{color:OR,fontWeight:800,fontSize:20}}>{Number(sel.price||0).toLocaleString()}₪</div></div>
+            {sel.reducedPrice&&<div><div style={{color:"#666",fontSize:12}}>מחיר מוזל</div><div style={{color:"#7ec97e",fontWeight:800,fontSize:20}}>{Number(sel.reducedPrice||0).toLocaleString()}₪</div></div>}
+          </div>}
+          <div style={{background:"rgba(201,168,76,0.06)",borderRadius:12,padding:14,marginBottom:16,border:"1px solid rgba(201,168,76,0.2)"}}>
+            <Lbl t="📋 בלעדיות"/>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><div style={{color:"#666",fontSize:11,marginBottom:5}}>תחילה</div><input value={sel.exclusiveStart||""} onChange={e=>updF(sel.id,"exclusiveStart",e.target.value)} placeholder="DD/MM/YY" style={{...C.inp,fontSize:14}}/></div>
+              <div><div style={{color:"#666",fontSize:11,marginBottom:5}}>סיום</div><input value={sel.exclusiveEnd||""} onChange={e=>updF(sel.id,"exclusiveEnd",e.target.value)} placeholder="DD/MM/YY" style={{...C.inp,fontSize:14}}/></div>
+            </div>
+          </div>
+        </div>}
+
+        {sel.notes&&<div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"12px 16px",fontSize:14,color:"#bbb",lineHeight:1.7,marginBottom:16}}>{sel.notes}</div>}
+        {sel.birthday&&<div style={{color:G,fontSize:14,marginBottom:16}}>🎂 {new Date(sel.birthday).toLocaleDateString("he")}</div>}
+
+        <Lbl t="מעקב פעולות"/>
+        {(isS?sActs:bActs).map(a=>{var done=sel.actions.includes(a);return <div key={a} onClick={()=>toggleAct(isS?"s":"b",sel.id,a)} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",cursor:"pointer"}}>
+          <div style={{width:24,height:24,borderRadius:"50%",background:done?"#7ec97e":"transparent",border:"2px solid "+(done?"#7ec97e":"#444"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#1a1208",flexShrink:0}}>{done?"✓":""}</div>
+          <span style={{fontSize:15,color:done?"#7ec97e":"#aaa"}}>{a}</span>
+        </div>)}
+
+        <div style={{marginTop:18,display:"flex",gap:10,flexWrap:"wrap"}}>
+          {sel.phone&&<Btn sm ch="💬 ווטסאפ" c={GR} onClick={()=>openWA(sel.phone)}/>}
+          {isS&&<Btn sm ch="📤 גיוס בלעדיות" c={OR} onClick={()=>setRecruitSeller(sel)}/>}
+          {!isS&&<Btn sm ch="🏠 שלח דירה" c={BL} onClick={()=>setSendToBuyer(sel)}/>}
+          {sel.phone&&<Btn sm ch="📅 יומן" ghost onClick={()=>addToCalendar("פגישה עם "+sel.name)}/>}
+        </div>
+      </div>
+      <PublishCard seller={sel} buyers={buyers}/>
+    </div>
+  }
+
+  // ADD FORMS
+  if(mode==="add"&&tab==="sellers"){return <div style={{padding:C.p}} className="fade">
+    <button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button>
+    <div style={{...C.card,border:"1px solid "+OR+"55"}}>
+      <div style={{fontWeight:800,color:OR,fontSize:17,marginBottom:18}}>🏡 מוכר חדש</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="שם *" ph="ישראל ישראלי" val={sn} set={setSn} mb={10}/><Inp label="טלפון *" ph="050-0000000" val={sp} set={setSp} mb={10}/></div>
+      <Inp label="כתובת" ph="רחוב הרצל 10" val={sa} set={setSa} mb={10}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="עיר" ph="באר שבע" val={sc} set={setSc} mb={10}/><Inp label="מחיר" ph="800000" val={sprice} set={setSprice} mb={10}/></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><Inp label="חדרים" ph="4" val={sr} set={setSr} mb={10}/><Inp label="מ״ר" ph="80" val={ss} set={setSs} mb={10}/><Inp label="קומה" ph="3" val={sf} set={setSf} mb={10}/></div>
+      <Inp label="מחיר מוזל" ph="750000" val={sred} set={setSred} mb={10}/>
+      <div style={{background:"rgba(201,168,76,0.06)",borderRadius:14,padding:14,marginBottom:14,border:"1px solid rgba(201,168,76,0.2)"}}>
+        <Lbl t="📋 בלעדיות"/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="תחילה" ph="01/01/26" val={ses} set={setSes} mb={0}/><Inp label="סיום" ph="01/04/26" val={see} set={setSee} mb={0}/></div>
+      </div>
+      <Inp label="הערות" ph="מושכרת, שוכרים, קוד כניסה..." val={snotes} set={setSnotes} rows={3} mb={14}/>
+      <div style={{marginBottom:16}}><Lbl t="📷 תמונות"/><ImgUp images={simgs} onAdd={img=>setSimgs(p=>[...p,img])} onRemove={id=>setSimgs(p=>p.filter(i=>i.id!==id))}/></div>
+      <div style={{display:"flex",gap:10}}><Btn full ch="שמור מוכר" onClick={addSeller} dis={!sn||!sp} c={OR}/><button onClick={()=>setMode("list")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px 18px",color:"#888",cursor:"pointer",fontFamily:"inherit",fontSize:14}}>ביטול</button></div>
+    </div>
+  </div>}
+
+  if(mode==="add"&&tab==="buyers"){return <div style={{padding:C.p}} className="fade">
+    <button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזור</button>
+    <div style={{...C.card,border:"1px solid "+BL+"55"}}>
+      <div style={{fontWeight:800,color:BL,fontSize:17,marginBottom:18}}>👤 קונה חדש</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="שם *" ph="ישראל ישראלי" val={bn} set={setBn} mb={10}/><Inp label="טלפון *" ph="050-0000000" val={bp} set={setBp} mb={10}/></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <Sel label="תקציב" val={bb} set={setBb} opts={[{v:"עד-600K",l:"עד 600K"},{v:"600K-1M",l:"600K-1M"},{v:"1M-1.5M",l:"1-1.5M"},{v:"1.5M+",l:"1.5M+"}]} mb={10}/>
+        <Sel label="חדרים" val={br} set={setBr} opts={[{v:"1-2",l:"1-2"},{v:"2-3",l:"2-3"},{v:"3-4",l:"3-4"},{v:"4-5",l:"4-5"},{v:"5+",l:"5+"}]} mb={10}/>
+      </div>
+      <Inp label="אזור" ph="באר שבע, שכונה ד..." val={ba} set={setBa} mb={10}/>
+      <div style={{marginBottom:10}}><Lbl t="יום הולדת"/><input type="date" value={bday} onChange={e=>setBday(e.target.value)} style={C.inp}/></div>
+      <Inp label="הערות" ph="חניה חובה..." val={bnotes} set={setBnotes} rows={2} mb={14}/>
+      <div style={{display:"flex",gap:10}}><Btn full ch="שמור קונה" onClick={addBuyer} dis={!bn||!bp} c={BL}/><button onClick={()=>setMode("list")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px 18px",color:"#888",cursor:"pointer",fontFamily:"inherit",fontSize:14}}>ביטול</button></div>
+    </div>
+  </div>}
+
+  // LIST
+  return <div style={{padding:C.p}} className="fade">
+    {recruitSeller&&<RecruitModal seller={recruitSeller} onClose={()=>setRecruitSeller(null)}/>}
+    {sendToBuyer&&<SendPropertyModal buyer={sendToBuyer} sellers={sellers} onClose={()=>setSendToBuyer(null)}/>}
+
+    <div style={{display:"flex",gap:10,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
+      <Pill ch={"🏡 מוכרים ("+sellers.length+")"} active={tab==="sellers"} onClick={()=>{setTab("sellers");setMode("list");setSel(null)}} c={OR}/>
+      <Pill ch={"👥 קונים ("+buyers.length+")"} active={tab==="buyers"} onClick={()=>{setTab("buyers");setMode("list");setSel(null)}} c={BL}/>
+    </div>
+    <div style={{display:"flex",gap:10,marginBottom:14}}>
+      <input placeholder="🔍 חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={{...C.inp,flex:1}}/>
+      <Btn sm ch="+ הוסף" onClick={()=>setMode("add")} c={tab==="sellers"?OR:BL}/>
+    </div>
+
+    {tab==="sellers"&&<div>
+      {fS.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:40,marginBottom:10}}>🏡</div>אין מוכרים</div>}
+      {fS.map(s=><div key={s.id} style={C.card}>
+        {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>
+          {s.images.map(img=><img key={img.id} src={img.url} style={{width:110,height:82,objectFit:"cover",borderRadius:10,border:"1px solid rgba(201,168,76,0.2)",flexShrink:0}}/>)}
+        </div>}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div>
+            <div style={{color:"#888",fontSize:14,marginTop:3}}>{s.phone}</div>
+            <div style={{color:"#777",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}{s.size?" · "+s.size+"מ":""}</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+            <Tag c={OR} ch={s.price?Number(s.price||0).toLocaleString()+"₪":"—"}/>
+            {s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}
+          </div>
+        </div>
+        {s.notes&&<div style={{color:"#777",fontSize:13,marginBottom:10,background:"rgba(0,0,0,0.15)",borderRadius:10,padding:"8px 12px",lineHeight:1.5}}>{s.notes.substring(0,90)}{s.notes.length>90?"...":""}</div>}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>
+          {s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}
+          <Btn sm ghost c={OR} ch="📤 גיוס" onClick={()=>setRecruitSeller(s)}/>
+          <Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/>
+        </div>
+      </div>)}
+    </div>}
+
+    {tab==="buyers"&&<div>
+      {fB.length===0&&<div style={{...C.card,textAlign:"center",color:"#555",padding:32,fontSize:15}}><div style={{fontSize:40,marginBottom:10}}>👥</div>אין קונים</div>}
+      {fB.map(b=><div key={b.id} style={C.card}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+          <div>
+            <div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div>
+            <div style={{color:"#888",fontSize:14,marginTop:3}}>{b.phone} · {b.area} · {b.budget}</div>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <GradeBadge grade={b.grade} onChange={v=>{var nb=buyers.map(x=>x.id===b.id?{...x,grade:v}:x);setBuyers(nb);sv("buyers",nb)}}/>
+          </div>
+        </div>
+        {b.notes&&<div style={{color:"#777",fontSize:13,marginBottom:10,background:"rgba(0,0,0,0.15)",borderRadius:10,padding:"8px 12px"}}>{b.notes}</div>}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <Btn sm ch="כרטיסייה" c={BL} onClick={()=>{setSel(b);setMode("view")}}/>
+          {b.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(b.phone)}/>}
+          <Btn sm ghost c={BL} ch="🏠 שלח דירה" onClick={()=>setSendToBuyer(b)}/>
+          <Btn sm ghost c={RE} ch="מחק" onClick={()=>delB(b.id)}/>
+        </div>
+      </div>)}
+    </div>}
+  </div>
+}
+
+// ── PUBLISH CARD ─────────────────────────────────────────────
+function PublishCard({seller,buyers}){
+  var[platform,setPlatform]=useState("whatsapp");
+  var[loading,setLoading]=useState(false);
+  var[result,setResult]=useState(null);
+  var[open,setOpen]=useState(false);
+  var s=seller;
+  var pls=[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}];
+
+  async function gen(){
+    setLoading(true);setResult(null);
+    var prompts={
+      whatsapp:"כתוב הודעת ווטסאפ שיווקית לנכס. חם, אישי, עם אמוג'י. עד 8 שורות.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, קומה "+s.floor+", "+s.price+"₪"+(s.notes?", "+s.notes:""),
+      yad2:"כתוב מודעת יד2. כותרת + תיאור + פרטים טכניים. עד 150 מילה.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪",
+      facebook:"כתוב פוסט פייסבוק שיווקי. 6-8 שורות עם אמוג'י.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",
+      instagram:"כתוב קפשן אינסטגרם. 3-5 שורות + האשטגים.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",
+      tiktok:"סקריפט טיקטוק 45 שניות. HOOK + גוף + CTA.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪",
+    };
+    try{var txt=await aiCall(prompts[platform],500);setResult(txt)}
+    catch(e){setResult(null)}
+    setLoading(false);
+  }
+
+  if(!open)return <button onClick={()=>setOpen(true)} style={{width:"100%",background:"rgba(155,142,196,0.08)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:14,padding:"14px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit",marginTop:10}}>📣 צור פרסום לנכס</button>;
+
+  return <div style={{marginTop:12}}>
+    <Lbl t="📣 פרסום לנכס — בחר פלטפורמה"/>
+    <div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
+      {pls.map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={platform===p.k} onClick={()=>{setPlatform(p.k);setResult(null)}} c={p.c}/>)}
+    </div>
+    <Btn full ch={loading?"🤖 מייצר...":"🤖 צור "+(pls.find(p=>p.k===platform)?.l||"")} onClick={gen} dis={loading}/>
+    {result&&<div style={{marginTop:12}}>
+      <textarea value={result} onChange={e=>setResult(e.target.value)} rows={8} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:10}}/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <button onClick={()=>navigator.clipboard.writeText(result)} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:10,padding:"10px 16px",color:G,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 העתק</button>
+        {platform==="whatsapp"&&<button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(result),"_blank")} style={{background:"rgba(37,211,102,0.12)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:10,padding:"10px 16px",color:GR,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📱 שלח</button>}
+        {platform==="whatsapp"&&buyers.slice(0,3).map(b=><button key={b.id} onClick={()=>b.phone&&openWA(b.phone,result)} style={{background:"rgba(126,184,201,0.1)",border:"1px solid rgba(126,184,201,0.3)",borderRadius:10,padding:"10px 14px",color:BL,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>→ {b.name}</button>)}
+        <button onClick={gen} style={{background:"rgba(155,142,196,0.1)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:10,padding:"10px 16px",color:PU,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄</button>
+      </div>
+    </div>}
+  </div>
+}
+
+// ── BROKER ────────────────────────────────────────────────
+function Broker({buyers}){
+  var[rawText,setRawText]=useState("");
+  var[rawImgs,setRawImgs]=useState([]);
+  var[result,setResult]=useState(null);
+  var[loading,setLoading]=useState(false);
+  var imgRef=useRef();
+
+  async function rewrite(){
+    setLoading(true);setResult(null);
+    try{
+      var txt=await aiCall("שכתב את פרטי הנכס הבאים כהודעת ווטסאפ אישית של חיים בן סימון מרימקס באר שבע לקונה. כלול פרטים טכניים עם אמוג'י. בסוף: 'חיים בן סימון | RE/MAX | באר שבע'. עד 10 שורות.\n\n"+rawText,500);
+      setResult(txt);
+    }catch(e){}
+    setLoading(false);
+  }
+
+  function addImg(files){Array.from(files).forEach(f=>{var r=new FileReader();r.onload=e=>setRawImgs(p=>[...p,{id:Date.now()+Math.random(),url:e.target.result}]);r.readAsDataURL(f)})}
+
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🤝 מתווכים</div>
+    <div style={{color:"#888",fontSize:14,marginBottom:16}}>קיבלת נכס ממתווך? המר לשפה שלך ושלח לקונים</div>
+
+    <div style={C.card}>
+      <Lbl t="📋 הדבק פרטי נכס"/>
+      <textarea placeholder="4 חד 110מ דיזנגוף באר שבע קומה 3 מחיר 850K חניה מרפסת..." value={rawText} onChange={e=>{setRawText(e.target.value);setResult(null)}} rows={4} style={{...C.inp,resize:"none",marginBottom:12}}/>
+      <div style={{marginBottom:12}}>
+        <Lbl t="📷 תמונות שקיבלת"/>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+          {rawImgs.map(img=><div key={img.id} style={{position:"relative"}}>
+            <img src={img.url} style={{width:90,height:72,objectFit:"cover",borderRadius:10,border:"1px solid rgba(201,168,76,0.2)"}}/>
+            <button onClick={()=>setRawImgs(p=>p.filter(i=>i.id!==img.id))} style={{position:"absolute",top:-7,left:-7,width:22,height:22,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+          </div>)}
+          <button onClick={()=>imgRef.current.click()} style={{width:90,height:72,borderRadius:10,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:24}}>📷</span>הוסף</button>
+        </div>
+        <input ref={imgRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>addImg(e.target.files)}/>
+      </div>
+      <Btn full ch={loading?"🤖 משכתב...":"🤖 שכתב בשפה שלי"} onClick={rewrite} dis={!rawText.trim()||loading}/>
+    </div>
+
+    {result&&<div style={{...C.cg,border:"1px solid rgba(37,211,102,0.3)"}}>
+      <Lbl t="✏️ ערוך ושלח"/>
+      <textarea value={result} onChange={e=>setResult(e.target.value)} rows={9} style={{...C.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",marginBottom:12,lineHeight:1.7,fontSize:14}}/>
+      {rawImgs.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>
+        {rawImgs.map(img=><img key={img.id} src={img.url} style={{width:100,height:80,objectFit:"cover",borderRadius:10,flexShrink:0}}/>)}
+      </div>}
+      <Lbl t="שלח לקונים מתאימים:"/>
+      {buyers.length===0&&<div style={{color:"#555",fontSize:14,marginBottom:12}}>אין קונים במאגר — הוסף בלשונית לקוחות</div>}
+      {buyers.map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+        <div>
+          <div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div>
+          <div style={{color:"#888",fontSize:13}}>{b.phone} · {b.area} · {b.budget}</div>
+        </div>
+        {b.phone&&<Btn sm ch="💬 שלח" c={GR} onClick={()=>openWA(b.phone,result)}/>}
+      </div>)}
+    </div>}
+  </div>
+}
+
+// ── PUBLISH PAGE ──────────────────────────────────────────
+function Publish({sellers,buyers}){
+  var[sel,setSel]=useState(null);
+  var[platform,setPlatform]=useState("whatsapp");
+  var[loading,setLoading]=useState(false);
+  var[result,setResult]=useState(null);
+  var pls=[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}];
+
+  async function gen(){
+    if(!sel)return;setLoading(true);setResult(null);
+    var s=sel;
+    var prompts={
+      whatsapp:"כתוב הודעת ווטסאפ שיווקית לנכס. חם, אישי, עם אמוג'י. עד 8 שורות.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, קומה "+s.floor+", "+s.price+"₪"+(s.notes?", "+s.notes:""),
+      yad2:"כתוב מודעת יד2. כותרת + תיאור + פרטים טכניים. עד 150 מילה.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪",
+      facebook:"כתוב פוסט פייסבוק שיווקי. 6-8 שורות עם אמוג'י.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",
+      instagram:"כתוב קפשן אינסטגרם. 3-5 שורות + האשטגים.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.price+"₪",
+      tiktok:"סקריפט טיקטוק 45 שניות. HOOK + גוף + CTA.\nנכס: "+s.address+", "+s.city+", "+s.rooms+" חד, "+s.size+"מ, "+s.price+"₪",
+    };
+    try{var txt=await aiCall(prompts[platform],500);setResult(txt)}catch(e){}
+    setLoading(false);
+  }
+
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:16}}>📣 פרסום חכם</div>
+    <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto",paddingBottom:4}}>
+      {pls.map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={platform===p.k} onClick={()=>{setPlatform(p.k);setResult(null)}} c={p.c}/>)}
+    </div>
+    <div style={{...C.cg,marginBottom:14}}>
+      <Lbl t="בחר נכס"/>
+      <select value={sel?sel.id:""} onChange={e=>{setSel(sellers.find(s=>s.id===parseInt(e.target.value))||null);setResult(null)}} style={{...C.inp,background:"#110f1a",marginBottom:12}}>
+        <option value="">— בחר מוכר/נכס —</option>
+        {sellers.map(s=><option key={s.id} value={s.id}>{s.name} — {s.address||"כתובת לא הוזנה"}</option>)}
+      </select>
+      {sel&&<Btn full ch={loading?"🤖 מייצר...":"🤖 צור "+(pls.find(p=>p.k===platform)?.l||"")} onClick={gen} dis={loading}/>}
+    </div>
+    {loading&&<div style={{...C.card,textAlign:"center",padding:36,fontSize:15}}><div style={{fontSize:40,marginBottom:12}}>🤖</div><div style={{color:G,fontWeight:700}}>מייצר מודעה...</div></div>}
+    {result&&!loading&&<div style={C.card}>
+      <Lbl t={"✏️ "+(pls.find(p=>p.k===platform)?.i||"")+" "+(pls.find(p=>p.k===platform)?.l||"")}/>
+      <textarea value={result} onChange={e=>setResult(e.target.value)} rows={9} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
+      {sel&&sel.images&&sel.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>
+        {sel.images.map(img=><img key={img.id} src={img.url} style={{width:100,height:80,objectFit:"cover",borderRadius:10,flexShrink:0}}/>)}
+      </div>}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <button onClick={()=>navigator.clipboard.writeText(result)} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:10,padding:"10px 16px",color:G,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 העתק</button>
+        {platform==="whatsapp"&&<button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(result),"_blank")} style={{background:"rgba(37,211,102,0.12)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:10,padding:"10px 16px",color:GR,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📱 שלח</button>}
+        <button onClick={gen} style={{background:"rgba(155,142,196,0.1)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:10,padding:"10px 16px",color:PU,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄 גרסה חדשה</button>
+      </div>
+      {platform==="whatsapp"&&buyers.length>0&&<div style={{marginTop:14}}>
+        <Lbl t="שלח לקונים:"/>
+        {buyers.slice(0,6).map(b=><div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+          <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#888",fontSize:13}}>{b.phone} · {b.budget}</div></div>
+          {b.phone&&<Btn sm ch="💬 שלח" c={GR} onClick={()=>openWA(b.phone,result)}/>}
+        </div>)}
+      </div>}
+    </div>}
+  </div>
+}
+
+// ── TIKTOK ────────────────────────────────────────────────
+function Tiktok(){
+  var[script,setScript]=useState("");var[loading,setLoading]=useState(false);
+  var[custom,setCustom]=useState("");var[selDay,setSelDay]=useState(null);var[selT,setSelT]=useState(null);
+  var plan=[
+    {day:"ראשון",time:"18:00",type:"השוואה",dur:"45שנ",icon:"📊",color:BL,why:"תוכן השוואה מקבל 3X שיתופים",topics:["כמה עולה דירה 3 חדרים בכל שכונה בבאר שבע?","שכונה ד vs שכונה ה — איפה כדאי?","מה מקבלים ב700K בבאר שבע ב-2026?"]},
+    {day:"שלישי",time:"20:00",type:"סיפור",dur:"60-90שנ",icon:"🎭",color:PU,why:"סיפורי לפני/אחרי מגיעים ל300K צפיות",topics:["לקוח שסירב לדירה — 3 חודשים אחר כך בכה לי","הדירה שנמכרה ב+200K ממה שביקשו","סיור בדירה שלא תאמינו מה מצאתי"]},
+    {day:"חמישי",time:"19:00",type:"חינוך",dur:"45שנ",icon:"🎓",color:G,why:"תוכן חינוכי = 40% יותר עוקבים",topics:["3 טעויות שקונה דירה עושה ואיך להימנע","מה לשאול מוכר דירה לפני שמציעים","מה זה בלעדיות ולמה זה טוב לך"]},
+    {day:"שבת",time:"10:00",type:"Quick tip",dur:"30שנ",icon:"⚡",color:OR,why:"תוכן קצר בשבת = פי 2 engagement",topics:["שאלה אחת שחוסכת לך 50K","הסוד שמתווכים לא מספרים על תמחור","לפני ואחרי שיפוץ — באר שבע 2026"]},
+  ];
+  async function gen(topic,type,dur){
+    setLoading(true);setScript("");
+    try{
+      var txt=await aiCall("צור סקריפט טיקטוק מלא לחיים בן סימון מתווך רימקס באר שבע 13 שנה.\nנושא: \""+topic+"\" | סוג: "+type+" | אורך: "+dur+"\n\nכלול:\n🎬 HOOK שנ׳ 0-3 — פתיחה שעוצרת גלילה\n---\n📢 גוף שנ׳ 3-35 — מילה במילה עם הנחיות אנרגיה\n---\n🎯 CTA שנ׳ 35-45\n---\n🎥 B-ROLL\n---\n✂️ קאפקאט\n---\n#האשטגים (10)",1400);
+      setScript(txt);
+    }catch(e){setScript("")}
+    setLoading(false);
+  }
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🎬 תוכנית טיקטוק</div>
+    <div style={{color:"#888",fontSize:14,marginBottom:16}}>מבוססת אלגוריתם טיקטוק לנדל״ן ישראל</div>
+    {plan.map(d=>{var open=selDay&&selDay.day===d.day;return <div key={d.day} style={{marginBottom:12}}>
+      <button onClick={()=>{setSelDay(open?null:d);setSelT(null);setScript("")}} style={{width:"100%",background:open?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)",border:"1px solid "+(open?d.color+"55":"rgba(255,255,255,0.08)"),borderRadius:open?"14px 14px 0 0":14,padding:"16px 18px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          <span style={{fontSize:26}}>{d.icon}</span>
+          <div style={{textAlign:"right"}}>
+            <div style={{display:"flex",gap:8,marginBottom:4}}><Tag c={d.color} ch={d.day}/><Tag c="#555" ch={d.time}/><Tag c={G} ch={d.dur}/></div>
+            <div style={{color:"#888",fontSize:13}}>{d.type}</div>
+          </div>
+        </div>
+        <span style={{color:open?d.color:"#444",fontSize:20}}>{open?"▲":"▼"}</span>
+      </button>
+      {open&&<div style={{border:"1px solid "+d.color+"22",borderTop:"none",borderRadius:"0 0 14px 14px",padding:16,background:"rgba(0,0,0,0.2)"}}>
+        <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:14,color:"#888"}}>💡 {d.why}</div>
+        {d.topics.map((t,i)=>{var isSel=selT===t;return <div key={i} style={{...C.card,border:isSel?"1px solid "+d.color+"55":"1px solid rgba(255,255,255,0.08)",marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center"}}>
+            <div style={{fontWeight:700,color:"#ede8f5",fontSize:15,flex:1,lineHeight:1.4}}>{t}</div>
+            <Btn sm ch="סקריפט" c={d.color} onClick={()=>{setSelT(t);gen(t,d.type,d.dur)}}/>
+          </div>
+          {isSel&&<div style={{marginTop:14}}>
+            {loading&&<div style={{textAlign:"center",padding:20,color:"#888",fontSize:15}}>🤖 מכין סקריפט...</div>}
+            {script&&!loading&&<div>
+              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:16,marginBottom:12,color:"#d0c8e8",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{script}</div>
+              <div style={{display:"flex",gap:10}}>
+                <button onClick={()=>navigator.clipboard.writeText(script)} style={{flex:1,background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:10,padding:"11px",color:G,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 העתק</button>
+                <button onClick={()=>gen(t,d.type,d.dur)} style={{flex:1,background:"rgba(155,142,196,0.1)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:10,padding:"11px",color:PU,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄 גרסה חדשה</button>
+              </div>
+            </div>}
+          </div>}
+        </div>})}
+      </div>}
+    </div>)}
+    <div style={{...C.card,marginTop:8}}>
+      <Lbl t="✏️ נושא חופשי"/>
+      <input placeholder="נושא לסרטון..." value={custom} onChange={e=>setCustom(e.target.value)} style={{...C.inp,marginBottom:10}}/>
+      <Btn full ch={loading?"🤖 מכין...":"🎬 צור סקריפט"} onClick={()=>{if(custom.trim()){setSelT("c");gen(custom,"חופשי","45-60שנ")}}} dis={!custom.trim()||loading}/>
+    </div>
+  </div>
+}
+
+// ── UNIVERSITY ────────────────────────────────────────────
+function University(){
+  var[topic,setTopic]=useState("");var[loading,setLoading]=useState(false);var[content,setContent]=useState(null);var[cat,setCat]=useState("market");
+  var cats=[
+    {k:"market",l:"שוק נדל\"ן",i:"📈",c:G},{k:"law",l:"דיני מקרקעין",i:"⚖️",c:BL},
+    {k:"sales",l:"מכירות",i:"💬",c:GR},{k:"finance",l:"מימון",i:"💰",c:OR},
+    {k:"marketing",l:"שיווק",i:"📱",c:PU},{k:"ai",l:"כלי AI",i:"🤖",c:TE},
+    {k:"general",l:"ידע כללי",i:"🌍",c:RE},
+  ];
+  var topics={
+    market:["מגמות מחירים בבאר שבע 2026","השפעת הריבית על שוק הנדלן","שכונות בצמיחה — איפה לקנות","מדד מחירי דירות — איך לקרוא"],
+    law:["מה זה טאבו ולמה חשוב לבדוק","הסכם בלעדיות — מה כדאי לדעת","חובות הגילוי של מוכר דירה","מסמכי העברת בעלות"],
+    sales:["SPIN Selling לנדל\"ן","איך להתמודד עם 'אני צריך לחשוב'","בניית rapport עם לקוחות","מו\"מ — מתי לוותר ומתי להחזיק"],
+    finance:["מסלולי משכנתא — פריים vs קבוע","מה זה LTV","מענקים לרוכשי דירה ראשונה","מחזור משכנתא — מתי כדאי?"],
+    marketing:["אלגוריתם טיקטוק 2026 לנדלן","כתיבה שיווקית שמוכרת דירות","בניית מותג אישי כמתווך","SEO לדפי נכסים"],
+    ai:["ChatGPT לכתיבת מודעות נדלן","Claude AI — איך להשתמש נכון","Midjourney ליצירת תמונות נכסים","Make.com — אוטומציות פשוטות","כלים AI לשיווק נדלן 2026"],
+    general:["כלכלה ישראלית 2026","פסיכולוגיה של קבלת החלטות קנייה","ניהול זמן יעיל ליום עמוס","בינה מלאכותית ועתיד שוק הנדלן"],
+  };
+  async function learn(t){
+    setLoading(true);setContent(null);
+    try{
+      var txt=await aiCall("מרצה מומחה שמלמד חיים בן סימון מתווך רימקס באר שבע.\nנושא: \""+t+"\"\n\nצור שיעור:\n📚 תקציר מנהלים (3 משפטים)\n---\n🔑 5 נקודות מפתח\n---\n💼 יישום מעשי יומיומי\n---\n📖 מקורות מומלצים\n---\n✅ שאלה לחשוב עליה",1200);
+      setContent({topic:t,text:txt});
+    }catch(e){}
+    setLoading(false);
+  }
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>🎓 אוניברסיטת נדל"ן</div>
+    <div style={{color:"#888",fontSize:14,marginBottom:16}}>למידה יומית · העשרה מקצועית · צמיחה עסקית</div>
+    <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:16}}>
+      {cats.map(c=><Pill key={c.k} ch={c.i+" "+c.l} active={cat===c.k} onClick={()=>setCat(c.k)} c={c.c}/>)}
+    </div>
+    {!content&&!loading&&<div>
+      <div style={{color:"#666",fontSize:13,fontWeight:700,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>נושאים מומלצים</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+        {(topics[cat]||[]).map((t,i)=><button key={i} onClick={()=>learn(t)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,fontFamily:"inherit",textAlign:"right"}}>
+          <span style={{fontSize:24,flexShrink:0}}>{cats.find(c=>c.k===cat)?.i}</span>
+          <span style={{color:"#d0c090",fontSize:15,flex:1,fontWeight:600}}>{t}</span>
+          <span style={{color:"#444",fontSize:18}}>←</span>
+        </button>)}
+      </div>
+      <div style={C.card}>
+        <Lbl t="נושא שלי"/>
+        <input placeholder="כתוב נושא..." value={topic} onChange={e=>setTopic(e.target.value)} onKeyDown={e=>e.key==="Enter"&&topic.trim()&&learn(topic)} style={{...C.inp,marginBottom:10}}/>
+        <Btn full ch="🎓 למד עכשיו" onClick={()=>learn(topic)} dis={!topic.trim()}/>
+      </div>
+    </div>}
+    {loading&&<div style={{...C.card,textAlign:"center",padding:40}}><div style={{fontSize:44,marginBottom:14}}>🎓</div><div style={{color:G,fontWeight:700,fontSize:17}}>מכין שיעור...</div></div>}
+    {content&&!loading&&<div className="fade">
+      <button onClick={()=>setContent(null)} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:16,fontWeight:700}}>← חזרה</button>
+      <div style={C.cg}>
+        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:18,color:G,marginBottom:14}}>{content.topic}</div>
+        <div style={{color:"#d0c8e8",fontSize:15,lineHeight:2,whiteSpace:"pre-wrap"}}>{content.text}</div>
+        <div style={{display:"flex",gap:10,marginTop:18}}>
+          <button onClick={()=>navigator.clipboard.writeText(content.text)} style={{flex:1,background:"rgba(201,168,76,0.1)",border:"1px solid rgba(201,168,76,0.25)",borderRadius:12,padding:"12px",color:G,fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 שמור</button>
+          <button onClick={()=>setContent(null)} style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"12px",color:"#888",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>נושא חדש</button>
+        </div>
+      </div>
+    </div>}
+  </div>
+}
+
+// ── WEEKLY REPORT ─────────────────────────────────────────
+function WeeklyReport({sellers}){
+  var DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פרסום פעיל בכל הפלטפורמות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n📅 בלעדיות בתוקף עד: {סיום}\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";
+  var[template,setTemplate]=useState(lv("report_tpl",DEF));
+  var[sel,setSel]=useState(null);var[preview,setPreview]=useState("");var[loading,setLoading]=useState(false);
+  function genPrev(){
+    if(!sel)return;var s=sel;
+    var msg=template.replace("{כתובת}",s.address||"").replace("{שם}",s.name||"").replace("{מחיר}",s.price?Number(s.price||0).toLocaleString():"").replace("{סיום}",s.exclusiveEnd||"").replace(/{מספר}/g,Math.floor(Math.random()*5+2)).replace("{המלצה}","להוריד מחיר ב-20,000₪ לפי מחירי השוק");
+    setPreview(msg);
+  }
+  async function aiGen(){
+    if(!sel)return;setLoading(true);
+    try{var txt=await aiCall("כתוב דיווח שבועי מקצועי וחם של חיים בן סימון מרימקס לבעל נכס "+sel.name+". נכס: "+sel.address+", "+sel.city+", "+sel.rooms+" חד, "+sel.price+"₪, בלעדיות עד "+sel.exclusiveEnd+". כלול מצב שיווקי, פניות, המלצה. עד 12 שורות.",500);setPreview(txt)}
+    catch(e){}setLoading(false);
+  }
+  return <div style={{padding:C.p}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:22,fontWeight:900,color:G,marginBottom:6}}>📊 דיווח שבועי</div>
+    <div style={{color:"#888",fontSize:14,marginBottom:16}}>ערוך תבנית ושלח בלחיצה</div>
+    <div style={C.card}>
+      <Lbl t="תבנית (עריכה חופשית)"/>
+      <textarea value={template} onChange={e=>{setTemplate(e.target.value);sv("report_tpl",e.target.value)}} rows={12} style={{...C.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:10}}/>
+      <div style={{color:"#888",fontSize:12,marginBottom:12}}>משתנים: {"{שם}"} {"{כתובת}"} {"{מחיר}"} {"{סיום}"}</div>
+      <Sel label="בחר מוכר" val={sel?String(sel.id):""} set={v=>{setSel(sellers.find(s=>s.id===parseInt(v))||null);setPreview("")}} opts={[{v:"",l:"— בחר מוכר —"},...sellers.map(s=>({v:String(s.id),l:s.name+" — "+(s.address||"")}))]}/>
+      {sel&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        <Btn sm ch="👁 תצוגה מקדימה" onClick={genPrev} c={BL}/>
+        <Btn sm ch={loading?"🤖...":"🤖 AI דיווח"} onClick={aiGen} dis={loading} c={PU}/>
+      </div>}
+    </div>
+    {preview&&<div style={{...C.cg,border:"1px solid rgba(37,211,102,0.3)"}}>
+      <Lbl t="ערוך לפני שליחה"/>
+      <textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={12} style={{...C.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
+      {sel&&sel.phone&&<Btn full ch="📱 שלח בווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)}/>}
+    </div>}
+  </div>
+}
+
+// ── ASSISTANT ─────────────────────────────────────────────
+function Assistant({buyers,setBuyers,sellers,setSellers,tasks,setTasks}){
+  var[msgs,setMsgs]=useState([{role:"ai",text:"שלום חיים! 👋\n\nאני העוזר האישי שלך.\nדבר אלי בחופשיות — מה תרצה לעשות?"}]);
+  var[cmd,setCmd]=useState("");var[loading,setLoading]=useState(false);
+  var[showV,setShowV]=useState(false);var[vt,setVt]=useState("");
+  var bot=useRef();
+  useEffect(()=>{bot.current?.scrollIntoView({behavior:"smooth"})},[msgs]);
+  function addMsg(r,t){setMsgs(m=>[...m,{role:r,text:t}])}
+
+  async function run(input){
+    var c=input||cmd;if(!c.trim())return;
+    setCmd("");addMsg("user",c);setLoading(true);
+    try{
+      var sl=sellers.slice(0,15).map(s=>s.name+"|"+s.phone+"|"+s.address+"|"+s.city+"|"+(s.rooms||"?")+"חד|"+(s.price||"?")+"₪|בלע׳:"+(s.exclusiveEnd||"לא")).join("\n");
+      var bl=buyers.slice(0,10).map(b=>b.name+"|"+b.phone+"|"+b.area+"|"+b.budget+"|דירוג:"+(b.grade||"B")).join(", ");
+      var prompt="עוזר של חיים בן סימון רימקס באר שבע 13 שנה.\n\nמוכרים:\n"+sl+"\n\nקונים: "+bl+"\n\nפקודה: \""+c+"\"\n\nענה JSON:\n{\"action\":\"INFO|SCHEDULE|WHATSAPP|FIND_MATCH\",\"response\":\"תשובה ברורה\",\"details\":\"\",\"waMessage\":\"\",\"taskText\":\"\",\"taskTime\":\"\"}";
+      var txt=await aiCall(prompt,600);
+      var r=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      if(r.action==="SCHEDULE"&&r.taskText){var t=[...tasks,{id:Date.now(),text:r.taskText,time:r.taskTime||"—",done:false,type:"remind"}];setTasks(t);sv("tasks",t)}
+      addMsg("ai",r.response+(r.details?"\n\n"+r.details:"")+(r.waMessage?"\n\n💬 הודעה:\n"+r.waMessage:""));
+    }catch(e){}
+    setLoading(false);
+  }
+
+  var examples=["מי מהקונים דירוג A?","מה המוכרים עם בלעדיות שפגה?","תזכורת להתקשר לירדן מחר 10:00","כמה מוכרים יש לי בשכונה ד?","הכן הודעה לקונים דירוג A על נכס חדש"];
+
+  return <div style={{...{padding:C.p},paddingBottom:160}} className="fade">
+    <div style={{marginBottom:16}}>
+      {msgs.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-start":"flex-end",marginBottom:12}}>
+        <div style={{maxWidth:"90%",background:m.role==="user"?"rgba(201,168,76,0.12)":"rgba(255,255,255,0.06)",border:"1px solid "+(m.role==="user"?"rgba(201,168,76,0.28)":"rgba(255,255,255,0.1)"),borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"14px 18px",fontSize:15,color:m.role==="user"?"#f0d888":"#d0c8e8",lineHeight:1.75,whiteSpace:"pre-wrap"}}>
+          {m.role==="ai"&&<span style={{fontSize:12,color:G,fontWeight:700,display:"block",marginBottom:6}}>🤖 עוזר AI</span>}
+          {m.text}
+        </div>
+      </div>)}
+      {loading&&<div style={{display:"flex",justifyContent:"flex-end"}}>
+        <div style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"16px 16px 16px 4px",padding:"14px 18px",color:"#888",fontSize:15}}>🤖 מעבד...</div>
+      </div>}
+      <div ref={bot}/>
+    </div>
+    {msgs.length===1&&<div style={{marginBottom:16}}>
+      {examples.map((ex,i)=><button key={i} onClick={()=>run(ex)} style={{display:"block",width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"12px 16px",cursor:"pointer",fontFamily:"inherit",textAlign:"right",color:"#bbb",fontSize:14,marginBottom:8}}>→ {ex}</button>)}
+    </div>}
+    <div style={{position:"fixed",bottom:82,right:0,left:0,padding:"12px 14px",background:"rgba(7,6,13,0.97)",borderTop:"1px solid rgba(201,168,76,0.15)",backdropFilter:"blur(20px)"}}>
+      {showV&&<div style={{marginBottom:10}} className="fade">
+        <div style={{color:G,fontSize:13,fontWeight:700,marginBottom:6}}>מה אמרת? כתוב:</div>
+        <div style={{display:"flex",gap:8}}>
+          <input placeholder="כתוב..." value={vt} onChange={e=>setVt(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&vt.trim()){run(vt);setShowV(false);setVt("")}}} style={{...C.inp,flex:1}}/>
+          <Btn sm ch="▶" c={G} onClick={()=>{run(vt);setShowV(false);setVt("")}} dis={!vt.trim()}/>
+        </div>
+      </div>}
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <VoiceBtn size={52} onText={t=>{if(t==="__voice__")setShowV(v=>!v)}}/>
+        <input placeholder="כתוב פקודה..." value={cmd} onChange={e=>setCmd(e.target.value)} onKeyDown={e=>e.key==="Enter"&&cmd.trim()&&run()} style={{...C.inp,flex:1}}/>
+        <Btn sm ch="שלח" onClick={()=>run()} dis={!cmd.trim()||loading} c={G}/>
+      </div>
+    </div>
+  </div>
+}
+
+// ── MAIN APP ──────────────────────────────────────────────
+var TABS=[
+  {k:"home",l:"בית",i:"🏠"},
+  {k:"caller",l:"קונה",i:"📞"},
+  {k:"daily",l:"יומי",i:"📅"},
+  {k:"crm",l:"לקוחות",i:"👥"},
+  {k:"publish",l:"פרסום",i:"📣"},
+  {k:"broker",l:"מתווך",i:"🤝"},
+  {k:"report",l:"דיווח",i:"📊"},
+  {k:"tiktok",l:"טיקטוק",i:"🎬"},
+  {k:"ai",l:"עוזר",i:"🤖"},
+  {k:"uni",l:"אוני׳",i:"🎓"},
+  {k:"settings",l:"הגדרות",i:"⚙️"},
+];
+
+function App(){
+  var[tab,setTab]=useState("home");
+  var[buyers,setBuyers]=useState(()=>lv("buyers",[]));
+  var[sellers,setSellers]=useState(()=>{var s=lv("sellers",null);return s&&s.length>0?s:IS});
+  var[tasks,setTasks]=useState(()=>lv("tasks",[]));
+  var hasKey=!!localStorage.getItem("np5_apikey");
+
+  return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:90}}>
+    <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 70% 50% at 15% 10%,rgba(120,80,200,0.09) 0%,transparent 60%)",pointerEvents:"none",zIndex:0}}/>
+    <div style={{position:"relative",zIndex:1}}>
+      {/* Header */}
+      <div style={{background:"rgba(7,6,13,0.96)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(201,168,76,0.14)",padding:"14px 16px",position:"sticky",top:0,zIndex:100}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:G}}>NadlanPro</div>
+            <div style={{fontSize:11,color:"#555",marginTop:1}}>RE/MAX · חיים בן סימון · באר שבע</div>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            {!hasKey&&<button onClick={()=>setTab("settings")} style={{background:"rgba(201,126,126,0.15)",border:"1px solid rgba(201,126,126,0.4)",borderRadius:20,padding:"4px 12px",fontSize:12,color:RE,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>⚠️ הכנס API Key</button>}
+            <div style={{background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",borderRadius:20,padding:"4px 12px",fontSize:11,color:GR,fontWeight:700,display:"flex",alignItems:"center",gap:5}}>
+              <span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pages */}
+      {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks}/>}
+      {tab==="caller"&&<QuickCaller buyers={buyers} setBuyers={setBuyers} sellers={sellers}/>}
+      {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers}/>}
+      {tab==="publish"&&<Publish sellers={sellers} buyers={buyers}/>}
+      {tab==="broker"&&<Broker buyers={buyers}/>}
+      {tab==="report"&&<WeeklyReport sellers={sellers}/>}
+      {tab==="tiktok"&&<Tiktok/>}
+      {tab==="ai"&&<Assistant buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} tasks={tasks} setTasks={setTasks}/>}
+      {tab==="uni"&&<University/>}
+      {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
+
+      {/* Nav */}
+      <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(20px)",borderTop:"1px solid rgba(201,168,76,0.14)",display:"flex",zIndex:200,padding:"6px 0 10px",overflowX:"auto"}}>
+        {TABS.map(t=>{var active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:"0 0 auto",minWidth:52,background:"none",border:"none",cursor:"pointer",padding:"6px 6px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
+          {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:2.5,background:G,borderRadius:2}}/>}
+          <span style={{fontSize:20}}>{t.i}</span>
+          <span style={{fontSize:9,fontWeight:700,color:active?G:"#333",fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
+        </button>})}
+      </nav>
+    </div>
+  </div>
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
