@@ -404,9 +404,18 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
       <div style={{marginTop:18,display:"flex",gap:10,flexWrap:"wrap"}}>
         {sel.phone&&<Btn sm ch="ווטסאפ" c={GR} onClick={()=>openWA(sel.phone)} icon="💬"/>}
         {tenantPhone&&<Btn sm ch="שוכר" c={BL} onClick={()=>openWA(tenantPhone)} icon="🏠"/>}
-        <Btn sm ch="שלח נכס" c={OR} onClick={()=>{const waMsg="שלום 👋\n\nחיים בן סימון מרימקס באר שבע.\n\nדירה ב"+sel.address+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nמעוניינים? 📸\nחיים | RE/MAX";openWA("",waMsg)}} icon="📤"/>
+        <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("buyers")} icon="📤"/>
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
+
+      {/* Send to buyer modal */}
+      {sendModal==="buyers"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
+        <Lbl t="בחר קונה לשליחה"/>
+        {buyers.map(b=><div key={b.id} onClick={()=>{const waMsg="שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך — דירה ב"+sel.address+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nאשלח פרטים? 📸\nחיים | RE/MAX";if(b.phone)openWA(b.phone,waMsg);const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+b.name);setSendModal(null)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+          <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
+          <span style={{color:GR,fontSize:20}}>💬</span>
+        </div>)}
+      </Modal>}
 
       {/* Publish */}
       <div style={{marginTop:16}}>
@@ -416,9 +425,25 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
             {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
           </div>
           <Btn full ch={pubLoading?"מייצר...":"צור פרסום"} onClick={()=>genPublish(sel)} dis={pubLoading} icon="🤖"/>
-          {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/>{pubPlat==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(pubResult),"_blank")} icon="📱"/>}<Btn sm ch="שמור" c={PU} onClick={()=>{addLog(sel.id,"פרסום "+pubPlat+": "+pubResult.substring(0,60)+"...","s");toast("💾 נשמר לכרטיסייה!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPublish(sel)}/></div></div>}
+          {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/>{pubPlat==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(pubResult),"_blank")} icon="📱"/>}<Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updS(sel.id,"savedAds",ads);toast("💾 פרסום "+pubPlat+" נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPublish(sel)}/></div></div>}
         </div>}
       </div>
+
+      {/* Saved Ads */}
+      {sel.savedAds&&Object.keys(sel.savedAds).length>0&&<div style={{marginTop:16}}>
+        <Lbl t="פרסומים שמורים" icon="📣"/>
+        {Object.entries(sel.savedAds).map(([platform,ad])=><div key={platform} style={{...S.card,border:"1px solid rgba(155,142,196,0.15)",marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:platform==="tiktok"?PU:G} ch={platform}/>
+            <span style={{color:"#555",fontSize:11}}>{ad.time}</span>
+          </div>
+          <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
+          <div style={{display:"flex",gap:8,marginTop:8}}>
+            <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
+            {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(ad.text),"_blank")} icon="📱"/>}
+          </div>
+        </div>)}
+      </div>}
 
       {/* Logs */}
       <div style={{marginTop:16}}>
@@ -532,17 +557,41 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       <div style={{marginBottom:16}}><Lbl t="תמונות" icon="📷"/><ImgUp images={sel.images||[]} onAdd={img=>updProp(sel.id,"images",[...(sel.images||[]),img])} onRemove={iid=>updProp(sel.id,"images",(sel.images||[]).filter(i=>i.id!==iid))}/></div>
 
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
-        <Btn sm ch="שלח נכס" c={GR} onClick={()=>{const m="שלום 👋\n\nחיים מרימקס באר שבע.\n\nדירה ב"+(sel.address||"")+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nאשלח פרטים? 📸\nחיים | RE/MAX";openWA("",m)}} icon="📤"/>
+        <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("sendToBuyer")} icon="📤"/>
       </div>
 
+      {/* Send to buyer modal */}
+      {pubOpen==="sendToBuyer"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
+        <Lbl t="בחר קונה"/>
+        {buyers.map(b=><div key={b.id} onClick={()=>{const waMsg="שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\n\nדירה ב"+(sel.address||"")+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nאשלח פרטים? 📸\nחיים | RE/MAX";if(b.phone)openWA(b.phone,waMsg);toast("✅ נשלח ל"+b.name);setPubOpen(false)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+          <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
+          <span style={{color:GR,fontSize:20}}>💬</span>
+        </div>)}
+      </Modal>}
+
       {/* Publish - no yad2 */}
-      <button onClick={()=>setPubOpen(!pubOpen)} style={{width:"100%",background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:16,padding:"16px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit"}}>📣 פרסום</button>
-      {pubOpen&&<div style={{marginTop:12}}>
+      <button onClick={()=>setPubOpen(pubOpen===true?false:true)} style={{width:"100%",background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:16,padding:"16px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit"}}>📣 פרסום</button>
+      {pubOpen===true&&<div style={{marginTop:12}}>
         <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto"}}>
           {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
         </div>
         <Btn full ch={pubLoading?"מייצר...":"צור"} onClick={()=>genPub(sel)} dis={pubLoading} icon="🤖"/>
-        {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/><Btn sm ghost ch="🔄" onClick={()=>genPub(sel)}/></div></div>}
+        {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/><Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updProp(sel.id,"savedAds",ads);toast("💾 נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPub(sel)}/></div></div>}
+      </div>}
+
+      {/* Saved Ads */}
+      {sel.savedAds&&Object.keys(sel.savedAds).length>0&&<div style={{marginTop:16}}>
+        <Lbl t="פרסומים שמורים" icon="📣"/>
+        {Object.entries(sel.savedAds).map(([platform,ad])=><div key={platform} style={{...S.card,border:"1px solid rgba(155,142,196,0.15)",marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:PU} ch={platform}/>
+            <span style={{color:"#555",fontSize:11}}>{ad.time}</span>
+          </div>
+          <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
+          <div style={{display:"flex",gap:8,marginTop:8}}>
+            <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
+          </div>
+        </div>)}
       </div>}
     </div>
   </div>}
