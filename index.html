@@ -40,7 +40,7 @@ function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
 let _tt;function toast(m){const o=document.querySelector('.toast');if(o)o.remove();clearTimeout(_tt);const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);_tt=setTimeout(()=>e.remove(),2500)}
 
-function getKey(){return localStorage.getItem(PX+"gemini_key")||""}
+function getKey(){return localStorage.getItem(PX+"claude_key")||""}
 
 const IS=[
 {id:1,name:"תומר פולק",phone:"0545226691",address:"שרעבי 6/21",city:"באר שבע",rooms:"4",size:"77",floor:"2",price:"820000",reducedPrice:"800000",exclusiveStart:"03/06/25",exclusiveEnd:"03/12/25",notes:"מושכרת 3500 אחמד 0503037464",actions:[],images:[],video:"",logs:[]},
@@ -94,14 +94,16 @@ function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]
 async function aiCall(prompt,max=900){
   const key=getKey();
   if(!key){toast("⚠️ חסר API Key — לחץ ⚙️ הגדרות");throw new Error("no key")}
-  const sysPrompt="אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX בבאר שבע עם 13 שנות ניסיון. ענה תמיד בעברית, בקצרה ובמקצועיות.";
-  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+key,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({system_instruction:{parts:[{text:sysPrompt}]},contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:max}})
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:max,
+      system:"אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX בבאר שבע עם 13 שנות ניסיון. ענה תמיד בעברית, בקצרה ובמקצועיות.",
+      messages:[{role:"user",content:prompt}]})
   });
   const d=await r.json();
   if(d.error){toast("⚠️ "+d.error.message);throw new Error(d.error.message)}
-  return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts||[]).map(p=>p.text||"").join("").trim()
+  return d.content.map(i=>i.text||"").join("").trim()
 }
 
 const GRADES={A:{c:"#7ec97e",l:"A — חם 🔥"},B:{c:OR,l:"B — פוטנציאל ⚡"},C:{c:"#888",l:"C — קר ❄️"}};
@@ -529,24 +531,29 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
 
 // ━━━ WEEKLY REPORT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function WeeklyReport({sellers}){
+  const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";
+  const[template,setTemplate]=useState(lv("report_tpl",DEF));
   const[sel,setSel]=useState(null);const[preview,setPreview]=useState("");const[loading,setLoading]=useState(false);const[views,setViews]=useState("");
-  function genPrev(){if(!sel)return;setPreview("דיווח שבועי — "+sel.name+"\nשלום "+sel.name+" 😊\n\nחיים בן סימון מרימקס — דיווח שבועי:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• "+views+" צפיות\n• פניות השבוע\n\n💰 מחיר: "+fmtP(sel.price)+"\n\n🔑 המלצה: המשך שיווק אגרסיבי\n\nזמין עבורך!\nחיים | RE/MAX | באר שבע")}
-  async function aiGen(){if(!sel)return;setLoading(true);try{const txt=await aiCall("כתוב דיווח שבועי מקצועי לבעל נכס "+sel.name+". כתובת: "+sel.address+", "+sel.city+", "+(sel.rooms||"?")+" חד, "+sel.price+"₪. פורסם בפייסבוק טיקטוק אינסטגרם ויד2. "+views+" צפיות. ללא תאריך סיום בלעדיות. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}
+  function genPrev(){if(!sel)return;const s=sel;setPreview(template.replace("{כתובת}",s.address||"").replace("{שם}",s.name||"").replace("{מחיר}",s.price?Number(s.price).toLocaleString():"").replace(/{מספר}/g,Math.floor(Math.random()*5+2)).replace("{צפיות}",views||"0").replace("{המלצה}","להמשיך שיווק אגרסיבי בכל הפלטפורמות"))}
+  async function aiGen(){if(!sel)return;setLoading(true);try{const txt=await aiCall("כתוב דיווח שבועי מקצועי וחם של חיים בן סימון מרימקס לבעל נכס "+sel.name+". נכס: "+sel.address+", "+sel.city+", "+(sel.rooms||"?")+" חד, "+sel.price+"₪. פורסם בפייסבוק טיקטוק אינסטגרם ויד2. "+views+" צפיות. כלול מצב שיווקי, פניות, המלצה. ללא תאריך בלעדיות. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}
   return <div style={{padding:S.pg}} className="fade">
-    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>📊 דיווח שבועי</div>
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>📊 דיווח שבועי</div>
+    <div style={{color:"#777",fontSize:14,marginBottom:18}}>ערוך תבנית ושלח בלחיצה</div>
     <div style={S.card}>
-      <Sel label="בחר מוכר" val={sel?String(sel.id):""} set={v=>{setSel(sellers.find(s=>s.id===parseInt(v))||null);setPreview("")}} opts={[{v:"",l:"— בחר —"},...sellers.map(s=>({v:String(s.id),l:s.name+" — "+(s.address||"")}))]}/>
+      <Lbl t="תבנית (עריכה חופשית)" icon="📝"/>
+      <textarea value={template} onChange={e=>{setTemplate(e.target.value);sv("report_tpl",e.target.value)}} rows={14} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
+      <div style={{color:"#666",fontSize:12,marginBottom:14}}>משתנים: {"{שם} {כתובת} {מחיר} {צפיות}"}</div>
+      <Sel label="בחר מוכר" val={sel?String(sel.id):""} set={v=>{setSel(sellers.find(s=>s.id===parseInt(v))||null);setPreview("")}} opts={[{v:"",l:"— בחר מוכר —"},...sellers.map(s=>({v:String(s.id),l:s.name+" — "+(s.address||"")}))]}/>
       {sel&&<div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:14,marginBottom:14}}>
         <div style={{color:"#ede8f5",fontWeight:700}}>{sel.name}</div>
         <div style={{color:"#777",fontSize:13}}>{sel.address} · {sel.city}</div>
       </div>}
       <Inp label="כמות צפיות" ph="1200" val={views} set={setViews} mb={14} icon="👁"/>
-      {sel&&<div style={{display:"flex",gap:10}}><Btn sm ch="תצוגה" onClick={genPrev} c={BL} icon="👁"/><Btn sm ch={loading?"...":"AI דיווח"} onClick={aiGen} dis={loading} c={PU} icon="🤖"/></div>}
+      {sel&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Btn sm ch="תצוגה מקדימה" onClick={genPrev} c={BL} icon="👁"/><Btn sm ch={loading?"...":"AI דיווח"} onClick={aiGen} dis={loading} c={PU} icon="🤖"/></div>}
     </div>
-    {preview&&<div style={{...S.cg,border:"1px solid rgba(37,211,102,0.25)"}}><Lbl t="ערוך ושלח" icon="✏️"/><textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={14} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>{sel&&sel.phone&&<Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)} icon="📱"/>}</div>}
+    {preview&&<div style={{...S.cg,border:"1px solid rgba(37,211,102,0.25)"}}><Lbl t="ערוך לפני שליחה" icon="✏️"/><textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={14} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>{sel&&sel.phone&&<Btn full ch="שלח בווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)} icon="📱"/>}</div>}
   </div>
 }
-
 // ━━━ TIKTOK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function Tiktok(){
   const[script,setScript]=useState("");const[loading,setLoading]=useState(false);const[custom,setCustom]=useState("");const[selDay,setSelDay]=useState(null);const[selT,setSelT]=useState(null);
@@ -589,13 +596,13 @@ function University(){
 function Settings({onClose}){
   const[key,setKey]=useState(getKey());
   const[saved,setSaved]=useState(false);
-  function save(){localStorage.setItem(PX+"gemini_key",key.trim());setSaved(true);toast("✅ API Key נשמר!");setTimeout(()=>setSaved(false),2000)}
+  function save(){localStorage.setItem(PX+"claude_key",key.trim());setSaved(true);toast("✅ API Key נשמר!");setTimeout(()=>setSaved(false),2000)}
   return <div style={{padding:S.pg}} className="fade">
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G}}>⚙️ הגדרות</div>{onClose&&<button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:36,height:36,borderRadius:12,fontSize:22,cursor:"pointer"}}>×</button>}</div>
     <div style={S.card}>
-      <Lbl t="Google Gemini API Key" icon="🔑"/>
-      <div style={{color:"#777",fontSize:14,marginBottom:14,lineHeight:1.65}}>המפתח מאפשר AI: פרסום, סקריפטים, דיווחים.<br/><span style={{color:BL}}>aistudio.google.com</span> → מפתחות API → קבל מפתח</div>
-      <input type="password" placeholder="AIza..." value={key} onChange={e=>setKey(e.target.value)} style={{...S.inp,marginBottom:14,fontFamily:"monospace",fontSize:13}}/>
+      <Lbl t="Claude API Key" icon="🔑"/>
+      <div style={{color:"#777",fontSize:14,marginBottom:14,lineHeight:1.65}}>המפתח מאפשר AI: פרסום, סקריפטים, דיווחים.<br/><span style={{color:BL}}>console.anthropic.com</span> → API Keys → Create Key</div>
+      <input type="password" placeholder="sk-ant-api03-..." value={key} onChange={e=>setKey(e.target.value)} style={{...S.inp,marginBottom:14,fontFamily:"monospace",fontSize:13}}/>
       <Btn full ch={saved?"✅ נשמר!":"שמור API Key"} onClick={save} c={saved?"#7ec97e":G}/>
       <div style={{marginTop:12,textAlign:"center",fontSize:13,color:key?"#7ec97e":RE,fontWeight:600}}>{key?"✓ מפתח מוגדר — AI זמין":"⚠️ ללא מפתח — AI לא יעבוד"}</div>
     </div>
@@ -611,9 +618,29 @@ const TABS=[
   {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
 
+const IB=[
+{id:101,name:"רחלה",phone:"0532746623",grade:"A",budget:"",notes:"יד 2, אלעזר בן יאיר. מגיעה לסיור סגירה, לדבר בשני להגיע שלישי",sentProperties:[],actions:["נשלחו דירות"],logs:[{text:"נוספה",time:"22/03/26"}]},
+{id:102,name:"דורון",phone:"0509444030",grade:"A",budget:"",notes:"טיקטוק, סוויטות בר גיורא. נשמע מבין עניין, רוצה שנדבר עוד. לא רצה בר גיורא רוצה יותר קרוב",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"28/03/26"}]},
+{id:103,name:"שמעון כהן",phone:"0505435486",grade:"C",budget:"",notes:"טיקטוק, סוויטות בר גיורא. לא ענה",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"27/03/26"}]},
+{id:104,name:"שי",phone:"0547887876",grade:"A",budget:"",notes:"טיקטוק, סוויטות בר גיורא. רוצה לראות אחרי החג אלעזר בן יאיר ובר גיורא",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"27/03/26"}]},
+{id:105,name:"דן עובדיה",phone:"",grade:"B",budget:"",notes:"טיקטוק, סוויטות בר גיורא. חבר, לדבר אחרי פסח לסגור משהו",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"29/03/26"}]},
+{id:106,name:"יצחק יחזקאל",phone:"0504082972",grade:"A",budget:"",notes:"טיקטוק, סוויטות בר גיורא. שלחתי וואטסאפ עם הסרטון לעשות עוד שיחה לתאם",sentProperties:[],actions:["נשלחו דירות"],logs:[{text:"נוספה",time:"30/03/26"}]},
+{id:107,name:"נטלי",phone:"0536236451",grade:"A",budget:"",notes:"יד 2 פישינג יד ושם. לקוח מאשדוד, רוצה לשבת ולרכוש דירה, הצעתי את הדירה של שי",sentProperties:[],actions:["נשלחו דירות"],logs:[{text:"נוספה",time:"31/03/26"}]},
+{id:108,name:"יחזקאל נפתלייב",phone:"0504444229",grade:"A",budget:"",notes:"יד 2 פישינג רגר. סופר A, אלעזר בן יאיר ובר גיורא",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"31/03/26"}]},
+{id:109,name:"סתיו אברהם",phone:"0535382723",grade:"A",budget:"",notes:"טיקטוק, דירה אסף. בנסיעה עם המשפחה, לשים באתר",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:110,name:"מישל",phone:"0548394788",grade:"A",budget:"",notes:"טיקטוק, דירה אסף. לדבר אחרי החג, לשים באתר",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:111,name:"מושקי",phone:"0536236451",grade:"A",budget:"",notes:"יד 2, דירה של שי. דיברתי עם הלקוח הרוסי מאשדוד שיחה טובה, לדאוג שיגיע לראות כמה דירות, רצה לקבוע פגישה",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:112,name:"אלכסנדר",phone:"0528331057",grade:"A",budget:"",notes:"טיקטוק, דירה אסף. מחפש דירה עם מעלית תקציב פתוח, מתייעץ עם אישתו. לנסות להביא דירות זולות ולשלוח",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:113,name:"עומרי נחמני",phone:"0526082676",grade:"A",budget:"",notes:"יד 2 פישינג. רוצה לקנות 3 דירות זולות, מגיע מאשדוד שיחה טובה. לשלוח פרטים ותמונות לקבוע סיור",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:114,name:"שמחה אגרונוב",phone:"0543058307",grade:"A",budget:"",notes:"יד 2 פישינג. שיחה טובה, לשלוח פרטים ותמונות",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:115,name:"שרון חן",phone:"0506285526",grade:"A",budget:"",notes:"יד 2 פישינג. בבאר שבע מנסה לראות דירות, מנסה לתאם מצדה, לנסות גם שגיא",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"05/04/26"}]},
+{id:116,name:"דוד גל",phone:"0533319925",grade:"A",budget:"850000",notes:"מחפש ליד אוניברסיטה, תקציב 850K",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"09/04/26"}]},
+{id:117,name:"רביד בן דוד",phone:"0522969615",grade:"A",budget:"650000",notes:"בבאר שבע, מחפש דירה מחולקת או דברים עד 650K",sentProperties:[],actions:[],logs:[{text:"נוספה",time:"09/04/26"}]},
+];
+
 function App(){
   const[tab,setTab]=useState("home");
-  const[buyers,setBuyers]=useState(()=>lv("buyers",[]));
+  const[buyers,setBuyers]=useState(()=>{const b=lv("buyers",null);return b&&b.length>0?b:IB});
   const[sellers,setSellers]=useState(()=>{const s=lv("sellers",null);return s&&s.length>0?s:IS});
   const[tasks,setTasks]=useState(()=>lv("tasks",[]));
   const[brokerProps,setBrokerProps]=useState(()=>lv("brokerProps",[]));
