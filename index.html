@@ -328,7 +328,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
   // publish
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);
   // send property modal
-  const[sendModal,setSendModal]=useState(null);const[sendSelProp,setSendSelProp]=useState(null);
+  const[sendModal,setSendModal]=useState(null);const[sendSelProp,setSendSelProp]=useState(null);const[galleryOpen,setGalleryOpen]=useState(null);
   // log input
   const[logInput,setLogInput]=useState("");
 
@@ -412,6 +412,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
         {sel.phone&&<Btn sm ch="ווטסאפ" c={GR} onClick={()=>openWA(sel.phone)} icon="💬"/>}
         {tenantPhone&&<Btn sm ch="שוכר" c={BL} onClick={()=>openWA(tenantPhone)} icon="🏠"/>}
         <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("buyers")} icon="📤"/>
+        {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
 
@@ -459,6 +460,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
         <div style={{display:"flex",gap:8,marginTop:10}}><input placeholder="הוסף תיעוד..." value={logInput} onChange={e=>setLogInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&logInput){addLog(sel.id,logInput,"s");setLogInput("")}}} style={{...S.inp,flex:1}}/><Btn sm ch="+" c={G} onClick={()=>{if(logInput){addLog(sel.id,logInput,"s");setLogInput("")}}}/></div>
       </div>
     </div>
+    {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=><img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
   </div>}
 
   // VIEW BUYER
@@ -533,7 +535,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
 function BrokerPage({brokerProps,setBrokerProps,buyers}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
-  const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);
+  const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
 
   function addProp(){if(!ba&&!bn)return;const p={id:Date.now(),name:bn,phone:bp,address:ba,city:bc,rooms:br2,size:bs,floor:bf,price:bprice,notes:bnotes,images:bimgs,video:bvid,agentName:bagent,actions:[],logs:[],created:nowStr()};const np=[...brokerProps,p];setBrokerProps(np);sv("brokerProps",np);setBn("");setBp("");setBa("");setBr2("");setBs("");setBf("");setBprice("");setBnotes("");setBimgs([]);setBvid("");setBagent("");setMode("list");toast("✅ נכס נוסף")}
   function delProp(id){const np=brokerProps.filter(p=>p.id!==id);setBrokerProps(np);sv("brokerProps",np);setSel(null);setMode("list");toast("🗑 נמחק")}
@@ -565,6 +567,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
 
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
         <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("sendToBuyer")} icon="📤"/>
+        {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
       </div>
 
       {/* Send to buyer modal */}
@@ -601,6 +604,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
         </div>)}
       </div>}
     </div>
+    {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=><img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
   </div>}
 
   if(mode==="add"){return <div style={{padding:S.pg}} className="fade"><button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button><div style={{...S.card,border:"1px solid "+TE+"44"}}><div style={{fontWeight:800,color:TE,fontSize:18,marginBottom:20}}>🤝 נכס ממתווך</div><Inp label="שם מתווך (פנימי)" val={bagent} set={setBagent} mb={10} icon="🤝"/><Inp label="כתובת *" ph="רחוב 10" val={ba} set={setBa} mb={10}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="עיר" val={bc} set={setBc} mb={10}/><Inp label="מחיר" val={bprice} set={setBprice} mb={10}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><Inp label="חדרים" val={br2} set={setBr2} mb={10}/><Inp label="מ״ר" val={bs} set={setBs} mb={10}/><Inp label="קומה" val={bf} set={setBf} mb={10}/></div><Inp label="טלפון" val={bp} set={setBp} mb={10}/><Inp label="הערות" val={bnotes} set={setBnotes} rows={2} mb={14}/><Inp label="קישור סרטון" ph="https://..." val={bvid} set={setBvid} mb={14} icon="🎬"/><div style={{marginBottom:18}}><Lbl t="תמונות" icon="📷"/><ImgUp images={bimgs} onAdd={img=>setBimgs(p=>[...p,img])} onRemove={id=>setBimgs(p=>p.filter(i=>i.id!==id))}/></div><div style={{display:"flex",gap:10}}><Btn full ch="שמור" onClick={addProp} dis={!ba&&!bn} c={TE} icon="💾"/><Btn ghost ch="ביטול" onClick={()=>setMode("list")}/></div></div></div>}
