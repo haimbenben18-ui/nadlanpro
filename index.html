@@ -8,6 +8,8 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px;line-height:1.5;overscroll-behavior:none}
@@ -32,6 +34,11 @@ input[type=date]{color-scheme:dark}
 </head>
 <body>
 <div id="root"></div>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew",authDomain:"nadlanpro-5b041.firebaseapp.com",projectId:"nadlanpro-5b041",storageBucket:"nadlanpro-5b041.firebasestorage.app",messagingSenderId:"404856613598",appId:"1:404856613598:web:916fdd4cbbf05519eb304f"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+</script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
 const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c",RE="#c97e7e",TE="#4cc9a8";
@@ -190,9 +197,10 @@ function DailyPlan({tasks,setTasks}){
       <div onClick={()=>toggle(t.id)} style={{width:28,height:28,borderRadius:"50%",border:"2px solid "+(t.done?"#7ec97e":G+"44"),background:t.done?"#7ec97e":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#1a1208",cursor:"pointer",flexShrink:0}}>{t.done?"✓":""}</div>
       <div style={{flex:1}}>
         <div style={{fontSize:15,color:t.done?"#555":"#ede8f5",textDecoration:t.done?"line-through":"none"}}>{icons[t.type]||"📌"} {t.text}</div>
-        {t.clientName&&<div style={{fontSize:12,color:"#777",marginTop:2}}>{t.clientType==="buyer"?"👤 קונה":"🏡 מוכר"}: {t.clientName} {t.clientPhone&&"· "+t.clientPhone}</div>}
+        {t.clientName&&<div style={{fontSize:12,color:"#777",marginTop:2}}>{t.clientType==="buyer"?"👤 קונה":"🏡 מוכר"}: {t.clientName}{t.clientPhone&&<span style={{color:BL,marginRight:6}}> · {t.clientPhone}</span>}</div>}
       </div>
       <div style={{color:"#555",fontSize:13,flexShrink:0,fontWeight:600}}>{t.time}</div>
+      {t.clientPhone&&<a href={"tel:"+t.clientPhone} title="חייג" style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4,color:BL,textDecoration:"none"}}>📞</a>}
       {t.clientPhone&&<button onClick={()=>openWA(t.clientPhone)} title="ווטסאפ" style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4,color:GR}}>💬</button>}
       <button onClick={()=>addCal(t.text+(t.clientName?" — "+t.clientName:""))} title="יומן" style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:4}}>📅</button>
       <button onClick={()=>del(t.id)} style={{background:"none",border:"none",color:"#333",cursor:"pointer",fontSize:20,padding:4}}>×</button>
@@ -218,11 +226,10 @@ function DailyPlan({tasks,setTasks}){
 }
 
 // ━━━ RECRUIT (גיוס נכסים) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function Recruit(){
+function Recruit({prospects,setProspects}){
   const[phones,setPhones]=useState("");
   const[selMsg,setSelMsg]=useState(0);
   const[msg,setMsg]=useState("");
-  const[prospects,setProspects]=useState(()=>lv("prospects",[]));
   const[viewP,setViewP]=useState(null);
   const[mode,setMode]=useState("send"); // send | list
 
@@ -327,8 +334,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
 
   const allProps=[...sellers.map(s=>({...s,src:"s"})),...(brokerProps||[]).map(p=>({...p,src:"b"}))];
 
-  function addSeller(){if(!sn)return;const s={id:Date.now(),name:sn,phone:sp,address:sa,city:sc,rooms:sr,size:ss,floor:sf,price:sprice,reducedPrice:sred,exclusiveStart:ses,exclusiveEnd:see,notes:snotes,images:simgs,video:svid,actions:[],logs:[],created:nowStr()};const ns=[...sellers,s];setSellers(ns);sv("sellers",ns);setSn("");setSp("");setSa("");setSr("");setSs("");setSf("");setSprice("");setSred("");setSes("");setSee("");setSnotes("");setSimgs([]);setSvid("");setMode("list");toast("✅ מוכר נוסף")}
-  function addBuyer(){if(!bn)return;const b={id:Date.now(),name:bn,phone:bp,budget:bb,notes:bnotes,grade:bg,sentProperties:[],status:"חדש",actions:[],logs:[],created:nowStr()};const nb=[...buyers,b];setBuyers(nb);sv("buyers",nb);setBn("");setBp("");setBb("");setBnotes("");setBg("B");setMode("list");toast("✅ קונה נוסף")}
+  function addSeller(){if(!sn)return;const s={id:Date.now(),name:sn,phone:sp,address:sa,city:sc,rooms:sr,size:ss,floor:sf,price:sprice,reducedPrice:sred,exclusiveStart:ses,exclusiveEnd:see,notes:snotes,images:simgs,video:svid,actions:[],logs:[],created:nowStr(),archived:false};const ns=[...sellers,s];setSellers(ns);sv("sellers",ns);setSn("");setSp("");setSa("");setSr("");setSs("");setSf("");setSprice("");setSred("");setSes("");setSee("");setSnotes("");setSimgs([]);setSvid("");setMode("list");toast("✅ מוכר נוסף")}
+  function addBuyer(){if(!bn)return;const b={id:Date.now(),name:bn,phone:bp,budget:bb,notes:bnotes,grade:bg,sentProperties:[],status:"חדש",actions:[],logs:[],created:nowStr(),archived:false};const nb=[...buyers,b];setBuyers(nb);sv("buyers",nb);setBn("");setBp("");setBb("");setBnotes("");setBg("B");setMode("list");toast("✅ קונה נוסף")}
   function delS(id){if(!confirm("למחוק?"))return;const ns=sellers.filter(s=>s.id!==id);setSellers(ns);sv("sellers",ns);setSel(null);setMode("list");toast("🗑 נמחק")}
   function delB(id){if(!confirm("למחוק?"))return;const nb=buyers.filter(b=>b.id!==id);setBuyers(nb);sv("buyers",nb);setSel(null);setMode("list");toast("🗑 נמחק")}
   function updS(id,f,v){const ns=sellers.map(s=>s.id===id?{...s,[f]:v}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
@@ -357,8 +364,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
   const sActs=["שיחה ראשונית","פגישה בנכס","הסכם שיווק","צולמו תמונות","פורסם","הצעה התקבלה","עסקה נסגרה"];
   const bStatuses=["לפני סיור","נשלחו דירות","יצא לסיור","נתן הצעת מחיר","מתלבט","לשלוח דירות נוספות"];
 
-  const fS=sellers.filter(s=>!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase()));
-  const fB=buyers.filter(b=>!search||(b.name+(b.phone||"")).toLowerCase().includes(search.toLowerCase()));
+  const fS=sellers.filter(s=>!s.archived&&(!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase())));
+  const fB=buyers.filter(b=>!b.archived&&(!search||(b.name+(b.phone||"")).toLowerCase().includes(search.toLowerCase())));
 
   // VIEW SELLER
   if(mode==="view"&&sel&&tab==="sellers"){
@@ -368,7 +375,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
     <div style={{...S.card,border:"1px solid "+OR+"44"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
         <div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:"#ede8f5"}}>{sel.name}</div><div style={{color:"#777",fontSize:15,marginTop:4}}>{sel.phone}</div></div>
-        <Btn sm ch="🗑" c={RE} ghost onClick={()=>delS(sel.id)}/>
+        <div style={{display:"flex",gap:6}}><Btn sm ch="📦" c={PU} ghost onClick={()=>{updS(sel.id,"archived",true);setSel(null);setMode("list");toast("📦 הועבר לארכיון")}}/><Btn sm ch="🗑" c={RE} ghost onClick={()=>delS(sel.id)}/></div>
       </div>
       {/* Editable fields */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
@@ -464,7 +471,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
     <div style={{...S.card,border:"1px solid "+BL+"44"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
         <div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:"#ede8f5"}}>{sel.name}</div></div>
-        <div style={{display:"flex",gap:8}}><GradeBadge grade={sel.grade} onChange={v=>updB(sel.id,"grade",v)}/><Btn sm ch="🗑" c={RE} ghost onClick={()=>delB(sel.id)}/></div>
+        <div style={{display:"flex",gap:6}}><GradeBadge grade={sel.grade} onChange={v=>updB(sel.id,"grade",v)}/><Btn sm ch="📦" c={PU} ghost onClick={()=>{updB(sel.id,"archived",true);setSel(null);setMode("list");toast("📦 הועבר לארכיון")}}/><Btn sm ch="🗑" c={RE} ghost onClick={()=>delB(sel.id)}/></div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
         <Inp label="שם" val={sel.name} set={v=>updB(sel.id,"name",v)} mb={0}/>
@@ -692,11 +699,33 @@ function Settings({onClose}){
   </div>
 }
 
+// ━━━ ARCHIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function Archive({sellers,setSellers,buyers,setBuyers}){
+  const[tab,setTab]=useState("sellers");
+  const aS=sellers.filter(s=>s.archived);
+  const aB=buyers.filter(b=>b.archived);
+  function restoreS(id){const ns=sellers.map(s=>s.id===id?{...s,archived:false}:s);setSellers(ns);sv("sellers",ns);toast("↩️ הוחזר")}
+  function restoreB(id){const nb=buyers.map(b=>b.id===id?{...b,archived:false}:b);setBuyers(nb);sv("buyers",nb);toast("↩️ הוחזר")}
+  return <div style={{padding:S.pg}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>📦 ארכיון</div>
+    <div style={{display:"flex",gap:10,marginBottom:16}}><Pill ch="🏡 מוכרים" count={aS.length} active={tab==="sellers"} onClick={()=>setTab("sellers")} c={OR}/><Pill ch="👥 קונים" count={aB.length} active={tab==="buyers"} onClick={()=>setTab("buyers")} c={BL}/></div>
+    {tab==="sellers"&&<div>{aS.length===0&&<Empty icon="📦" text="אין מוכרים בארכיון"/>}{aS.map(s=><div key={s.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><Tag c={OR} ch={fmtP(s.price)}/></div>
+      <Btn sm ch="↩️ החזר" c={PU} onClick={()=>restoreS(s.id)}/>
+    </div>)}</div>}
+    {tab==="buyers"&&<div>{aB.length===0&&<Empty icon="📦" text="אין קונים בארכיון"/>}{aB.map(b=><div key={b.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div><div style={{color:"#777",fontSize:14}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div><GradeBadge grade={b.grade} onChange={()=>{}}/></div>
+      {b.notes&&<div style={{color:"#666",fontSize:13,marginBottom:10}}>{b.notes.substring(0,100)}</div>}
+      <Btn sm ch="↩️ החזר" c={PU} onClick={()=>restoreB(b.id)}/>
+    </div>)}</div>}
+  </div>
+}
+
 // ━━━ APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const TABS=[
   {k:"home",l:"בית",i:"🏠"},{k:"recruit",l:"גיוס",i:"📤"},{k:"daily",l:"יומי",i:"📅"},
   {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"report",l:"דיווח",i:"📊"},
-  {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"settings",l:"⚙️",i:"⚙️"},
+  {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"archive",l:"ארכיון",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
 
 const IB=[
@@ -724,11 +753,34 @@ const IB=[
 
 function App(){
   const[tab,setTab]=useState("home");
-  const[buyers,setBuyers]=useState(()=>{const b=lv("buyers",null);return b&&b.length>0?b:IB});
-  const[sellers,setSellers]=useState(()=>{const s=lv("sellers",null);return s&&s.length>0?s:IS});
-  const[tasks,setTasks]=useState(()=>lv("tasks",[]));
-  const[brokerProps,setBrokerProps]=useState(()=>lv("brokerProps",[]));
+  const[buyers,_setBuyers]=useState(()=>{const b=lv("buyers",null);return b&&b.length>0?b:IB});
+  const[sellers,_setSellers]=useState(()=>{const s=lv("sellers",null);return s&&s.length>0?s:IS});
+  const[tasks,_setTasks]=useState(()=>lv("tasks",[]));
+  const[brokerProps,_setBrokerProps]=useState(()=>lv("brokerProps",[]));
   const[hotProps,setHotProps]=useState(()=>lv("hotProps",[]));
+
+  function fsWrite(name,items){try{db.collection("data").doc(name).set({items})}catch(e){console.error("Firestore write error:",e)}}
+  function setBuyers(v){_setBuyers(v);sv("buyers",v);fsWrite("buyers",v)}
+  function setSellers(v){_setSellers(v);sv("sellers",v);fsWrite("sellers",v)}
+  function setTasks(v){_setTasks(v);sv("tasks",v);fsWrite("tasks",v)}
+  function setBrokerProps(v){_setBrokerProps(v);sv("brokerProps",v);fsWrite("brokerProps",v)}
+
+  const[prospects,_setProspects]=useState(()=>lv("prospects",[]));
+  function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
+
+  useEffect(()=>{
+    const cols=["buyers","sellers","tasks","brokerProps","prospects"];
+    const setters={buyers:_setBuyers,sellers:_setSellers,tasks:_setTasks,brokerProps:_setBrokerProps,prospects:_setProspects};
+    cols.forEach(name=>{
+      db.collection("data").doc(name).get().then(doc=>{
+        if(doc.exists&&doc.data().items&&doc.data().items.length>0){
+          const items=doc.data().items;
+          setters[name](items);
+          sv(name,items);
+        }
+      }).catch(e=>console.error("Firestore load error:",name,e));
+    });
+  },[]);
 
   return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:92}}>
     <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 60% 45% at 12% 8%,rgba(100,70,180,0.07) 0%,transparent 55%)",pointerEvents:"none",zIndex:0}}/>
@@ -741,13 +793,14 @@ function App(){
       </div>
 
       {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab}/>}
-      {tab==="recruit"&&<Recruit/>}
+      {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
       {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps}/>}
       {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
       {tab==="uni"&&<University/>}
+      {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
       <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(201,168,76,0.1)",display:"flex",zIndex:200,padding:"6px 0 12px",overflowX:"auto"}}>
