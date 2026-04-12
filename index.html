@@ -96,7 +96,18 @@ function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb!==unde
 function Empty({icon,text}){return <div style={{...S.card,textAlign:"center",color:"#444",padding:40}}><div style={{fontSize:44,marginBottom:12,opacity:.7}}>{icon}</div><div style={{color:"#555"}}>{text}</div></div>}
 function Modal({children,onClose,title,color}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"#13111c",borderRadius:"22px 22px 18px 18px",padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(255,255,255,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:800,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
 
-function openWA(phone,msg){const p=(phone||"").replace(/^0/,"972").replace(/[-\s]/g,"");if(!p){toast("⚠️ אין מספר טלפון");return}window.open("https://wa.me/"+p+(msg?"?text="+encodeURIComponent(msg):""),"_blank")}
+function openWA(phone,msg){
+  const p=(phone||"").replace(/^0/,"972").replace(/[-\s]/g,"");
+  if(!p&&!msg){toast("⚠️ אין מספר טלפון");return}
+  const encodedMsg=msg?encodeURIComponent(msg):"";
+  let url;
+  if(p){
+    url="https://api.whatsapp.com/send?phone="+p+(msg?"&text="+encodedMsg:"");
+  }else{
+    url="https://api.whatsapp.com/send?text="+encodedMsg;
+  }
+  window.open(url,"_blank");
+}
 function addCal(title,date,time){const dt=date||(new Date().toISOString().split("T")[0]);const t=time||"09:00";const s=dt.replace(/-/g,"")+"T"+t.replace(":","")+"00";const h=String(Math.min(23,parseInt(t.split(":")[0])+1)).padStart(2,"0");const e=dt.replace(/-/g,"")+"T"+h+t.split(":")[1]+"00";window.open("https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+s+"/"+e,"_blank")}
 function fmtP(p){return p?Number(p).toLocaleString("he-IL")+"₪":"—"}
 function daysTo(str){if(!str)return null;const p=str.split("/");if(p.length<3)return null;const y=p[2].length===2?"20"+p[2]:p[2];return Math.ceil((new Date(parseInt(y),parseInt(p[1])-1,parseInt(p[0]))-new Date())/86400000)}
@@ -461,7 +472,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
             {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
           </div>
           <Btn full ch={pubLoading?"מייצר...":"צור פרסום"} onClick={()=>genPublish(sel)} dis={pubLoading} icon="🤖"/>
-          {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/>{pubPlat==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(pubResult),"_blank")} icon="📱"/>}<Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updS(sel.id,"savedAds",ads);toast("💾 פרסום "+pubPlat+" נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPublish(sel)}/></div></div>}
+          {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/>{pubPlat==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",pubResult)} icon="📱"/>}<Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updS(sel.id,"savedAds",ads);toast("💾 פרסום "+pubPlat+" נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPublish(sel)}/></div></div>}
         </div>}
       </div>
 
@@ -476,7 +487,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
           <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
           <div style={{display:"flex",gap:8,marginTop:8}}>
             <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
-            {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(ad.text),"_blank")} icon="📱"/>}
+            {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",ad.text)} icon="📱"/>}
           </div>
         </div>)}
       </div>}
