@@ -123,7 +123,7 @@ const GRADES={A:{c:"#7ec97e",l:"A — חם 🔥"},B:{c:OR,l:"B — פוטנצי�
 function GradeBadge({grade,onChange}){const[open,setOpen]=useState(false);const g=GRADES[grade||"B"];return <div style={{position:"relative"}}><button onClick={()=>setOpen(!open)} style={{background:g.c+"18",border:"1px solid "+g.c+"44",borderRadius:10,padding:"5px 14px",color:g.c,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.l} ▾</button>{open&&<div style={{position:"absolute",top:"115%",right:0,background:"#1c1a28",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,zIndex:200,minWidth:155,overflow:"hidden",boxShadow:"0 12px 40px rgba(0,0,0,.5)"}}>{Object.entries(GRADES).map(([k,v])=><div key={k} onClick={()=>{onChange(k);setOpen(false);toast("✅ דירוג עודכן ל-"+k)}} style={{padding:"12px 18px",cursor:"pointer",color:v.c,fontSize:14,fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{v.l}</div>)}</div>}</div>}
 
 // ━━━ DASHBOARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab}){
+function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab,setCrmInitTab}){
   const today=new Date();
   const pending=tasks.filter(t=>!t.done).length;
   const expiring=sellers.filter(s=>{const d=daysTo(s.exclusiveEnd);return d!==null&&d>=0&&d<=14});
@@ -134,7 +134,7 @@ function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab
   return <div style={{padding:S.pg}} className="fade">
     <div style={{marginBottom:24}}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:30,fontWeight:900,lineHeight:1.2}}><span className="shimmer">שלום חיים 👋</span></div><div style={{color:"#666",fontSize:15,marginTop:6}}>{today.toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long"})}</div></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-      {[{l:"מוכרים",v:sellers.length,i:"🏡",c:OR,tab:"crm"},{l:"קונים",v:buyers.length,i:"👥",c:BL,tab:"crm"},{l:"בלעדיויות",v:sellers.filter(s=>s.exclusiveEnd).length,i:"📋",c:G,tab:"crm"},{l:"משימות",v:pending,i:"⚡",c:PU,tab:"daily"}].map(s=><div key={s.l} onClick={()=>setTab(s.tab)} style={{...S.card,padding:20,textAlign:"center",cursor:"pointer"}}><div style={{fontSize:30,marginBottom:8}}>{s.i}</div><div style={{fontSize:36,fontWeight:900,color:s.c,fontFamily:"'Frank Ruhl Libre',serif",lineHeight:1}}>{s.v}</div><div style={{fontSize:13,color:"#555",marginTop:8,fontWeight:600}}>{s.l}</div></div>)}
+      {[{l:"מוכרים",v:sellers.length,i:"🏡",c:OR,go:()=>{setCrmInitTab("sellers");setTab("crm")}},{l:"קונים",v:buyers.length,i:"👥",c:BL,go:()=>{setCrmInitTab("buyers");setTab("crm")}},{l:"בלעדיויות",v:sellers.filter(s=>s.exclusiveEnd).length,i:"📋",c:G,go:()=>{setCrmInitTab("sellers");setTab("crm")}},{l:"משימות",v:pending,i:"⚡",c:PU,go:()=>setTab("daily")}].map(s=><div key={s.l} onClick={s.go} style={{...S.card,padding:20,textAlign:"center",cursor:"pointer"}}><div style={{fontSize:30,marginBottom:8}}>{s.i}</div><div style={{fontSize:36,fontWeight:900,color:s.c,fontFamily:"'Frank Ruhl Libre',serif",lineHeight:1}}>{s.v}</div><div style={{fontSize:13,color:"#555",marginTop:8,fontWeight:600}}>{s.l}</div></div>)}
     </div>
 
     {/* Hot Properties */}
@@ -327,8 +327,9 @@ function Recruit({prospects,setProspects}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps}){
-  const[tab,setTab]=useState("sellers");const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
+  const[tab,setTab]=useState(initialTab||"sellers");
+  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   // seller form
   const[sn,setSn]=useState("");const[sp,setSp]=useState("");const[sa,setSa]=useState("");const[sc,setSc]=useState("באר שבע");const[sr,setSr]=useState("");const[ss,setSs]=useState("");const[sf,setSf]=useState("");const[sprice,setSprice]=useState("");const[sred,setSred]=useState("");const[ses,setSes]=useState("");const[see,setSee]=useState("");const[snotes,setSnotes]=useState("");const[simgs,setSimgs]=useState([]);const[svid,setSvid]=useState("");
   // buyer form
@@ -767,7 +768,7 @@ const IB=[
 ];
 
 function App(){
-  const[tab,setTab]=useState("home");
+  const[tab,setTab]=useState("home");const[crmInitTab,setCrmInitTab]=useState("sellers");
   const[buyers,_setBuyers]=useState(()=>{const b=lv("buyers",null);return b&&b.length>0?b:IB});
   const[sellers,_setSellers]=useState(()=>{const s=lv("sellers",null);return s&&s.length>0?s:IS});
   const[tasks,_setTasks]=useState(()=>lv("tasks",[]));
@@ -807,10 +808,10 @@ function App(){
         </div>
       </div>
 
-      {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab}/>}
+      {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab}/>}
       {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
