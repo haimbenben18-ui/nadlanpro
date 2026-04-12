@@ -337,7 +337,16 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
   // publish
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);
   // send property modal
-  const[sendModal,setSendModal]=useState(null);const[sendSelProp,setSendSelProp]=useState(null);const[galleryOpen,setGalleryOpen]=useState(null);
+  const[sendModal,setSendModal]=useState(null);const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");const[galleryOpen,setGalleryOpen]=useState(null);
+  function buildSendMsg(buyerName,prop,variant){
+    const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
+    const tpls=[
+      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
+      "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
+    ];
+    return tpls[(variant||0)%tpls.length];
+  }
   // log input
   const[logInput,setLogInput]=useState("");
 
@@ -356,13 +365,13 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
     else{const nb=buyers.map(b=>b.id===id?{...b,logs:[...(b.logs||[]),{text,time:nowStr()}]}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
   }
   function sendPropertyToBuyer(buyerId,prop){
-    const nb=buyers.map(b=>{if(b.id!==buyerId)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:prop.id,address:prop.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלחה דירה: "+prop.address,time:nowStr()}]}});
-    setBuyers(nb);sv("buyers",nb);
-    const waMsg="שלום "+(buyers.find(b=>b.id===buyerId)?.name||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך — דירה ב"+(prop.address||"")+"\n\n🏠 "+(prop.rooms||"?")+" חדרים | "+(prop.size||"?")+"מ״ר\n🏢 קומה "+(prop.floor||"")+"\n💰 "+fmtP(prop.price)+"\n\nאשלח פרטים נוספים? 📸\n\nחיים | RE/MAX";
     const buyer=buyers.find(b=>b.id===buyerId);
-    if(buyer?.phone)openWA(buyer.phone,waMsg);
-    toast("✅ דירה נשלחה");setSendModal(null)
+    setSendBuyer(buyer||null);
+    setSendMsg(buildSendMsg(buyer?.name||"",prop,0));
+    setSendModal("msgEdit");
+    setSendSelProp(prop);
   }
+  const[sendSelProp,setSendSelProp]=useState(null);
 
   async function genPublish(s){
     setPubLoading(true);setPubResult(null);
@@ -428,12 +437,20 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
       </div>
 
       {/* Send to buyer modal */}
-      {sendModal==="buyers"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
+      {sendModal==="buyers"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
         <Lbl t="בחר קונה לשליחה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{const waMsg="שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך — דירה ב"+sel.address+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nאשלח פרטים? 📸\nחיים | RE/MAX";if(b.phone)openWA(b.phone,waMsg);const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+b.name);setSendModal(null)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg(buildSendMsg(b.name,sel,0))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
+      </Modal>}
+      {sendModal==="buyers"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={OR} onClose={()=>{setSendBuyer(null);setSendModal(null)}}>
+        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
+        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sel,Math.floor(Math.random()*3)))} icon="🔄"/>
+          <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb2=buyers.map(x=>x.id===sendBuyer.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setSendModal(null)}} icon="📱"/>
+        </div>
       </Modal>}
 
       {/* Publish */}
@@ -476,9 +493,17 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
 
   // VIEW BUYER
   if(mode==="view"&&sel&&tab==="buyers"){return <div style={{padding:S.pg}} className="fade">
-    {sendModal&&<Modal title="שלח דירה" color={BL} onClose={()=>setSendModal(null)}>
+    {sendModal&&sendModal!=="msgEdit"&&<Modal title="שלח דירה" color={BL} onClose={()=>setSendModal(null)}>
       <Lbl t="בחר נכס"/>
       {allProps.map(p=><div key={p.id+p.src} onClick={()=>sendPropertyToBuyer(sel.id,p)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}><div><div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:12}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div></div><span style={{color:BL,fontSize:20}}>→</span></div>)}
+    </Modal>}
+    {sendModal==="msgEdit"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={BL} onClose={()=>{setSendBuyer(null);setSendSelProp(null);setSendModal(null)}}>
+      <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
+      <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sendSelProp,Math.floor(Math.random()*3)))} icon="🔄"/>
+        <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb=buyers.map(b=>{if(b.id!==sendBuyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:sendSelProp.id,address:sendSelProp.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלחה דירה: "+sendSelProp.address,time:nowStr()}]}});setBuyers(nb);sv("buyers",nb);toast("✅ דירה נשלחה");setSendBuyer(null);setSendSelProp(null);setSendModal(null)}} icon="📱"/>
+      </div>
     </Modal>}
     <button onClick={()=>{setSel(null);setMode("list")}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button>
     <div style={{...S.card,border:"1px solid "+BL+"44"}}>
@@ -548,6 +573,16 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
+  const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");
+  function buildSendMsg(buyerName,prop,variant){
+    const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
+    const tpls=[
+      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
+      "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
+    ];
+    return tpls[(variant||0)%tpls.length];
+  }
 
   function addProp(){if(!ba&&!bn)return;const p={id:Date.now(),name:bn,phone:bp,address:ba,city:bc,rooms:br2,size:bs,floor:bf,price:bprice,notes:bnotes,images:bimgs,video:bvid,agentName:bagent,actions:[],logs:[],created:nowStr()};const np=[...brokerProps,p];setBrokerProps(np);sv("brokerProps",np);setBn("");setBp("");setBa("");setBr2("");setBs("");setBf("");setBprice("");setBnotes("");setBimgs([]);setBvid("");setBagent("");setMode("list");toast("✅ נכס נוסף")}
   function delProp(id){const np=brokerProps.filter(p=>p.id!==id);setBrokerProps(np);sv("brokerProps",np);setSel(null);setMode("list");toast("🗑 נמחק")}
@@ -583,12 +618,20 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       </div>
 
       {/* Send to buyer modal */}
-      {pubOpen==="sendToBuyer"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
+      {pubOpen==="sendToBuyer"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="בחר קונה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{const waMsg="שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\n\nדירה ב"+(sel.address||"")+"\n🏠 "+(sel.rooms||"?")+" חד | "+(sel.size||"?")+"מ\n💰 "+fmtP(sel.price)+"\n\nאשלח פרטים? 📸\nחיים | RE/MAX";if(b.phone)openWA(b.phone,waMsg);toast("✅ נשלח ל"+b.name);setPubOpen(false)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg(buildSendMsg(b.name,sel,0))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
+      </Modal>}
+      {pubOpen==="sendToBuyer"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={GR} onClose={()=>{setSendBuyer(null);setPubOpen(false)}}>
+        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
+        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sel,Math.floor(Math.random()*3)))} icon="🔄"/>
+          <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setPubOpen(false)}} icon="📱"/>
+        </div>
       </Modal>}
 
       {/* Publish - no yad2 */}
