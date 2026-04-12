@@ -785,17 +785,19 @@ function App(){
   function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
 
   useEffect(()=>{
-    const cols=["buyers","sellers","tasks","brokerProps","prospects"];
     const setters={buyers:_setBuyers,sellers:_setSellers,tasks:_setTasks,brokerProps:_setBrokerProps,prospects:_setProspects};
-    cols.forEach(name=>{
-      db.collection("data").doc(name).get().then(doc=>{
-        if(doc.exists&&doc.data().items&&doc.data().items.length>0){
-          const items=doc.data().items;
+    const unsubs=[];
+    ["buyers","sellers","tasks","brokerProps","prospects"].forEach(name=>{
+      const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
+        if(doc.exists){
+          const items=doc.data().items||[];
           setters[name](items);
           sv(name,items);
         }
-      }).catch(e=>console.error("Firestore load error:",name,e));
+      },e=>console.error("Firestore sync error:",name,e));
+      unsubs.push(unsub);
     });
+    return()=>unsubs.forEach(u=>u());
   },[]);
 
   return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:92}}>
