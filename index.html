@@ -769,34 +769,44 @@ const IB=[
 
 function App(){
   const[tab,setTab]=useState("home");const[crmInitTab,setCrmInitTab]=useState("sellers");
-  const[buyers,_setBuyers]=useState(()=>{const b=lv("buyers",null);return b&&b.length>0?b:IB});
-  const[sellers,_setSellers]=useState(()=>{const s=lv("sellers",null);return s&&s.length>0?s:IS});
-  const[tasks,_setTasks]=useState(()=>lv("tasks",[]));
-  const[brokerProps,_setBrokerProps]=useState(()=>lv("brokerProps",[]));
+  const[loaded,setLoaded]=useState(false);
+  const[buyers,_setBuyers]=useState([]);
+  const[sellers,_setSellers]=useState([]);
+  const[tasks,_setTasks]=useState([]);
+  const[brokerProps,_setBrokerProps]=useState([]);
   const[hotProps,setHotProps]=useState(()=>lv("hotProps",[]));
+  const[prospects,_setProspects]=useState([]);
 
   function fsWrite(name,items){try{const size=JSON.stringify(items).length;if(size>900000){toast("⚠️ יותר מדי תמונות — מחק כמה");return}db.collection("data").doc(name).set({items})}catch(e){console.error("Firestore write error:",e)}}
   function setBuyers(v){_setBuyers(v);sv("buyers",v);fsWrite("buyers",v)}
   function setSellers(v){_setSellers(v);sv("sellers",v);fsWrite("sellers",v)}
   function setTasks(v){_setTasks(v);sv("tasks",v);fsWrite("tasks",v)}
   function setBrokerProps(v){_setBrokerProps(v);sv("brokerProps",v);fsWrite("brokerProps",v)}
-
-  const[prospects,_setProspects]=useState(()=>lv("prospects",[]));
   function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
 
   useEffect(()=>{
-    const setters={buyers:_setBuyers,sellers:_setSellers,tasks:_setTasks,brokerProps:_setBrokerProps,prospects:_setProspects};
-    const unsubs=[];
-    ["buyers","sellers","tasks","brokerProps","prospects"].forEach(name=>{
-      const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
-        if(doc.exists){
-          const items=doc.data().items||[];
-          setters[name](items);
-          sv(name,items);
+    let unsubs=[];
+    (async()=>{
+      try{
+        const initDoc=await db.collection("data").doc("_init").get();
+        if(!initDoc.exists){
+          await db.collection("data").doc("sellers").set({items:IS});
+          await db.collection("data").doc("buyers").set({items:IB});
+          await db.collection("data").doc("tasks").set({items:[]});
+          await db.collection("data").doc("brokerProps").set({items:[]});
+          await db.collection("data").doc("prospects").set({items:[]});
+          await db.collection("data").doc("_init").set({done:true,time:new Date().toISOString()});
         }
-      },e=>console.error("Firestore sync error:",name,e));
-      unsubs.push(unsub);
-    });
+      }catch(e){console.error("Firestore init error:",e)}
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects]];
+      collections.forEach(([name,setter])=>{
+        const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
+          if(doc.exists){const items=doc.data().items||[];setter(items);sv(name,items)}
+        },e=>console.error("Firestore sync error:",name,e));
+        unsubs.push(unsub);
+      });
+      setLoaded(true);
+    })();
     return()=>unsubs.forEach(u=>u());
   },[]);
 
