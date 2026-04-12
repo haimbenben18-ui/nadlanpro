@@ -386,7 +386,29 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
 
   async function genPublish(s){
     setPubLoading(true);setPubResult(null);
-    const prompts={whatsapp:"כתוב הודעת ווטסאפ שיווקית. חם, אישי, עם אמוג'י. עד 8 שורות.\nנכס: "+s.address+", "+s.city+", "+(s.rooms||"?")+" חד, "+(s.size||"?")+"מ, קומה "+(s.floor||"")+", "+s.price+"₪",yad2:"כתוב מודעת יד2. כותרת + תיאור + פרטים טכניים. עד 150 מילה.\nנכס: "+s.address+", "+s.city+", "+(s.rooms||"?")+" חד, "+(s.size||"?")+"מ, "+s.price+"₪",facebook:"כתוב פוסט פייסבוק שיווקי. 6-8 שורות עם אמוג'י.\nנכס: "+s.address+", "+s.city+", "+(s.rooms||"?")+" חד, "+s.price+"₪",instagram:"כתוב קפשן אינסטגרם. 3-5 שורות + האשטגים.\nנכס: "+s.address+", "+s.city+", "+(s.rooms||"?")+" חד, "+s.price+"₪",tiktok:"סקריפט טיקטוק 45 שניות. HOOK + גוף + CTA.\nנכס: "+s.address+", "+s.city+", "+(s.rooms||"?")+" חד, "+(s.size||"?")+"מ, "+s.price+"₪"};
+    const streetOnly=(s.address||"").replace(/\s*\d+.*/,"").trim();
+    const notes=s.notes||"";
+    const basePrompt="נכס למכירה בבאר שבע:\n"+
+      "רחוב: "+streetOnly+"\n"+
+      "עיר: "+(s.city||"באר שבע")+"\n"+
+      (s.rooms?"חדרים: "+s.rooms+"\n":"")+
+      (s.size?"גודל: "+s.size+" מ\"ר\n":"")+
+      (s.floor?"קומה: "+s.floor+"\n":"")+
+      "מחיר: "+(s.price||"")+" ש\"ח"+(s.reducedPrice?" (מוזל מ-"+s.reducedPrice+")":"")+"\n"+
+      (notes?"\nהערות חשובות (התייחס אליהן בפרסום אם רלוונטי): "+notes+"\n":"")+
+      "\nחשוב:\n"+
+      "- כתוב רק את שם הרחוב, בלי מספר בית\n"+
+      "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
+      "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
+      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
+      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+    const prompts={
+      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
+      yad2:basePrompt+"\nכתוב מודעת יד2 מקצועית עם כותרת קצרה בשורה ראשונה, תיאור מפתה, פרטים טכניים, ו-CTA. עד 150 מילה.",
+      facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
+      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
+      tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
+    };
     try{const txt=await aiCall(prompts[pubPlat],500);setPubResult(txt)}catch(e){toast("⚠️ שגיאה")}setPubLoading(false)
   }
 
@@ -599,7 +621,32 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
   function delProp(id){const np=brokerProps.filter(p=>p.id!==id);setBrokerProps(np);sv("brokerProps",np);setSel(null);setMode("list");toast("🗑 נמחק")}
   function updProp(id,f,v){const np=brokerProps.map(p=>p.id===id?{...p,[f]:v}:p);setBrokerProps(np);sv("brokerProps",np);if(sel&&sel.id===id)setSel(np.find(p=>p.id===id))}
 
-  async function genPub(s){setPubLoading(true);setPubResult(null);const prompts={whatsapp:"כתוב הודעת ווטסאפ שיווקית. חם, אישי. עד 8 שורות.\nנכס: "+(s.address||"")+", "+(s.city||"")+", "+(s.rooms||"?")+" חד, "+(s.size||"?")+"מ, "+s.price+"₪",facebook:"פוסט פייסבוק שיווקי. 6-8 שורות.\nנכס: "+(s.address||"")+", "+(s.rooms||"?")+" חד, "+s.price+"₪",instagram:"קפשן אינסטגרם. 3-5 שורות + האשטגים.\nנכס: "+(s.address||"")+", "+(s.rooms||"?")+" חד, "+s.price+"₪",tiktok:"סקריפט טיקטוק 45שנ. HOOK+גוף+CTA.\nנכס: "+(s.address||"")+", "+(s.rooms||"?")+" חד, "+s.price+"₪"};try{const txt=await aiCall(prompts[pubPlat]||prompts.whatsapp,500);setPubResult(txt)}catch(e){toast("⚠️ שגיאה")}setPubLoading(false)}
+  async function genPub(s){
+    setPubLoading(true);setPubResult(null);
+    const streetOnly=(s.address||"").replace(/\s*\d+.*/,"").trim();
+    const notes=s.notes||"";
+    const basePrompt="נכס למכירה בבאר שבע:\n"+
+      "רחוב: "+streetOnly+"\n"+
+      "עיר: "+(s.city||"באר שבע")+"\n"+
+      (s.rooms?"חדרים: "+s.rooms+"\n":"")+
+      (s.size?"גודל: "+s.size+" מ\"ר\n":"")+
+      (s.floor?"קומה: "+s.floor+"\n":"")+
+      "מחיר: "+(s.price||"")+" ש\"ח"+(s.reducedPrice?" (מוזל מ-"+s.reducedPrice+")":"")+"\n"+
+      (notes?"\nהערות חשובות (התייחס אליהן בפרסום אם רלוונטי): "+notes+"\n":"")+
+      "\nחשוב:\n"+
+      "- כתוב רק את שם הרחוב, בלי מספר בית\n"+
+      "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
+      "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
+      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
+      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+    const prompts={
+      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
+      facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
+      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
+      tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
+    };
+    try{const txt=await aiCall(prompts[pubPlat]||prompts.whatsapp,500);setPubResult(txt)}catch(e){toast("⚠️ שגיאה")}setPubLoading(false)
+  }
 
   const fP=brokerProps.filter(p=>!search||(p.address+p.name+p.agentName).toLowerCase().includes(search.toLowerCase()));
 
