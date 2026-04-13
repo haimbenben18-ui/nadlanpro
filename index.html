@@ -186,7 +186,7 @@ function fmtP(p){if(!p||isNaN(Number(p)))return"—";return Number(p).toLocaleSt
 function daysTo(str){if(!str)return null;const p=str.split("/");if(p.length<3)return null;const y=p[2].length===2?"20"+p[2]:p[2];return Math.ceil((new Date(parseInt(y),parseInt(p[1])-1,parseInt(p[0]))-new Date())/86400000)}
 function nowStr(){const d=new Date();return d.toLocaleDateString("he")+" "+d.toLocaleTimeString("he",{hour:"2-digit",minute:"2-digit"})}
 
-function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]=useState(null);async function handle(files){for(const f of Array.from(files)){try{toast("⏳ מעלה תמונה...");const fd=new FormData();fd.append('file',f);fd.append('upload_preset','nadlanpro');const r=await fetch('https://api.cloudinary.com/v1_1/dopvqfgzw/image/upload',{method:'POST',body:fd});const d=await r.json();if(d.secure_url){onAdd({id:Date.now()+Math.random(),url:d.secure_url});toast("✅ תמונה הועלתה")}else{toast("❌ שגיאה בהעלאה");console.error(d)}}catch(e){toast("❌ "+e.message);console.error(e)}}}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/></div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} onClick={()=>setPrev(img.url)} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)",cursor:"pointer"}}/>{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-8,left:-8,width:24,height:24,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:92,height:74,borderRadius:12,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:26}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
+function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]=useState(null);async function handle(files){const arr=Array.from(files);if(arr.length===0)return;toast("⏳ מעלה "+arr.length+" תמונות...");const newImages=[];for(const f of arr){try{const fd=new FormData();fd.append('file',f);fd.append('upload_preset','nadlanpro');const r=await fetch('https://api.cloudinary.com/v1_1/dopvqfgzw/image/upload',{method:'POST',body:fd});const d=await r.json();if(d.secure_url){newImages.push({id:Date.now()+Math.random(),url:d.secure_url})}}catch(e){console.error(e)}}if(newImages.length>0){onAdd(newImages);toast("✅ "+newImages.length+" תמונות הועלו")}else{toast("❌ שגיאה בהעלאה")}}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/></div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} onClick={()=>setPrev(img.url)} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)",cursor:"pointer"}}/>{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-8,left:-8,width:24,height:24,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:92,height:74,borderRadius:12,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:26}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
 
 async function aiCall(prompt,max=900){
   const key=getKey();
@@ -242,11 +242,21 @@ function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab
 
     {/* Sent buyers */}
     {sentBuyers.length>0&&<div style={{...S.card,border:"1px solid "+BL+"33",marginTop:6}}>
-      <div style={{fontWeight:700,color:BL,fontSize:16,marginBottom:10}}>📤 קונים שנשלחו אליהם דירות</div>
-      {sentBuyers.map(b=><div key={b.id} style={{padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-        <div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{b.name} · <GradeBadge grade={b.grade} onChange={()=>{}}/></div>
-        <div style={{color:"#777",fontSize:12}}>{b.sentProperties.length} דירות נשלחו</div>
-      </div>)}
+      <div style={{fontWeight:700,color:BL,fontSize:16,marginBottom:10}}>📤 קונים שנשלחו להם דירות - פולואפ</div>
+      <div style={{color:"#666",fontSize:12,marginBottom:12}}>התקשר מחר לקבוע סיור</div>
+      {sentBuyers.map(b=>{const lastSent=b.sentProperties&&b.sentProperties.length>0?b.sentProperties[b.sentProperties.length-1]:null;return <div key={b.id} style={{padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+          <div>
+            <div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{b.name} · <GradeBadge grade={b.grade} onChange={()=>{}}/></div>
+            <div style={{color:"#777",fontSize:12}}>{b.phone} · {b.sentProperties.length} דירות נשלחו</div>
+            {lastSent&&<div style={{color:"#555",fontSize:11}}>אחרון: {lastSent.address} ({lastSent.time})</div>}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {b.phone&&<Btn sm ch="📞 חיוג" c={BL} onClick={()=>window.location.href='tel:'+b.phone}/>}
+          {b.phone&&<Btn sm ch="💬 פולואפ" c={GR} onClick={()=>openWA(b.phone,"שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\nבהמשך לדירות ששלחתי לך, רציתי לשמוע מה אתה חושב?\n\nנוח לך שנקבע סיור השבוע?\n\n📞 חיים | 054-4740691")}/>}
+        </div>
+      </div>})}
     </div>}
 
     {expiring.length>0&&<div style={{...S.card,border:"1px solid rgba(232,168,76,0.3)",marginTop:6}}>
@@ -411,7 +421,7 @@ function Recruit({prospects,setProspects}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps}){
   const[tab,setTab]=useState(initialTab||"sellers");
   useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   // seller form
@@ -544,6 +554,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
         {sel.tenantPhone&&<Btn sm ch="שוכר 📞" c={BL} onClick={()=>window.location.href='tel:'+sel.tenantPhone}/>}
         <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("choose")} icon="📤"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
+        {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
 
@@ -558,10 +569,10 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
       {sendModal==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setSendModal(null)}>
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
-        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות יצורפו אוטומטית</div>}
+        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות זמינות בכרטיסייה — צרף ידנית אחרי בחירת הקבוצה</div>}
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
           <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);await sendWhatsAppMedia("",sendMsg,urls);setSendModal(null)}} icon="📱"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);if(sel.images&&sel.images.length>0)toast("📸 התמונות זמינות בכרטיסייה - צרף ידנית אחרי בחירת הקבוצה");setSendModal(null)}} icon="📱"/>
         </div>
       </Modal>}
       {/* Send to buyer modal */}
@@ -681,7 +692,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
 }
 
 // ━━━ BROKER PROPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function BrokerPage({brokerProps,setBrokerProps,buyers}){
+function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
@@ -752,6 +763,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
         <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("chooseMethod")} icon="📤"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
+        {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
 
       {/* Send choose modal */}
@@ -765,10 +777,10 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       {pubOpen==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
-        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות יצורפו אוטומטית</div>}
+        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות זמינות בכרטיסייה — צרף ידנית אחרי בחירת הקבוצה</div>}
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
           <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);await sendWhatsAppMedia("",sendMsg,urls);setPubOpen(false)}} icon="📱"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);if(sel.images&&sel.images.length>0)toast("📸 התמונות זמינות בכרטיסייה - צרף ידנית אחרי בחירת הקבוצה");setPubOpen(false)}} icon="📱"/>
         </div>
       </Modal>}
       {/* Send to buyer modal */}
@@ -1017,8 +1029,8 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab}/>}
-      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
+      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
       {tab==="uni"&&<University/>}
