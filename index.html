@@ -207,7 +207,7 @@ const GRADES={A:{c:"#7ec97e",l:"A — חם 🔥"},B:{c:OR,l:"B — פוטנצי�
 function GradeBadge({grade,onChange}){const[open,setOpen]=useState(false);const g=GRADES[grade||"B"];return <div style={{position:"relative"}}><button onClick={()=>setOpen(!open)} style={{background:g.c+"18",border:"1px solid "+g.c+"44",borderRadius:10,padding:"5px 14px",color:g.c,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.l} ▾</button>{open&&<div style={{position:"absolute",top:"115%",right:0,background:"#1c1a28",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,zIndex:200,minWidth:155,overflow:"hidden",boxShadow:"0 12px 40px rgba(0,0,0,.5)"}}>{Object.entries(GRADES).map(([k,v])=><div key={k} onClick={()=>{onChange(k);setOpen(false);toast("✅ דירוג עודכן ל-"+k)}} style={{padding:"12px 18px",cursor:"pointer",color:v.c,fontSize:14,fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{v.l}</div>)}</div>}</div>}
 
 // ━━━ DASHBOARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab,setCrmInitTab}){
+function Dashboard({buyers,setBuyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab,setCrmInitTab}){
   const today=new Date();
   const pending=tasks.filter(t=>!t.done).length;
   const expiring=sellers.filter(s=>{const d=daysTo(s.exclusiveEnd);return d!==null&&d>=0&&d<=14});
@@ -241,23 +241,37 @@ function Dashboard({buyers,sellers,tasks,hotProps,setHotProps,brokerProps,setTab
     </div>
 
     {/* Sent buyers */}
-    {sentBuyers.length>0&&<div style={{...S.card,border:"1px solid "+BL+"33",marginTop:6}}>
-      <div style={{fontWeight:700,color:BL,fontSize:16,marginBottom:10}}>📤 קונים שנשלחו להם דירות - פולואפ</div>
-      <div style={{color:"#666",fontSize:12,marginBottom:12}}>התקשר מחר לקבוע סיור</div>
-      {sentBuyers.map(b=>{const lastSent=b.sentProperties&&b.sentProperties.length>0?b.sentProperties[b.sentProperties.length-1]:null;return <div key={b.id} style={{padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-          <div>
-            <div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{b.name} · <GradeBadge grade={b.grade} onChange={()=>{}}/></div>
-            <div style={{color:"#777",fontSize:12}}>{b.phone} · {b.sentProperties.length} דירות נשלחו</div>
-            {lastSent&&<div style={{color:"#555",fontSize:11}}>אחרון: {lastSent.address} ({lastSent.time})</div>}
-          </div>
-        </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {b.phone&&<Btn sm ch="📞 חיוג" c={BL} onClick={()=>window.location.href='tel:'+b.phone}/>}
-          {b.phone&&<Btn sm ch="💬 פולואפ" c={GR} onClick={()=>openWA(b.phone,"שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\nבהמשך לדירות ששלחתי לך, רציתי לשמוע מה אתה חושב?\n\nנוח לך שנקבע סיור השבוע?\n\n📞 חיים | 054-4740691")}/>}
-        </div>
-      </div>})}
-    </div>}
+    {(()=>{
+      const STATUSES=[{k:"waiting",l:"ממתין לתשובה",c:OR,i:"⏳"},{k:"tour",l:"נקבע סיור",c:BL,i:"🏠"},{k:"offer",l:"הצעת מחיר",c:PU,i:"💵"},{k:"deal",l:"בעסקה",c:"#7ec97e",i:"🤝"}];
+      const relevant=buyers.filter(b=>b.sentProperties&&b.sentProperties.length>0&&b.followupStatus!=="irrelevant");
+      if(relevant.length===0)return null;
+      const setStatus=(buyerId,newStatus)=>{const nb=buyers.map(b=>b.id===buyerId?{...b,followupStatus:newStatus}:b);setBuyers(nb);toast("✅ סטטוס עודכן")};
+      return <div style={{marginTop:6}}>
+        <div style={{fontWeight:700,color:BL,fontSize:16,marginBottom:12,paddingRight:4}}>📤 פולואפ קונים</div>
+        {STATUSES.map(st=>{
+          const list=relevant.filter(b=>(b.followupStatus||"waiting")===st.k);
+          if(list.length===0)return null;
+          return <div key={st.k} style={{...S.card,border:"1px solid "+st.c+"33",marginBottom:10}}>
+            <div style={{fontWeight:700,color:st.c,fontSize:14,marginBottom:10}}>{st.i} {st.l} ({list.length})</div>
+            {list.map(b=>{const lastSent=b.sentProperties[b.sentProperties.length-1];return <div key={b.id} style={{padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+              <div style={{marginBottom:8}}>
+                <div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{b.name}</div>
+                <div style={{color:"#777",fontSize:12}}>{b.phone} · {b.sentProperties.length} דירות</div>
+                {lastSent&&<div style={{color:"#555",fontSize:11}}>אחרון: {lastSent.address}</div>}
+              </div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+                {b.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+b.phone}/>}
+                {b.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(b.phone,"שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\nבהמשך לדירות ששלחתי, רציתי לשמוע מה אתה חושב?\n\n📞 חיים | 054-4740691")}/>}
+              </div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                {STATUSES.filter(x=>x.k!==st.k).map(x=><button key={x.k} onClick={()=>setStatus(b.id,x.k)} style={{background:"transparent",border:"1px solid "+x.c+"55",borderRadius:10,padding:"5px 10px",color:x.c,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>→ {x.i} {x.l}</button>)}
+                <button onClick={()=>setStatus(b.id,"irrelevant")} style={{background:"transparent",border:"1px solid "+RE+"55",borderRadius:10,padding:"5px 10px",color:RE,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>❌ לא רלוונטי</button>
+              </div>
+            </div>})}
+          </div>;
+        })}
+      </div>;
+    })()}
 
     {expiring.length>0&&<div style={{...S.card,border:"1px solid rgba(232,168,76,0.3)",marginTop:6}}>
       <div style={{fontWeight:700,color:OR,marginBottom:12,fontSize:16}}>⚠️ בלעדיויות ({expiring.length})</div>
@@ -465,7 +479,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     const cap=buildCaption(prop,buyer.name);
     const ok=await sendWhatsAppMedia(buyer.phone,cap,urls);
     if(ok){
-      const nb=buyers.map(b=>{if(b.id!==buyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:prop.id,address:prop.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלח נכס: "+prop.address+" עם "+urls.length+" תמונות",time:nowStr()}]}});
+      const nb=buyers.map(b=>{if(b.id!==buyer.id)return b;const sp=b.sentProperties||[];return{...b,followupStatus:b.followupStatus||"waiting",sentProperties:[...sp,{id:prop.id,address:prop.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלח נכס: "+prop.address+" עם "+urls.length+" תמונות",time:nowStr()}]}});
       setBuyers(nb);sv("buyers",nb);
     }
     setSendModal(null);
@@ -578,7 +592,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {/* Send to buyer modal */}
       {sendModal==="buyers"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
         <Lbl t="בחר קונה לשליחה"/>
-        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setSendModal(null)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,followupStatus:x.followupStatus||"waiting",sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setSendModal(null)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
@@ -707,7 +721,8 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
     return tpls[(variant||0)%tpls.length];
   }
 
-  function addProp(){if(!ba&&!bn)return;const p={id:Date.now(),name:bn,phone:bp,address:ba,city:bc,rooms:br2,size:bs,floor:bf,price:bprice,notes:bnotes,images:bimgs,video:bvid,agentName:bagent,actions:[],logs:[],created:nowStr()};const np=[...brokerProps,p];setBrokerProps(np);sv("brokerProps",np);setBn("");setBp("");setBa("");setBr2("");setBs("");setBf("");setBprice("");setBnotes("");setBimgs([]);setBvid("");setBagent("");setMode("list");toast("✅ נכס נוסף")}
+  useEffect(()=>{const fixed=brokerProps.map(p=>{if(!p.price&&p.bprice)return{...p,price:p.bprice};return p});if(JSON.stringify(fixed)!==JSON.stringify(brokerProps)){setBrokerProps(fixed);sv("brokerProps",fixed)}},[]);
+  function addProp(){if(!ba&&!bn)return;const p={id:Date.now(),name:bn,phone:bp,address:ba,city:bc,rooms:br2,size:bs,floor:bf,price:bprice,notes:bnotes,images:bimgs,video:bvid,agentName:bagent,actions:[],logs:[],archived:false,created:nowStr()};const np=[...brokerProps,p];setBrokerProps(np);sv("brokerProps",np);setBn("");setBp("");setBa("");setBr2("");setBs("");setBf("");setBprice("");setBnotes("");setBimgs([]);setBvid("");setBagent("");setMode("list");toast("✅ נכס נוסף")}
   function delProp(id){const np=brokerProps.filter(p=>p.id!==id);setBrokerProps(np);sv("brokerProps",np);setSel(null);setMode("list");toast("🗑 נמחק")}
   function updProp(id,f,v){const np=brokerProps.map(p=>p.id===id?{...p,[f]:v}:p);setBrokerProps(np);sv("brokerProps",np);if(sel&&sel.id===id)setSel(np.find(p=>p.id===id))}
 
@@ -786,7 +801,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
       {/* Send to buyer modal */}
       {pubOpen==="sendToBuyer"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="בחר קונה"/>
-        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setPubOpen(false)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,followupStatus:x.followupStatus||"waiting",sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setPubOpen(false)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
@@ -1026,7 +1041,7 @@ function App(){
         </div>
       </div>
 
-      {tab==="home"&&<Dashboard buyers={buyers} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
+      {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
       {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
