@@ -109,7 +109,7 @@ function openWA(phone,msg){
   window.open(url,"_blank");
 }
 function addCal(title,date,time){const dt=date||(new Date().toISOString().split("T")[0]);const t=time||"09:00";const s=dt.replace(/-/g,"")+"T"+t.replace(":","")+"00";const h=String(Math.min(23,parseInt(t.split(":")[0])+1)).padStart(2,"0");const e=dt.replace(/-/g,"")+"T"+h+t.split(":")[1]+"00";window.open("https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+s+"/"+e,"_blank")}
-function fmtP(p){return p?Number(p).toLocaleString("he-IL")+"₪":"—"}
+function fmtP(p){if(!p||isNaN(Number(p)))return"—";return Number(p).toLocaleString("he-IL")+"₪"}
 function daysTo(str){if(!str)return null;const p=str.split("/");if(p.length<3)return null;const y=p[2].length===2?"20"+p[2]:p[2];return Math.ceil((new Date(parseInt(y),parseInt(p[1])-1,parseInt(p[0]))-new Date())/86400000)}
 function nowStr(){const d=new Date();return d.toLocaleDateString("he")+" "+d.toLocaleTimeString("he",{hour:"2-digit",minute:"2-digit"})}
 
@@ -378,7 +378,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
   function sendPropertyToBuyer(buyerId,prop){
     const buyer=buyers.find(b=>b.id===buyerId);
     setSendBuyer(buyer||null);
-    setSendMsg(buildSendMsg(buyer?.name||"",prop,0));
+    const base=prop.savedAds?.whatsapp?.text||buildSendMsg("",prop,0);
+    setSendMsg("שלום "+(buyer?.name||"")+" 😊\n\n"+base);
     setSendModal("msgEdit");
     setSendSelProp(prop);
   }
@@ -464,15 +465,31 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
         {sel.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(sel.phone||'')}/>}
         {sel.tenantPhone&&<Btn sm ch="שוכר 💬" c={GR} onClick={()=>openWA(sel.tenantPhone)}/>}
         {sel.tenantPhone&&<Btn sm ch="שוכר 📞" c={BL} onClick={()=>window.location.href='tel:'+sel.tenantPhone}/>}
-        <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("buyers")} icon="📤"/>
+        <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("choose")} icon="📤"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
 
+      {/* Send choose modal */}
+      {sendModal==="choose"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0));setSendModal("groupMsg")}}/>
+          <Btn full ch="👤 בחר קונה מהרשימה" c={BL} onClick={()=>setSendModal("buyers")}/>
+        </div>
+      </Modal>}
+      {/* Group send modal */}
+      {sendModal==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setSendModal(null)}>
+        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
+        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);setSendModal(null)}} icon="📱"/>
+        </div>
+      </Modal>}
       {/* Send to buyer modal */}
       {sendModal==="buyers"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
         <Lbl t="בחר קונה לשליחה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg(buildSendMsg(b.name,sel,0))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg("שלום "+b.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
@@ -481,8 +498,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sel,Math.floor(Math.random()*3)))} icon="🔄"/>
-          <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb2=buyers.map(x=>x.id===sendBuyer.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setSendModal(null)}} icon="📱"/>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb2=buyers.map(x=>x.id===sendBuyer.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setSendModal(null)}} icon="📱"/>
         </div>
       </Modal>}
 
@@ -534,8 +551,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
       <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
       <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sendSelProp,Math.floor(Math.random()*3)))} icon="🔄"/>
-        <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb=buyers.map(b=>{if(b.id!==sendBuyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:sendSelProp.id,address:sendSelProp.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלחה דירה: "+sendSelProp.address,time:nowStr()}]}});setBuyers(nb);sv("buyers",nb);toast("✅ דירה נשלחה");setSendBuyer(null);setSendSelProp(null);setSendModal(null)}} icon="📱"/>
+        <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sendSelProp?.savedAds?.whatsapp?.text||buildSendMsg("",sendSelProp,0)))} icon="🔄"/>
+        <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb=buyers.map(b=>{if(b.id!==sendBuyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:sendSelProp.id,address:sendSelProp.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלחה דירה: "+sendSelProp.address,time:nowStr()}]}});setBuyers(nb);sv("buyers",nb);toast("✅ דירה נשלחה");setSendBuyer(null);setSendSelProp(null);setSendModal(null)}} icon="📱"/>
       </div>
     </Modal>}
     <button onClick={()=>{setSel(null);setMode("list")}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button>
@@ -671,14 +688,30 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       <div style={{marginBottom:16}}><Lbl t="תמונות" icon="📷"/><ImgUp images={sel.images||[]} onAdd={img=>updProp(sel.id,"images",[...(sel.images||[]),...(Array.isArray(img)?img:[img])])} onRemove={iid=>updProp(sel.id,"images",(sel.images||[]).filter(i=>i.id!==iid))}/></div>
 
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
-        <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("sendToBuyer")} icon="📤"/>
+        <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("chooseMethod")} icon="📤"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
       </div>
 
+      {/* Send choose modal */}
+      {pubOpen==="chooseMethod"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0));setPubOpen("groupMsg")}}/>
+          <Btn full ch="👤 בחר קונה מהרשימה" c={BL} onClick={()=>setPubOpen("sendToBuyer")}/>
+        </div>
+      </Modal>}
+      {/* Group send modal */}
+      {pubOpen==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setPubOpen(false)}>
+        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
+        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);setPubOpen(false)}} icon="📱"/>
+        </div>
+      </Modal>}
       {/* Send to buyer modal */}
       {pubOpen==="sendToBuyer"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="בחר קונה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg(buildSendMsg(b.name,sel,0))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg("שלום "+b.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
@@ -687,8 +720,8 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="הודעה חדשה" c={BL} onClick={()=>setSendMsg(buildSendMsg(sendBuyer.name,sel,Math.floor(Math.random()*3)))} icon="🔄"/>
-          <Btn full ch="שלח ווטסאפ" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setPubOpen(false)}} icon="📱"/>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setPubOpen(false)}} icon="📱"/>
         </div>
       </Modal>}
 
