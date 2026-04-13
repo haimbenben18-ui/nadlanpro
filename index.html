@@ -44,6 +44,79 @@ input[type=date]{color-scheme:dark}
 const firebaseConfig={apiKey:"AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew",authDomain:"nadlanpro-5b041.firebaseapp.com",projectId:"nadlanpro-5b041",storageBucket:"nadlanpro-5b041.firebasestorage.app",messagingSenderId:"404856613598",appId:"1:404856613598:web:916fdd4cbbf05519eb304f"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+
+async function sendWhatsAppMedia(phone,caption,imageUrls){
+  const ULTRAMSG_INSTANCE="instance169955";
+  const ULTRAMSG_TOKEN="slhhpfslyuey11fp";
+  const p=(phone||"").replace(/^0/,"972").replace(/[-\s+]/g,"");
+  if(!p){toast("⚠️ אין מספר טלפון");return false}
+  if(!imageUrls||imageUrls.length===0){
+    try{
+      const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`,{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:new URLSearchParams({token:ULTRAMSG_TOKEN,to:p,body:caption})
+      });
+      const d=await r.json();
+      if(d.sent)toast("✅ הודעה נשלחה");
+      else toast("❌ שגיאה: "+(d.error||"unknown"));
+      return d.sent;
+    }catch(e){toast("❌ "+e.message);return false}
+  }
+  try{
+    toast("⏳ שולח תמונות...");
+    for(let i=0;i<imageUrls.length;i++){
+      const body=new URLSearchParams({
+        token:ULTRAMSG_TOKEN,
+        to:p,
+        image:imageUrls[i],
+        caption:i===0?caption:""
+      });
+      const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/image`,{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:body
+      });
+      const d=await r.json();
+      if(!d.sent){
+        toast("❌ שגיאה בתמונה "+(i+1));
+        console.error(d);
+        return false;
+      }
+      if(i<imageUrls.length-1)await new Promise(res=>setTimeout(res,800));
+    }
+    toast("✅ כל התמונות נשלחו!");
+    return true;
+  }catch(e){
+    toast("❌ "+e.message);
+    console.error(e);
+    return false;
+  }
+}
+
+function buildCaption(prop,buyerName){
+  const streetOnly=(prop.address||"").replace(/\s*\d+.*/,"").trim();
+  const city=prop.city||"באר שבע";
+  const rooms=prop.rooms?prop.rooms+" חדרים":"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor?"קומה "+prop.floor:"";
+  const price=prop.price?Number(prop.price).toLocaleString()+" ₪":"";
+  const notes=prop.notes||"";
+  let msg="";
+  if(buyerName)msg+="שלום "+buyerName+" 😊\n\n";
+  msg+="🏠 *"+(streetOnly||prop.name||"נכס")+"*\n";
+  msg+="📍 "+city+"\n\n";
+  if(rooms)msg+="🛏 "+rooms+"\n";
+  if(size)msg+="📐 "+size+"\n";
+  if(floor)msg+="🏢 "+floor+"\n";
+  if(price)msg+="\n💰 *"+price+"*\n";
+  if(notes)msg+="\n"+notes+"\n";
+  msg+="\n━━━━━━━━━━\n";
+  msg+="📞 *חיים בן סימון*\n";
+  msg+="🏆 RE/MAX באר שבע\n";
+  msg+="📱 054-4740691";
+  return msg;
+}
 </script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
@@ -113,7 +186,7 @@ function fmtP(p){if(!p||isNaN(Number(p)))return"—";return Number(p).toLocaleSt
 function daysTo(str){if(!str)return null;const p=str.split("/");if(p.length<3)return null;const y=p[2].length===2?"20"+p[2]:p[2];return Math.ceil((new Date(parseInt(y),parseInt(p[1])-1,parseInt(p[0]))-new Date())/86400000)}
 function nowStr(){const d=new Date();return d.toLocaleDateString("he")+" "+d.toLocaleTimeString("he",{hour:"2-digit",minute:"2-digit"})}
 
-function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]=useState(null);function handle(files){const arr=Array.from(files);let results=[];let done=0;arr.forEach(f=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const MAX=500;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*(MAX/w));w=MAX}else{w=Math.round(w*(MAX/h));h=MAX}}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);const compressed=c.toDataURL("image/jpeg",0.4);results.push({id:Date.now()+Math.random(),url:compressed});done++;if(done===arr.length)onAdd(results.length===1?results[0]:results)};img.src=e.target.result};r.readAsDataURL(f)})}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/></div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} onClick={()=>setPrev(img.url)} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)",cursor:"pointer"}}/>{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-8,left:-8,width:24,height:24,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:92,height:74,borderRadius:12,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:26}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
+function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]=useState(null);async function handle(files){for(const f of Array.from(files)){try{toast("⏳ מעלה תמונה...");const fd=new FormData();fd.append('file',f);fd.append('upload_preset','nadlanpro');const r=await fetch('https://api.cloudinary.com/v1_1/dopvqfgzw/image/upload',{method:'POST',body:fd});const d=await r.json();if(d.secure_url){onAdd({id:Date.now()+Math.random(),url:d.secure_url});toast("✅ תמונה הועלתה")}else{toast("❌ שגיאה בהעלאה");console.error(d)}}catch(e){toast("❌ "+e.message);console.error(e)}}}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/></div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}><img src={img.url} onClick={()=>setPrev(img.url)} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)",cursor:"pointer"}}/>{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-8,left:-8,width:24,height:24,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:92,height:74,borderRadius:12,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:26}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
 
 async function aiCall(prompt,max=900){
   const key=getKey();
@@ -375,13 +448,17 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
     if(type==="s"){const ns=sellers.map(s=>s.id===id?{...s,logs:[...(s.logs||[]),{text,time:nowStr()}]}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
     else{const nb=buyers.map(b=>b.id===id?{...b,logs:[...(b.logs||[]),{text,time:nowStr()}]}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
   }
-  function sendPropertyToBuyer(buyerId,prop){
+  async function sendPropertyToBuyer(buyerId,prop){
     const buyer=buyers.find(b=>b.id===buyerId);
-    setSendBuyer(buyer||null);
-    const base=prop.savedAds?.whatsapp?.text||buildSendMsg("",prop,0);
-    setSendMsg("שלום "+(buyer?.name||"")+" 😊\n\n"+base);
-    setSendModal("msgEdit");
-    setSendSelProp(prop);
+    if(!buyer)return;
+    const urls=(prop.images||[]).map(i=>i.url);
+    const cap=buildCaption(prop,buyer.name);
+    const ok=await sendWhatsAppMedia(buyer.phone,cap,urls);
+    if(ok){
+      const nb=buyers.map(b=>{if(b.id!==buyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:prop.id,address:prop.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלח נכס: "+prop.address+" עם "+urls.length+" תמונות",time:nowStr()}]}});
+      setBuyers(nb);sv("buyers",nb);
+    }
+    setSendModal(null);
   }
   const[sendSelProp,setSendSelProp]=useState(null);
 
@@ -473,7 +550,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
       {/* Send choose modal */}
       {sendModal==="choose"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0));setSendModal("groupMsg")}}/>
+          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""));setSendModal("groupMsg")}}/>
           <Btn full ch="👤 בחר קונה מהרשימה" c={BL} onClick={()=>setSendModal("buyers")}/>
         </div>
       </Modal>}
@@ -481,26 +558,19 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
       {sendModal==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setSendModal(null)}>
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות יצורפו אוטומטית</div>}
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);setSendModal(null)}} icon="📱"/>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);await sendWhatsAppMedia("",sendMsg,urls);setSendModal(null)}} icon="📱"/>
         </div>
       </Modal>}
       {/* Send to buyer modal */}
       {sendModal==="buyers"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
         <Lbl t="בחר קונה לשליחה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg("שלום "+b.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setSendModal(null)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
-      </Modal>}
-      {sendModal==="buyers"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={OR} onClose={()=>{setSendBuyer(null);setSendModal(null)}}>
-        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
-        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb2=buyers.map(x=>x.id===sendBuyer.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address,time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setSendModal(null)}} icon="📱"/>
-        </div>
       </Modal>}
 
       {/* Publish */}
@@ -546,14 +616,6 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab}){
     {sendModal&&sendModal!=="msgEdit"&&<Modal title="שלח דירה" color={BL} onClose={()=>setSendModal(null)}>
       <Lbl t="בחר נכס"/>
       {allProps.map(p=><div key={p.id+p.src} onClick={()=>sendPropertyToBuyer(sel.id,p)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}><div><div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:12}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div></div><span style={{color:BL,fontSize:20}}>→</span></div>)}
-    </Modal>}
-    {sendModal==="msgEdit"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={BL} onClose={()=>{setSendBuyer(null);setSendSelProp(null);setSendModal(null)}}>
-      <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
-      <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sendSelProp?.savedAds?.whatsapp?.text||buildSendMsg("",sendSelProp,0)))} icon="🔄"/>
-        <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);const nb=buyers.map(b=>{if(b.id!==sendBuyer.id)return b;const sp=b.sentProperties||[];return{...b,sentProperties:[...sp,{id:sendSelProp.id,address:sendSelProp.address,time:nowStr()}],logs:[...(b.logs||[]),{text:"נשלחה דירה: "+sendSelProp.address,time:nowStr()}]}});setBuyers(nb);sv("buyers",nb);toast("✅ דירה נשלחה");setSendBuyer(null);setSendSelProp(null);setSendModal(null)}} icon="📱"/>
-      </div>
     </Modal>}
     <button onClick={()=>{setSel(null);setMode("list")}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button>
     <div style={{...S.card,border:"1px solid "+BL+"44"}}>
@@ -695,7 +757,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       {/* Send choose modal */}
       {pubOpen==="chooseMethod"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0));setPubOpen("groupMsg")}}/>
+          <Btn full ch="📤 שלח לקבוצת ווטסאפ" c={GR} onClick={()=>{setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""));setPubOpen("groupMsg")}}/>
           <Btn full ch="👤 בחר קונה מהרשימה" c={BL} onClick={()=>setPubOpen("sendToBuyer")}/>
         </div>
       </Modal>}
@@ -703,26 +765,19 @@ function BrokerPage({brokerProps,setBrokerProps,buyers}){
       {pubOpen==="groupMsg"&&<Modal title={"📤 שלח לקבוצת ווטסאפ"} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
         <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
+        {sel.images&&sel.images.length>0&&<div style={{color:"#7ec97e",fontSize:13,marginBottom:10}}>📸 {sel.images.length} תמונות יצורפו אוטומטית</div>}
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={()=>{openWA("",sendMsg);setPubOpen(false)}} icon="📱"/>
+          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg(sel.savedAds?.whatsapp?.text||buildCaption(sel,""))} icon="🔄"/>
+          <Btn full ch="📱 שלח" c={GR} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);await sendWhatsAppMedia("",sendMsg,urls);setPubOpen(false)}} icon="📱"/>
         </div>
       </Modal>}
       {/* Send to buyer modal */}
       {pubOpen==="sendToBuyer"&&!sendBuyer&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
         <Lbl t="בחר קונה"/>
-        {buyers.map(b=><div key={b.id} onClick={()=>{setSendBuyer(b);setSendMsg("שלום "+b.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        {buyers.map(b=><div key={b.id} onClick={async()=>{const urls=(sel.images||[]).map(i=>i.url);const cap=buildCaption(sel,b.name);const ok=await sendWhatsAppMedia(b.phone,cap,urls);if(ok){const nb2=buyers.map(x=>x.id===b.id?{...x,sentProperties:[...(x.sentProperties||[]),{id:sel.id,address:sel.address,time:nowStr()}],logs:[...(x.logs||[]),{text:"נשלח נכס: "+sel.address+" עם "+urls.length+" תמונות",time:nowStr()}]}:x);setBuyers(nb2);sv("buyers",nb2)}setPubOpen(false)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
           <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{b.name}</div><div style={{color:"#777",fontSize:12}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div>
           <span style={{color:GR,fontSize:20}}>💬</span>
         </div>)}
-      </Modal>}
-      {pubOpen==="sendToBuyer"&&sendBuyer&&<Modal title={"📤 שלח ל"+sendBuyer.name} color={GR} onClose={()=>{setSendBuyer(null);setPubOpen(false)}}>
-        <Lbl t="ערוך הודעה לפני שליחה" icon="✏️"/>
-        <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={12} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <Btn sm ch="🔄 הודעה חדשה" c={BL} onClick={()=>setSendMsg("שלום "+sendBuyer.name+" 😊\n\n"+(sel.savedAds?.whatsapp?.text||buildSendMsg("",sel,0)))} icon="🔄"/>
-          <Btn full ch="📱 שלח" c={GR} onClick={()=>{if(sendBuyer.phone)openWA(sendBuyer.phone,sendMsg);toast("✅ נשלח ל"+sendBuyer.name);setSendBuyer(null);setPubOpen(false)}} icon="📱"/>
-        </div>
       </Modal>}
 
       {/* Publish - no yad2 */}
@@ -845,6 +900,11 @@ function Settings({onClose}){
       <div style={{marginTop:12,textAlign:"center",fontSize:13,color:key?"#7ec97e":RE,fontWeight:600}}>{key?"✓ מפתח מוגדר — AI זמין":"⚠️ ללא מפתח — AI לא יעבוד"}</div>
     </div>
     <div style={S.card}><Lbl t="Google Calendar" icon="📅"/><div style={{color:"#777",fontSize:14}}>כפתור 📅 בכל משימה פותח את Google Calendar</div></div>
+    <div style={S.card}>
+      <Lbl t="בדיקת שליחת ווטסאפ" icon="🧪"/>
+      <div style={{color:"#777",fontSize:13,marginBottom:12}}>שלח הודעת בדיקה למספר שלך כדי לוודא שהכל עובד</div>
+      <Btn full ch="שלח הודעת בדיקה ל-0544740691" c={GR} onClick={async()=>{await sendWhatsAppMedia("0544740691","✅ בדיקת מערכת NadlanPro - אם אתה רואה את זה, המערכת עובדת!",[])}} icon="🧪"/>
+    </div>
     <div style={S.card}><Lbl t="גרסה" icon="💎"/><div style={{color:"#777",fontSize:14}}>NadlanPro v7 · RE/MAX חיים בן סימון · באר שבע</div></div>
   </div>
 }
