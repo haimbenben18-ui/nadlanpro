@@ -130,11 +130,6 @@ function buildMultiCaption(prop,buyerName,isFirst,totalCount,currentIndex){
   let msg="";
   if(isFirst&&buyerName){
     msg+="שלום "+buyerName+" 😊\n\n";
-    if(totalCount>1){
-      msg+="חיים בן סימון מרימקס. חשבתי עליך ויש לי "+totalCount+" דירות שמתאימות לך:\n\n";
-    }else{
-      msg+="חיים בן סימון מרימקס. יש לי דירה מושלמת בשבילך:\n\n";
-    }
   }
   if(totalCount>1){
     msg+="🏘️ *דירה "+(currentIndex+1)+" מתוך "+totalCount+"*\n\n";
