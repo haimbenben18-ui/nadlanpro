@@ -27,48 +27,43 @@ async function sendWhatsApp(to, body) {
 }
 
 export default async function handler(req, res) {
-  // רק POST requests
   if (req.method !== 'POST') {
     return res.status(200).json({ status: 'ok', message: 'NadlanPro WhatsApp webhook is alive' });
   }
 
   try {
     const data = req.body;
-    console.log('Webhook received:', JSON.stringify(data));
+    console.log('Full webhook payload:', JSON.stringify(data));
 
-    // UltraMsg שולח את ההודעה בתוך data או ישירות
     const messageData = data.data || data;
 
-    // בדוק שזו הודעה נכנסת (לא שלנו)
+    console.log('From:', messageData.from);
+    console.log('FromMe:', messageData.fromMe);
+    console.log('Body:', messageData.body);
+    console.log('Type:', messageData.type);
+
     if (messageData.fromMe === true || messageData.fromMe === "true") {
+      console.log('Ignoring: own message');
       return res.status(200).json({ status: 'ignored', reason: 'own message' });
     }
 
-    // בדוק שיש תוכן
-    if (!messageData.body && messageData.type !== 'image' && messageData.type !== 'video') {
+    if (!messageData.body) {
+      console.log('Ignoring: no body');
       return res.status(200).json({ status: 'ignored', reason: 'no content' });
     }
 
-    // זיהוי הקבוצה - אם chatName מכיל "מוטי" או "NadlanPro"
-    const chatName = messageData.chatName || messageData.pushname || '';
-    const isAgentGroup = chatName.includes('מוטי') || chatName.includes('NadlanPro');
-
-    if (!isAgentGroup) {
-      return res.status(200).json({ status: 'ignored', reason: 'not agent group' });
-    }
-
-    // שולח תשובה בסיסית - מוטי חי!
+    // מוטי עונה לכל הודעה נכנסת (בינתיים)
     const from = messageData.from;
-    const messageBody = messageData.body || '(מדיה)';
+    const messageBody = messageData.body;
 
-    const reply = `🤖 מוטי כאן!\n\nקיבלתי את ההודעה שלך:\n"${messageBody.substring(0, 100)}"\n\n⏳ אני בשלב פיתוח - עוד אין לי יכולות מלאות, אבל אני מחובר ומקשיב.\n\nבקרוב אוכל:\n📝 להוסיף דירות\n📸 לקבל תמונות\n🎯 ליצור פרסומים\n📤 לשלוח לקונים\n\nנתראה בקרוב! 👋`;
+    const reply = `🤖 מוטי כאן!\n\nקיבלתי: "${messageBody.substring(0, 100)}"\n\n✅ המערכת חיה ומגיבה!\n\n⏳ בפיתוח - בקרוב אוכל לבצע פעולות.`;
 
     await sendWhatsApp(from, reply);
 
     return res.status(200).json({
       status: 'success',
       replied: true,
-      chatName: chatName
+      to: from
     });
 
   } catch (error) {
