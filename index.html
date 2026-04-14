@@ -118,6 +118,69 @@ function buildCaption(prop,buyerName){
   msg+="📱 054-4740691";
   return msg;
 }
+
+function buildMultiCaption(prop,buyerName,isFirst,totalCount,currentIndex){
+  const streetOnly=(prop.address||"").replace(/\s*\d+.*/,"").trim();
+  const city=prop.city||"באר שבע";
+  const rooms=prop.rooms?prop.rooms+" חדרים":"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor?"קומה "+prop.floor:"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  const notes=prop.notes||"";
+  let msg="";
+  if(isFirst&&buyerName){
+    msg+="שלום "+buyerName+" 😊\n\n";
+    if(totalCount>1){
+      msg+="חיים בן סימון מרימקס. חשבתי עליך ויש לי "+totalCount+" דירות שמתאימות לך:\n\n";
+    }else{
+      msg+="חיים בן סימון מרימקס. יש לי דירה מושלמת בשבילך:\n\n";
+    }
+  }
+  if(totalCount>1){
+    msg+="🏘️ *דירה "+(currentIndex+1)+" מתוך "+totalCount+"*\n\n";
+  }
+  msg+="🏠 *"+(streetOnly||prop.name||"נכס")+"*\n";
+  msg+="📍 "+city+"\n\n";
+  if(rooms)msg+="🛏 "+rooms+"\n";
+  if(size)msg+="📐 "+size+"\n";
+  if(floor)msg+="🏢 "+floor+"\n";
+  if(price)msg+="\n💰 *"+price+"*\n";
+  if(notes)msg+="\n"+notes+"\n";
+  if(currentIndex===totalCount-1){
+    msg+="\n━━━━━━━━━━\n";
+    msg+="📞 *חיים בן סימון*\n";
+    msg+="🏆 RE/MAX באר שבע\n";
+    msg+="📱 054-4740691\n\n";
+    if(totalCount>1){
+      msg+="איזו מהדירות הכי מעניינת אותך? 😊";
+    }else{
+      msg+="מעוניין? אשמח לתאם סיור 😊";
+    }
+  }
+  return msg;
+}
+
+async function sendMultipleProperties(buyer,propsArray){
+  if(!buyer.phone){toast("⚠️ אין טלפון לקונה");return false}
+  if(propsArray.length===0){toast("⚠️ לא נבחרו דירות");return false}
+  toast("⏳ שולח "+propsArray.length+" דירות ל"+buyer.name+"...");
+  for(let i=0;i<propsArray.length;i++){
+    const prop=propsArray[i];
+    const isFirst=(i===0);
+    const caption=buildMultiCaption(prop,buyer.name,isFirst,propsArray.length,i);
+    const media=prop.images||[];
+    const ok=await sendWhatsAppMedia(buyer.phone,caption,media);
+    if(!ok){
+      toast("❌ נעצר אחרי דירה "+(i+1));
+      return false;
+    }
+    if(i<propsArray.length-1){
+      await new Promise(res=>setTimeout(res,3000));
+    }
+  }
+  toast("✅ כל "+propsArray.length+" הדירות נשלחו!");
+  return true;
+}
 </script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
@@ -447,6 +510,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);
   // send property modal
   const[sendModal,setSendModal]=useState(null);const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");const[galleryOpen,setGalleryOpen]=useState(null);
+  const[sendMultiOpen,setSendMultiOpen]=useState(false);const[selectedProps,setSelectedProps]=useState([]);
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
@@ -672,6 +736,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {sel.phone&&<Btn sm ch="ווטסאפ" c={GR} onClick={()=>openWA(sel.phone)} icon="💬"/>}
         {sel.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(sel.phone||'')}/>}
         <Btn sm ch="שלח דירה" c={BL} onClick={()=>setSendModal(true)} icon="🏠"/>
+        <Btn sm ch="📤 שלח כמה דירות" c={PU} onClick={()=>{setSelectedProps([]);setSendMultiOpen(true)}} icon="🏘️"/>
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
 
@@ -680,6 +745,22 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {(sel.logs||[]).map((l,i)=><div key={i} style={{padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:13}}><span style={{color:"#555"}}>{l.time}</span> — <span style={{color:"#bbb"}}>{l.text}</span></div>)}
       <div style={{display:"flex",gap:8,marginTop:10}}><input placeholder="הוסף תיעוד..." value={logInput} onChange={e=>setLogInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&logInput){addLog(sel.id,logInput,"b");setLogInput("")}}} style={{...S.inp,flex:1}}/><Btn sm ch="+" c={G} onClick={()=>{if(logInput){addLog(sel.id,logInput,"b");setLogInput("")}}}/></div>
     </div>
+    {sendMultiOpen&&sel&&tab==="buyers"&&<Modal title={"📤 שלח דירות ל"+sel.name} color={PU} onClose={()=>setSendMultiOpen(false)}>
+      <div style={{color:"#777",fontSize:13,marginBottom:14,lineHeight:1.6}}>סמן דירות לשליחה. ההודעה הראשונה תכלול ברכה אישית, שאר הדירות יישלחו אחת אחרי השנייה בסדר שבחרת.</div>
+      <Lbl t={"נבחרו "+selectedProps.length+" דירות"} icon="✓"/>
+      <div style={{maxHeight:"50vh",overflowY:"auto",marginBottom:16}}>
+        {allProps.map(p=>{const idx=selectedProps.findIndex(sp=>sp.id===p.id&&sp.src===p.src);const isSelected=idx>=0;return <div key={p.id+p.src} onClick={()=>{if(isSelected){setSelectedProps(selectedProps.filter((_,i)=>i!==idx))}else{setSelectedProps([...selectedProps,p])}}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",background:isSelected?"rgba(155,142,196,0.08)":"transparent",borderRadius:10,marginBottom:4}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,flex:1}}>
+            <div style={{width:24,height:24,borderRadius:6,border:"2px solid "+(isSelected?PU:"#444"),background:isSelected?PU:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:14,fontWeight:900,flexShrink:0}}>{isSelected?(idx+1):""}</div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{p.address||p.name}</div>
+              <div style={{color:"#777",fontSize:12}}>{p.rooms||"?"}חד · {(p.price&&!isNaN(Number(p.price)))?Number(p.price).toLocaleString()+"₪":"—"}{p.src==="b"?" · מתווך":""}{p.images&&p.images.length>0?" · "+p.images.length+" תמונות":""}</div>
+            </div>
+          </div>
+        </div>})}
+      </div>
+      <Btn full ch={selectedProps.length===0?"בחר דירות לשליחה":"שלח "+selectedProps.length+" דירות בוואטסאפ"} c={GR} dis={selectedProps.length===0} icon="📱" onClick={async()=>{const ok=await sendMultipleProperties(sel,selectedProps);if(ok){const nb2=buyers.map(x=>{if(x.id!==sel.id)return x;const newSent=selectedProps.map(p=>({id:p.id,address:p.address||p.name,time:nowStr()}));const newLogs=[{text:"נשלחו "+selectedProps.length+" דירות",time:nowStr()}];return{...x,sentProperties:[...(x.sentProperties||[]),...newSent],logs:[...(x.logs||[]),...newLogs],followupStatus:x.followupStatus||"waiting"}});setBuyers(nb2);sv("buyers",nb2);setSendMultiOpen(false);setSelectedProps([])}}}/>
+    </Modal>}
   </div>}
 
   // ADD FORMS
