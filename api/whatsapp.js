@@ -1,71 +1,74 @@
+const TELEGRAM_CHAT_ID = "5941736529";
 const ULTRAMSG_INSTANCE = "instance169955";
 const ULTRAMSG_TOKEN = "slhhpfslyuey11fp";
-const MOTTI_GROUP_ID = "120363409064480878@g.us";
-
-async function sendWhatsApp(to, body) {
-  if (to !== MOTTI_GROUP_ID) {
-    console.log('BLOCKED: attempt to send to', to);
-    return null;
-  }
-  
-  const url = `https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`;
-  const params = new URLSearchParams({
-    token: ULTRAMSG_TOKEN,
-    to: to,
-    body: body
-  });
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error sending WhatsApp:', error);
-    return null;
-  }
-}
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return res.status(200).json({ status: 'ok', message: 'Motti Telegram bot webhook is alive' });
+  }
   if (req.method !== 'POST') {
-    return res.status(200).json({ status: 'ok', message: 'NadlanPro WhatsApp webhook is alive' });
+    return res.status(200).json({ status: 'ignored' });
   }
 
   try {
-    const data = req.body;
-    const messageData = data.data || data;
-    
-    console.log('From:', messageData.from, 'FromMe:', messageData.fromMe, 'Body:', messageData.body);
-
-    if (messageData.from !== MOTTI_GROUP_ID) {
-      return res.status(200).json({ status: 'ignored', reason: 'not motti group' });
-    }
-    
-    if (messageData.fromMe === true || messageData.fromMe === "true") {
-      return res.status(200).json({ status: 'ignored', reason: 'own message' });
+    const update = req.body;
+    if (!update.message) {
+      return res.status(200).json({ status: 'no message' });
     }
 
-    if (!messageData.body) {
-      return res.status(200).json({ status: 'ignored', reason: 'no content' });
+    const msg = update.message;
+    const chatId = String(msg.chat.id);
+    const text = msg.text || '';
+
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log('BLOCKED: unauthorized chat', chatId);
+      return res.status(200).json({ status: 'unauthorized' });
     }
 
-    const messageBody = messageData.body;
-    const reply = `🤖 מוטי כאן.\n\nקיבלתי: "${messageBody.substring(0, 100)}"\n\nאני בשלב פיתוח - לא מבצע פעולות עדיין.`;
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    if (!BOT_TOKEN) {
+      console.error('Missing TELEGRAM_BOT_TOKEN env var');
+      return res.status(200).json({ status: 'error', message: 'missing token' });
+    }
 
-    await sendWhatsApp(MOTTI_GROUP_ID, reply);
+    async function sendTelegram(text) {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: text,
+          parse_mode: 'HTML'
+        })
+      });
+    }
 
-    return res.status(200).json({ 
-      status: 'success', 
-      replied: true
-    });
+    if (text === '/start') {
+      await sendTelegram(
+        '🤖 <b>שלום חיים, מוטי כאן!</b>\n\n' +
+        'אני הסוכן האישי שלך ב-NadlanPro.\n\n' +
+        '⏳ אני בשלב פיתוח. בקרוב אוכל:\n' +
+        '📝 להוסיף דירות\n' +
+        '📸 לקבל תמונות\n' +
+        '🎯 ליצור פרסומים\n' +
+        '📤 לשלוח לקונים (עם אישור שלך)\n' +
+        '📘 לפרסם בפייסבוק (עם אישור שלך)\n\n' +
+        'כל פעולה רגישה דורשת אישור שלך לפני ביצוע.\n\n' +
+        '💬 כתוב לי מה אתה צריך!'
+      );
+    } else {
+      await sendTelegram(
+        '🤖 מוטי כאן.\n\n' +
+        'קיבלתי: "<b>' + text.substring(0, 200) + '</b>"\n\n' +
+        '⏳ אני בשלב פיתוח - עדיין לא מבצע פעולות.\n' +
+        'בקרוב אוכל לעזור לך!'
+      );
+    }
+
+    return res.status(200).json({ status: 'success' });
 
   } catch (error) {
     console.error('Handler error:', error);
-    return res.status(200).json({ 
-      status: 'error', 
-      message: error.message 
-    });
+    return res.status(200).json({ status: 'error', message: error.message });
   }
 }
