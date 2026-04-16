@@ -2,9 +2,11 @@ const TELEGRAM_CHAT_ID = "5941736529";
 const ULTRAMSG_INSTANCE = "instance169955";
 const ULTRAMSG_TOKEN = "slhhpfslyuey11fp";
 
+let mottiActive = true;
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    return res.status(200).json({ status: 'ok', message: 'Motti Telegram bot webhook is alive' });
+    return res.status(200).json({ status: 'ok', active: mottiActive });
   }
   if (req.method !== 'POST') {
     return res.status(200).json({ status: 'ignored' });
@@ -18,31 +20,53 @@ export default async function handler(req, res) {
 
     const msg = update.message;
     const chatId = String(msg.chat.id);
-    const text = msg.text || '';
+    const text = (msg.text || '').trim();
 
     if (chatId !== TELEGRAM_CHAT_ID) {
-      console.log('BLOCKED: unauthorized chat', chatId);
       return res.status(200).json({ status: 'unauthorized' });
     }
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     if (!BOT_TOKEN) {
-      console.error('Missing TELEGRAM_BOT_TOKEN env var');
       return res.status(200).json({ status: 'error', message: 'missing token' });
     }
 
-    async function sendTelegram(text) {
+    async function sendTelegram(replyText) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: text,
+          text: replyText,
           parse_mode: 'HTML'
         })
       });
     }
 
+    // פקודות הפעלה וכיבוי
+    if (text === '/off' || text === 'כבה') {
+      mottiActive = false;
+      await sendTelegram('🔴 מוטי כבוי. לא אגיב להודעות עד שתכתוב /on');
+      return res.status(200).json({ status: 'turned off' });
+    }
+
+    if (text === '/on' || text === 'הפעל') {
+      mottiActive = true;
+      await sendTelegram('🟢 מוטי פעיל! אני כאן.');
+      return res.status(200).json({ status: 'turned on' });
+    }
+
+    if (text === '/status' || text === 'סטטוס') {
+      await sendTelegram(mottiActive ? '🟢 מוטי פעיל.' : '🔴 מוטי כבוי.');
+      return res.status(200).json({ status: 'status sent' });
+    }
+
+    // אם מוטי כבוי - לא עונה
+    if (!mottiActive) {
+      return res.status(200).json({ status: 'sleeping' });
+    }
+
+    // פקודות רגילות
     if (text === '/start') {
       await sendTelegram(
         '🤖 <b>שלום חיים, מוטי כאן!</b>\n\n' +
@@ -53,6 +77,10 @@ export default async function handler(req, res) {
         '🎯 ליצור פרסומים\n' +
         '📤 לשלוח לקונים (עם אישור שלך)\n' +
         '📘 לפרסם בפייסבוק (עם אישור שלך)\n\n' +
+        'פקודות שימושיות:\n' +
+        '/off - כבה את מוטי\n' +
+        '/on - הפעל את מוטי\n' +
+        '/status - בדוק אם מוטי פעיל\n\n' +
         'כל פעולה רגישה דורשת אישור שלך לפני ביצוע.\n\n' +
         '💬 כתוב לי מה אתה צריך!'
       );
