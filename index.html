@@ -1258,6 +1258,10 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
   const[fName,setFName]=useState("");const[fPhone,setFPhone]=useState("");const[fCompany,setFCompany]=useState("");const[fArea,setFArea]=useState("");
   const[sendModal,setSendModal]=useState(null);
   const[broadcastSel,setBroadcastSel]=useState(null);
+  const[importOpen,setImportOpen]=useState(false);
+  const[pasteText,setPasteText]=useState("");
+  const vcfRef=useRef();
+  const pickerAvailable=typeof navigator!=='undefined'&&'contacts' in navigator&&navigator.contacts&&'select' in navigator.contacts;
 
   function resetForm(){setFName("");setFPhone("");setFCompany("");setFArea("");setEditing(null)}
   function startEdit(a){setEditing(a);setFName(a.name||"");setFPhone(a.phone||"");setFCompany(a.company||"");setFArea(a.area||"");setMode("form")}
@@ -1285,34 +1289,87 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
     toast("🗑 נמחק");
   }
 
+  function addImportedAgents(items){
+    const newOnes=[];
+    items.forEach(it=>{
+      const name=(it.name||"").trim();
+      const phone=(it.phone||"").trim();
+      if(!name&&!phone)return;
+      const exists=agentsContacts.some(a=>a.phone&&phone&&a.phone===phone);
+      if(exists)return;
+      if(newOnes.some(n=>n.phone&&phone&&n.phone===phone))return;
+      newOnes.push({id:Date.now()+"_"+Math.random().toString(36).slice(2,8),name,phone,company:"",area:"",created:nowStr()});
+    });
+    if(newOnes.length===0){toast("לא נוספו מתווכים חדשים (כפולים?)");return 0}
+    const upd=[...agentsContacts,...newOnes];
+    setAgentsContacts(upd);
+    toast("✅ יובאו "+newOnes.length+" מתווכים");
+    return newOnes.length;
+  }
+
   async function importFromContacts(){
-    if(!('contacts' in navigator)||!('select' in (navigator.contacts||{}))){
-      toast("⚠️ ייבוא אנשי קשר זמין רק מהטלפון");
+    if(!pickerAvailable){
+      toast("⚠️ Contact Picker זמין רק ב-Chrome אנדרואיד — נסה vCard או הדבקה");
       return;
     }
     try{
-      const props=['name','tel'];
-      const opts={multiple:true};
-      const contacts=await navigator.contacts.select(props,opts);
+      const contacts=await navigator.contacts.select(['name','tel'],{multiple:true});
       if(!contacts||contacts.length===0){toast("לא נבחרו אנשי קשר");return}
-      const newOnes=[];
-      contacts.forEach(c=>{
-        const name=(c.name&&c.name[0])||"";
-        const phones=c.tel||[];
-        const phone=phones[0]||"";
-        if(!name&&!phone)return;
-        const exists=agentsContacts.some(a=>a.phone===phone&&phone);
-        if(exists)return;
-        newOnes.push({id:Date.now()+"_"+Math.random().toString(36).slice(2,8),name,phone,company:"",area:"",created:nowStr()});
-      });
-      if(newOnes.length===0){toast("לא נוספו מתווכים חדשים (כפולים?)");return}
-      const upd=[...agentsContacts,...newOnes];
-      setAgentsContacts(upd);
-      toast("✅ יובאו "+newOnes.length+" מתווכים");
+      const items=contacts.map(c=>({name:(c.name&&c.name[0])||"",phone:(c.tel&&c.tel[0])||""}));
+      addImportedAgents(items);
+      setImportOpen(false);
     }catch(e){
       console.error(e);
       toast("❌ "+e.message);
     }
+  }
+
+  function parseVCard(text){
+    const items=[];
+    const blocks=text.split(/BEGIN:VCARD/i).slice(1);
+    blocks.forEach(block=>{
+      const body=block.split(/END:VCARD/i)[0]||"";
+      const lines=body.split(/\r?\n/);
+      let name="",phone="";
+      lines.forEach(line=>{
+        const l=line.trim();
+        if(/^FN[:;]/i.test(l)){name=l.split(":").slice(1).join(":").trim()}
+        else if(!name&&/^N[:;]/i.test(l)){const parts=l.split(":").slice(1).join(":").split(";").filter(Boolean);name=(parts[1]||"")+" "+(parts[0]||"");name=name.trim()}
+        else if(!phone&&/^TEL/i.test(l)){phone=l.split(":").slice(1).join(":").replace(/[^\d+]/g,"").trim()}
+      });
+      if(name||phone)items.push({name,phone});
+    });
+    return items;
+  }
+
+  async function importVcfFile(file){
+    if(!file)return;
+    try{
+      const text=await file.text();
+      const items=parseVCard(text);
+      if(items.length===0){toast("⚠️ לא נמצאו אנשי קשר בקובץ");return}
+      const added=addImportedAgents(items);
+      if(added>0)setImportOpen(false);
+    }catch(e){
+      console.error(e);
+      toast("❌ שגיאה בקריאת הקובץ");
+    }
+  }
+
+  function importFromPaste(){
+    if(!pasteText.trim()){toast("⚠️ אין טקסט להדביק");return}
+    const lines=pasteText.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    const items=[];
+    lines.forEach(line=>{
+      const phoneMatch=line.match(/(\+?\d[\d\-\s]{6,})/);
+      const phone=phoneMatch?phoneMatch[1].replace(/[\-\s]/g,""):"";
+      let name=phone?line.replace(phoneMatch[1],"").replace(/[,;\t]+/g," ").trim():line;
+      name=name.replace(/^[,;\s\-]+|[,;\s\-]+$/g,"");
+      items.push({name,phone});
+    });
+    if(items.length===0){toast("⚠️ לא נמצאו שורות תקינות");return}
+    const added=addImportedAgents(items);
+    if(added>0){setPasteText("");setImportOpen(false)}
   }
 
   async function sendPropertyToAgent(agent,prop){
@@ -1351,8 +1408,34 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
 
     <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
       <Btn sm ch="➕ הוסף ידנית" c={G} onClick={()=>{resetForm();setMode("form")}}/>
-      <Btn sm ch="📱 ייבוא מאנשי קשר" c={BL} onClick={importFromContacts}/>
+      <Btn sm ch="📥 ייבוא אנשי קשר" c={BL} onClick={()=>setImportOpen(true)}/>
     </div>
+
+    {importOpen&&<Modal title="📥 ייבוא מתווכים" color={BL} onClose={()=>setImportOpen(false)}>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div>
+          <Btn full ch={pickerAvailable?"📇 בחר מאנשי קשר (אנדרואיד)":"📇 לא נתמך במכשיר זה"} c={GR} dis={!pickerAvailable} onClick={importFromContacts}/>
+          {!pickerAvailable&&<div style={{color:"#777",fontSize:12,marginTop:6,lineHeight:1.5}}>הבחירה הישירה זמינה רק ב-Chrome על אנדרואיד. השתמש בקובץ vCard או בהדבקה למטה.</div>}
+        </div>
+
+        <div style={{height:1,background:"rgba(255,255,255,0.06)"}}/>
+
+        <div>
+          <Lbl t="קובץ vCard (.vcf)" icon="📂"/>
+          <Btn full ch="📂 העלה קובץ אנשי קשר" c={BL} onClick={()=>vcfRef.current&&vcfRef.current.click()}/>
+          <input ref={vcfRef} type="file" accept=".vcf,text/vcard,text/x-vcard" style={{display:"none"}} onChange={e=>{const f=e.target.files&&e.target.files[0];if(f)importVcfFile(f);e.target.value=""}}/>
+          <div style={{color:"#777",fontSize:12,marginTop:6,lineHeight:1.5}}>באייפון: אנשי קשר → בחר → שתף → vCard. באנדרואיד: אנשי קשר → ייצוא לקובץ .vcf</div>
+        </div>
+
+        <div style={{height:1,background:"rgba(255,255,255,0.06)"}}/>
+
+        <div>
+          <Lbl t="הדבק רשימה" icon="📋"/>
+          <textarea placeholder={"הדבק שורה לכל איש קשר, לדוגמה:\nדני כהן 0501234567\nרונית רימקס, 052-9876543\n0541112222"} value={pasteText} onChange={e=>setPasteText(e.target.value)} rows={6} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:10}}/>
+          <Btn full ch="➕ הוסף מהרשימה" c={G} onClick={importFromPaste}/>
+        </div>
+      </div>
+    </Modal>}
 
     <input placeholder="🔍 חיפוש שם / טלפון / חברה / אזור" value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:14}}/>
 
