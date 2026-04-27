@@ -64,29 +64,32 @@ async function sendWhatsAppMedia(phone,caption,mediaItems){
       return d.sent;
     }catch(e){toast("❌ "+e.message);return false}
   }
+  async function sendMediaItem(item,i){
+    const isVideo=item.type==='video';
+    const endpoint=isVideo?'video':'image';
+    const fieldName=isVideo?'video':'image';
+    const bodyParams={token:ULTRAMSG_TOKEN,to:p,caption:i===0?caption:""};
+    bodyParams[fieldName]=item.url;
+    const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/${endpoint}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams(bodyParams)
+    });
+    return await r.json();
+  }
   try{
-    toast("⏳ שולח "+items.length+" קבצים...");
     for(let i=0;i<items.length;i++){
-      const item=items[i];
-      const isVideo=item.type==='video';
-      const endpoint=isVideo?'video':'image';
-      const fieldName=isVideo?'video':'image';
-      const bodyParams={token:ULTRAMSG_TOKEN,to:p,caption:i===0?caption:""};
-      bodyParams[fieldName]=item.url;
-      const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/${endpoint}`,{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:new URLSearchParams(bodyParams)
-      });
-      const d=await r.json();
+      toast("📸 שולח "+(items[i].type==='video'?"וידאו":"תמונה")+" "+(i+1)+" מתוך "+items.length+"...");
+      let d=await sendMediaItem(items[i],i);
       if(!d.sent){
-        toast("❌ שגיאה בקובץ "+(i+1));
-        console.error(d);
-        return false;
+        toast("⚠️ ניסיון חוזר לתמונה "+(i+1)+"...");
+        await new Promise(res=>setTimeout(res,2000));
+        d=await sendMediaItem(items[i],i);
+        if(!d.sent){toast("❌ תמונה "+(i+1)+" נכשלה לאחר ניסיון חוזר");console.error(d);return false}
       }
-      if(i<items.length-1)await new Promise(res=>setTimeout(res,1200));
+      if(i<items.length-1)await new Promise(res=>setTimeout(res,2000));
     }
-    toast("✅ כל הקבצים נשלחו!");
+    toast("✅ כל "+items.length+" הקבצים נשלחו!");
     return true;
   }catch(e){
     toast("❌ "+e.message);
@@ -175,6 +178,25 @@ async function sendMultipleProperties(buyer,propsArray){
   }
   toast("✅ כל "+propsArray.length+" הדירות נשלחו!");
   return true;
+}
+
+async function sendDirectMessage(phone,text){
+  const ULTRAMSG_INSTANCE="instance169955";
+  const ULTRAMSG_TOKEN="slhhpfslyuey11fp";
+  const p=(phone||"").replace(/^0/,"972").replace(/[-\s+]/g,"");
+  if(!p){toast("⚠️ אין מספר טלפון");return false}
+  try{
+    const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({token:ULTRAMSG_TOKEN,to:p,body:text})
+    });
+    const d=await r.json();
+    if(d.sent){
+      try{db.collection("messages").doc(p).collection("msgs").add({text,sent_at:new Date().toISOString(),direction:"out"})}catch(e){console.error("msg save err",e)}
+      return true;
+    }else{toast("❌ שגיאה: "+(d.error||"unknown"));return false}
+  }catch(e){toast("❌ "+e.message);return false}
 }
 </script>
 <script type="text/babel">
@@ -493,10 +515,113 @@ function Recruit({prospects,setProspects}){
   </div>
 }
 
+// ━━━ INLINE MSG BOX ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function InlineMsgBox({phone,name,onSent}){
+  const[open,setOpen]=useState(false);
+  const[text,setText]=useState("");
+  const[sending,setSending]=useState(false);
+  const[history,setHistory]=useState([]);
+  async function loadHistory(){
+    if(!phone)return;
+    const p=phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
+    try{
+      const snap=await db.collection("messages").doc(p).collection("msgs")
+        .orderBy("sent_at","desc").limit(5).get();
+      setHistory(snap.docs.map(d=>d.data()));
+    }catch(e){console.error("hist err",e)}
+  }
+  async function send(){
+    if(!text.trim()||!phone||sending)return;
+    setSending(true);
+    const ok=await sendDirectMessage(phone,text);
+    if(ok){
+      toast("✅ ההודעה נשלחה");
+      const newMsg={text,time:nowStr(),sent_at:new Date().toISOString()};
+      setHistory(h=>[newMsg,...h]);
+      onSent&&onSent(text);
+      setText("");
+    }
+    setSending(false);
+  }
+  return <div style={{marginTop:8}}>
+    <button onClick={()=>{if(!open)loadHistory();setOpen(!open)}}
+      style={{background:"rgba(37,211,102,0.07)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:10,
+        padding:"7px 14px",color:GR,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
+        display:"inline-flex",alignItems:"center",gap:6}}>
+      💬 הודעה ישירה {open?"▲":"▼"}
+    </button>
+    {open&&<div style={{marginTop:8,background:"rgba(37,211,102,0.04)",borderRadius:14,padding:14,border:"1px solid rgba(37,211,102,0.12)"}}>
+      {history.length>0&&<div style={{marginBottom:10}}>
+        <div style={{color:"#555",fontSize:11,marginBottom:5,fontWeight:700,textTransform:"uppercase",letterSpacing:.4}}>היסטוריה</div>
+        {history.slice(0,5).map((m,i)=><div key={i} style={{fontSize:11,color:"#666",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+          <span style={{color:"#444"}}>{m.time||new Date(m.sent_at).toLocaleDateString("he-IL")}</span>
+          {" — "}{m.text.substring(0,65)}{m.text.length>65?"...":""}
+        </div>)}
+      </div>}
+      <textarea value={text} onChange={e=>setText(e.target.value)}
+        onKeyDown={e=>{if(e.key==="Enter"&&e.ctrlKey)send()}}
+        placeholder={"כתוב הודעה ל"+name+"... (Ctrl+Enter לשליחה)"} rows={2}
+        style={{...S.inp,resize:"none",fontSize:13,lineHeight:1.6,marginBottom:8,
+          color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.2)"}}/>
+      <Btn sm ch={sending?"שולח...":"📤 שלח"} c={GR} dis={!text.trim()||!phone||sending} onClick={send}/>
+    </div>}
+  </div>
+}
+
+// ━━━ ADD TASK MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function AddTaskModal({client,onClose,onAdd}){
+  const[clientType,setClientType]=useState(client.type||"buyer");
+  const[desc,setDesc]=useState("");
+  const[date,setDate]=useState(new Date().toISOString().split("T")[0]);
+  const[taskTime,setTaskTime]=useState("10:00");
+  const[taskCat,setTaskCat]=useState("call");
+  function create(){
+    if(!desc.trim())return;
+    const task={
+      id:Date.now()+Math.random(),
+      text:desc,
+      time:taskTime||"—",
+      done:false,
+      type:taskCat,
+      clientName:client.name,
+      clientPhone:client.phone||"",
+      clientType,
+      date
+    };
+    onAdd&&onAdd(task);
+    toast("✅ משימה נוצרה — מוצגת בלשונית יומי");
+    onClose();
+  }
+  return <Modal title={"➕ הוסף משימה — "+client.name} color={PU} onClose={onClose}>
+    <div style={{marginBottom:14}}>
+      <Lbl t="סוג לקוח"/>
+      <div style={{display:"flex",gap:8}}>
+        {[{v:"seller",l:"🏡 מוכר"},{v:"buyer",l:"👤 קונה"}].map(x=>
+          <button key={x.v} onClick={()=>setClientType(x.v)}
+            style={{flex:1,background:clientType===x.v?PU+"22":"rgba(255,255,255,0.03)",
+              border:"1px solid "+(clientType===x.v?PU+"55":"rgba(255,255,255,0.08)"),
+              borderRadius:12,padding:"10px",color:clientType===x.v?PU:"#777",
+              fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{x.l}</button>
+        )}
+      </div>
+    </div>
+    <Inp label="תיאור משימה *" ph="לדוגמה: לתאם סיור, לשלוח פרטים..." val={desc} set={setDesc} mb={14}/>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+      <div><Lbl t="תאריך"/><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={S.inp}/></div>
+      <div><Lbl t="שעה"/><input type="time" value={taskTime} onChange={e=>setTaskTime(e.target.value)} style={S.inp}/></div>
+    </div>
+    <Sel label="סוג פעולה" val={taskCat} set={setTaskCat} opts={[
+      {v:"call",l:"📞 שיחה"},{v:"tour",l:"🏠 סיור"},{v:"meeting",l:"🤝 פגישה"},
+      {v:"send",l:"📤 שליחה"},{v:"remind",l:"⏰ תזכורת"}
+    ]} mb={18}/>
+    <Btn full ch="צור משימה" onClick={create} dis={!desc.trim()} c={PU} icon="➕"/>
+  </Modal>
+}
+
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks}){
   const[tab,setTab]=useState(initialTab||"sellers");
-  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
+  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);
   // seller form
   const[sn,setSn]=useState("");const[sp,setSp]=useState("");const[sa,setSa]=useState("");const[sc,setSc]=useState("באר שבע");const[sr,setSr]=useState("");const[ss,setSs]=useState("");const[sf,setSf]=useState("");const[sprice,setSprice]=useState("");const[sred,setSred]=useState("");const[ses,setSes]=useState("");const[see,setSee]=useState("");const[snotes,setSnotes]=useState("");const[simgs,setSimgs]=useState([]);const[svid,setSvid]=useState("");
   // buyer form
@@ -531,6 +656,12 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   function addLog(id,text,type){
     if(type==="s"){const ns=sellers.map(s=>s.id===id?{...s,logs:[...(s.logs||[]),{text,time:nowStr()}]}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
     else{const nb=buyers.map(b=>b.id===id?{...b,logs:[...(b.logs||[]),{text,time:nowStr()}]}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
+  }
+  function addTaskFromModal(task){
+    const nt=[...(tasks||[]),task];
+    setTasks(nt);
+    // also persist to Firebase tasks collection for record
+    try{db.collection("tasks_log").add({client_name:task.clientName,client_phone:task.clientPhone,type:task.clientType,description:task.text,date:task.date,time:task.time,status:"pending",created_at:new Date().toISOString()})}catch(e){console.error("task log err",e)}
   }
   async function sendPropertyToBuyer(buyerId,prop){
     const buyer=buyers.find(b=>b.id===buyerId);
@@ -771,14 +902,19 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=><div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
+      {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
 
     {tab==="buyers"&&<div>{fB.length===0&&<Empty icon="👥" text="אין קונים"/>}{fB.map(b=><div key={b.id} style={S.card}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div><GradeBadge grade={b.grade} onChange={v=>updB(b.id,"grade",v)}/></div>
       {b.notes&&<div style={{color:"#666",fontSize:13,marginBottom:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"9px 14px"}}>{b.notes.substring(0,100)}</div>}
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={BL} onClick={()=>{setSel(b);setMode("view")}}/>{b.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(b.phone)}/>}{b.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(b.phone||'')}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delB(b.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={BL} onClick={()=>{setSel(b);setMode("view")}}/>{b.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(b.phone)}/>}{b.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(b.phone||'')}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:b.name,phone:b.phone||"",type:"buyer"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delB(b.id)}/></div>
+      {b.phone&&(()=>{const pn=b.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(126,184,201,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
+      {b.phone&&<InlineMsgBox phone={b.phone} name={b.name} onSent={text=>{const pn=b.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(b.id,"📤 הודעה ישירה: "+text.substring(0,40),"b")}}/>}
     </div>)}</div>}
+    {taskModal&&<AddTaskModal client={taskModal} onClose={()=>setTaskModal(null)} onAdd={addTaskFromModal}/>}
   </div>
 }
 
@@ -1121,7 +1257,7 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks}/>}
       {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
