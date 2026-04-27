@@ -1066,7 +1066,14 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
 function WeeklyReport({sellers}){
   const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";
   const[template,setTemplate]=useState(lv("report_tpl",DEF));
-  const[sel,setSel]=useState(null);const[preview,setPreview]=useState("");const[loading,setLoading]=useState(false);const[views,setViews]=useState("");
+  const[sel,setSel]=useState(null);const[preview,setPreview]=useState("");const[loading,setLoading]=useState(false);const[views,setViews]=useState("");const[sending,setSending]=useState(false);
+  async function sendDirect(){
+    if(!sel||!sel.phone||!preview.trim()||sending)return;
+    setSending(true);
+    const ok=await sendDirectMessage(sel.phone,preview);
+    if(ok)toast("✅ הדיווח נשלח ל"+sel.name);
+    setSending(false);
+  }
   function genPrev(){if(!sel)return;const s=sel;setPreview(template.replace("{כתובת}",s.address||"").replace("{שם}",s.name||"").replace("{מחיר}",s.price?Number(s.price).toLocaleString():"").replace(/{מספר}/g,Math.floor(Math.random()*5+2)).replace("{צפיות}",views||"0").replace("{המלצה}","להמשיך שיווק אגרסיבי בכל הפלטפורמות"))}
   async function aiGen(){if(!sel)return;setLoading(true);try{const txt=await aiCall("כתוב דיווח שבועי מקצועי וחם של חיים בן סימון מרימקס לבעל נכס "+sel.name+". נכס: "+sel.address+", "+sel.city+", "+(sel.rooms||"?")+" חד, "+sel.price+"₪. פורסם בפייסבוק טיקטוק אינסטגרם ויד2. "+views+" צפיות. כלול מצב שיווקי, פניות, המלצה. ללא תאריך בלעדיות. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}
   return <div style={{padding:S.pg}} className="fade">
@@ -1084,7 +1091,7 @@ function WeeklyReport({sellers}){
       <Inp label="כמות צפיות" ph="1200" val={views} set={setViews} mb={14} icon="👁"/>
       {sel&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Btn sm ch="תצוגה מקדימה" onClick={genPrev} c={BL} icon="👁"/><Btn sm ch={loading?"...":"AI דיווח"} onClick={aiGen} dis={loading} c={PU} icon="🤖"/></div>}
     </div>
-    {preview&&<div style={{...S.cg,border:"1px solid rgba(37,211,102,0.25)"}}><Lbl t="ערוך לפני שליחה" icon="✏️"/><textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={14} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>{sel&&sel.phone&&<Btn full ch="שלח בווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)} icon="📱"/>}</div>}
+    {preview&&<div style={{...S.cg,border:"1px solid rgba(37,211,102,0.25)"}}><Lbl t="ערוך לפני שליחה" icon="✏️"/><textarea value={preview} onChange={e=>setPreview(e.target.value)} rows={14} style={{...S.inp,resize:"none",color:"#c8f0d0",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",fontSize:14,lineHeight:1.7,marginBottom:14}}/>{sel&&sel.phone&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Btn full ch={sending?"שולח...":"📤 שלח ישירות"} c={GR} dis={sending||!preview.trim()} onClick={sendDirect}/><Btn sm ghost ch="פתח בווטסאפ" c={GR} onClick={()=>openWA(sel.phone,preview)} icon="📱"/></div>}</div>}
   </div>
 }
 // ━━━ TIKTOK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
