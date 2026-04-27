@@ -10,11 +10,12 @@ const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 
 // ═══ שליחה בטלגרם ═══
 async function sendTelegram(chatId, text) {
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+  const resp = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
   });
+  return resp.json();
 }
 
 // ═══ Firebase REST ═══
@@ -83,7 +84,7 @@ async function uploadCloudinary(imageUrl) {
   return d.secure_url || null;
 }
 
-// ═══ Claude API — פירסור פרטי נכס ═══
+// ═══ Claude — פירסור פרטי נכס ═══
 async function parseWithClaude(text) {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -94,30 +95,39 @@ async function parseWithClaude(text) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        model: 'claude-sonnet-4-20250514', max_tokens: 600,
         messages: [{ role: 'user', content:
-          `חלץ פרטי נכס מהטקסט. החזר JSON בלבד בלי markdown:\n{"city":"","street":"","rooms":null,"floor":null,"size_sqm":null,"price":null,"contact_name":"","contact_phone":"","notes":""}\nשדה חסר = null. מחיר = מספר בלבד.\n\nטקסט: "${text}"` }],
+          `חלץ פרטי נכס מהטקסט. החזר JSON בלבד, ללא markdown וללא הסברים:\n` +
+          `{"city":"","street":"","rooms":null,"floor":null,"size_sqm":null,"price":null,"contact_name":"","contact_phone":"","notes":""}\n` +
+          `חוקים: שדה חסר = null. מחיר = מספר שלם בלבד (ללא פסיקים). rooms = מספר עשרוני מותר (3.5).\n\n` +
+          `טקסט: "${text}"` }],
       }),
     });
     const d = await r.json();
-    const c = (d.content?.[0]?.text || '{}').replace(/```json\s*/g,'').replace(/```/g,'').trim();
-    return JSON.parse(c);
-  } catch(e) { return null; }
+    const raw = d.content?.[0]?.text || '{}';
+    const clean = raw.replace(/```json\s*/g,'').replace(/```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) {
+    console.error('parseWithClaude error:', e);
+    return null;
+  }
 }
 
-// ═══ Claude API — יצירת טקסט פרסום ═══
+// ═══ Claude — יצירת טקסט פרסום ═══
 async function generatePromoWithClaude(apt) {
   try {
-    const price = typeof apt.price === 'number' ? apt.price.toLocaleString('he-IL') : apt.price || '';
-    const details = [
-      apt.city ? `עיר: ${apt.city}` : '',
-      apt.street ? `רחוב: ${apt.street}` : '',
-      apt.rooms ? `חדרים: ${apt.rooms}` : '',
-      apt.floor != null ? `קומה: ${apt.floor}` : '',
-      apt.size_sqm ? `גודל: ${apt.size_sqm} מ"ר` : '',
-      price ? `מחיר: ${price} ₪` : '',
-      apt.contact_phone ? `טלפון: ${apt.contact_phone}` : '',
-      apt.notes ? `הערות: ${apt.notes}` : '',
+    const price = typeof apt.price === 'number'
+      ? apt.price.toLocaleString('he-IL')
+      : (apt.price || '');
+    const lines = [
+      apt.city        ? `עיר: ${apt.city}` : null,
+      apt.street      ? `רחוב: ${apt.street}` : null,
+      apt.rooms       ? `חדרים: ${apt.rooms}` : null,
+      apt.floor != null ? `קומה: ${apt.floor}` : null,
+      apt.size_sqm    ? `גודל: ${apt.size_sqm} מ"ר` : null,
+      price           ? `מחיר: ${price} ₪` : null,
+      apt.contact_phone ? `טלפון: ${apt.contact_phone}` : null,
+      apt.notes       ? `הערות: ${apt.notes}` : null,
     ].filter(Boolean).join('\n');
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -130,15 +140,29 @@ async function generatePromoWithClaude(apt) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 500,
         messages: [{ role: 'user', content:
-          `צור טקסט פרסום קצר לווטסאפ עבור נכס למכירה. החזר רק את הטקסט, בלי הסברים.\nהשתמש באימוג'ים. שפה יוניסקס (בלי פנייה מגדרית). בדיוק בפורמט הזה:\n\n🏠 דירה למכירה!\n📍 [עיר], [רחוב]\n🛏️ [חדרים] חדרים | 🏢 קומה [X]\n📐 [גודל] מ"ר\n💰 [מחיר] ₪\n📝 [הערות - רק אם יש]\n📞 לפרטים: [טלפון]\n\nRE/MAX באר שבע — חיים בן סימון\n\nהשמט שורות של שדות חסרים. פרטי הנכס:\n${details}` }],
+          `צור טקסט פרסום לווטסאפ עבור דירה למכירה.\n` +
+          `החזר רק את הטקסט המוגמר, ללא הסברים נוספים.\n` +
+          `שפה יוניסקס. השמט שורות של שדות חסרים. השתמש בדיוק בפורמט הזה:\n\n` +
+          `🏠 דירה למכירה!\n` +
+          `📍 [עיר], [רחוב]\n` +
+          `🛏️ [חדרים] חדרים | 🏢 קומה [X]\n` +
+          `📐 [גודל] מ"ר\n` +
+          `💰 [מחיר] ₪\n` +
+          `📝 [הערות - רק אם יש]\n` +
+          `📞 לפרטים: חיים בן סימון\n` +
+          `RE/MAX באר שבע\n\n` +
+          `פרטי הנכס:\n${lines}` }],
       }),
     });
     const d = await r.json();
     return (d.content?.[0]?.text || '').trim();
-  } catch(e) { return null; }
+  } catch(e) {
+    console.error('generatePromoWithClaude error:', e);
+    return null;
+  }
 }
 
-// ═══ Claude API — תיקון פרסום ═══
+// ═══ Claude — תיקון פרסום ═══
 async function fixPromoWithClaude(currentPromo, fixRequest) {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -151,43 +175,65 @@ async function fixPromoWithClaude(currentPromo, fixRequest) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 500,
         messages: [{ role: 'user', content:
-          `הנה טקסט פרסום נדל"ן:\n\n${currentPromo}\n\nנא לתקן לפי הבקשה הבאה: "${fixRequest}"\n\nהחזר רק את הטקסט המתוקן, בלי הסברים. שמור על אותו פורמט ואימוג'ים. שפה יוניסקס.` }],
+          `הנה טקסט פרסום נדל"ן:\n\n${currentPromo}\n\n` +
+          `בקשת תיקון: "${fixRequest}"\n\n` +
+          `החזר רק את הטקסט המתוקן, ללא הסברים. שמור על אותו פורמט ואימוג'ים. שפה יוניסקס.` }],
       }),
     });
     const d = await r.json();
     return (d.content?.[0]?.text || '').trim();
-  } catch(e) { return null; }
+  } catch(e) {
+    console.error('fixPromoWithClaude error:', e);
+    return null;
+  }
 }
 
-// ═══ זיהוי פקודות בעברית טבעית ═══
-function detectCommand(text) {
+// ═══ זיהוי פקודות — עברית טבעית + slash ═══
+// מחזיר: { cmd, type, args } או null
+function detectIntent(text) {
   const t = text.trim();
 
-  // דירה מוכר
-  if (/^(תוסיף|הוסף|תכניס|הכנס)?\s*דירה\s+מוכר/i.test(t) || t === '/דירה_מוכר') return 'דירה_מוכר';
-  // דירה מתווך
-  if (/^(תוסיף|הוסף|תכניס|הכנס)?\s*דירה\s+מתווך/i.test(t) || t === '/דירה_מתווך') return 'דירה_מתווך';
-  // כיבוי
-  if (/^(כבה|כיבוי|תכבה)$/i.test(t) || t === '/off') return 'off';
-  // הפעלה
-  if (/^(הדלק|תדליק|הפעל)$/i.test(t) || t === '/on') return 'on';
-  // סטטוס
-  if (/^(סטטוס|מצב)$/i.test(t) || t === '/status' || t === '/סטטוס') return 'סטטוס';
-  // עזרה
-  if (/^(עזרה|עזור)$/i.test(t) || t === '/עזרה' || t === '/help') return 'עזרה';
-  // ביטול
-  if (/^(ביטול|בטל)$/i.test(t) || t === '/ביטול') return 'ביטול';
-  // start
-  if (t === '/start') return 'start';
+  // slash commands
+  if (t === '/start')          return { cmd: 'start' };
+  if (t === '/on')             return { cmd: 'on' };
+  if (t === '/off')            return { cmd: 'off' };
+  if (t === '/עזרה' || t === '/help') return { cmd: 'עזרה' };
+  if (t === '/ביטול')          return { cmd: 'ביטול' };
+  if (t === '/סטטוס' || t === '/status') return { cmd: 'סטטוס' };
+
+  // slash + type
+  const slashSeller = t.match(/^\/דירה[_\s]מוכר(.*)?$/i);
+  if (slashSeller) return { cmd: 'דירה', type: 'seller', args: (slashSeller[1] || '').trim() };
+  const slashAgent = t.match(/^\/דירה[_\s]מתווך(.*)?$/i);
+  if (slashAgent)  return { cmd: 'דירה', type: 'agent', args: (slashAgent[1] || '').trim() };
+
+  // עברית טבעית — on/off/status
+  if (/^(הפעל|תפעיל|הדלק|תדליק)$/.test(t))  return { cmd: 'on' };
+  if (/^(כבה|תכבה|כיבוי|עצור)$/.test(t))     return { cmd: 'off' };
+  if (/^(סטטוס|מצב|מה קורה)$/.test(t))       return { cmd: 'סטטוס' };
+  if (/^(עזרה|עזור|מה אתה יודע|פקודות)$/.test(t)) return { cmd: 'עזרה' };
+  if (/^(ביטול|בטל|עזוב|בלי|לא)$/.test(t))   return { cmd: 'ביטול' };
+
+  // עברית טבעית — דירה מוכר/מתווך
+  // מזהה: [פועל אופציונלי] דיר(ה/ת) מוכר/מתווך [שאר]
+  const sellerMatch = t.match(/^(?:תוסיף|הוסף|תכניס|הכנס|תרשום|רשום|הכניס)?\s*דיר[הת]\s+מוכר(?:\s+(.*))?$/i);
+  if (sellerMatch) return { cmd: 'דירה', type: 'seller', args: (sellerMatch[1] || '').trim() };
+
+  const agentMatch = t.match(/^(?:תוסיף|הוסף|תכניס|הכנס|תרשום|רשום|הכניס)?\s*דיר[הת]\s+מתווך(?:\s+(.*))?$/i);
+  if (agentMatch) return { cmd: 'דירה', type: 'agent', args: (agentMatch[1] || '').trim() };
 
   return null;
 }
 
-// ═══ חילוץ טקסט אחרי פקודת דירה ═══
-function extractArgsAfterCommand(text) {
-  // הסר את חלק הפקודה ותחזיר את השאר
-  return text.replace(/^(תוסיף|הוסף|תכניס|הכנס)?\s*דירה\s+(מוכר|מתווך)\s*/i, '').trim()
-    || text.replace(/^\/(דירה_מוכר|דירה_מתווך)\s*/i, '').trim();
+// ═══ שדות קריטיים חסרים ═══
+const CRITICAL_FIELDS = [
+  { key: 'city',  q: '🏙️ באיזו עיר הנכס?' },
+  { key: 'rooms', q: '🛏️ כמה חדרים?' },
+  { key: 'price', q: '💰 מה המחיר המבוקש? (מספר בלבד, בש"ח)' },
+];
+
+function getMissingCritical(apt) {
+  return CRITICAL_FIELDS.filter(f => !apt[f.key]);
 }
 
 // ═══ Handler ראשי ═══
@@ -202,38 +248,40 @@ export default async function handler(req, res) {
     const update = req.body;
     if (!update.message) return res.status(200).json({ status: 'no message' });
 
-    const msg = update.message;
+    const msg    = update.message;
     const chatId = String(msg.chat.id);
-    const text = (msg.text || '').trim();
-    const caption = (msg.caption || '').trim();
-    const photo = msg.photo;
+    const text   = (msg.text    || '').trim();
+    const caption= (msg.caption || '').trim();
+    const photo  = msg.photo;
 
     if (chatId !== TELEGRAM_CHAT_ID) return res.status(200).json({ status: 'unauthorized' });
 
-    // בדיקה אם מוטי פעיל
+    // ── בדיקה אם מוטי פעיל ──
     const mottiActive = await fbGet('settings/mottiActive');
-    const cmd = detectCommand(text);
+    const intent = detectIntent(text);
 
-    if (mottiActive === false && cmd !== 'on') {
-      if (cmd === 'סטטוס') {
-        await sendTelegram(chatId, '😴 מוטי כבוי כרגע.\nנא לשלוח /on או "הפעל" להפעלה.');
+    if (mottiActive === false && intent?.cmd !== 'on') {
+      if (intent?.cmd === 'סטטוס') {
+        await sendTelegram(chatId, '😴 מוטי כבוי כרגע.\nנא לשלוח "הפעל" או /on להפעלה.');
       }
       return res.status(200).json({ status: 'motti_off' });
     }
 
+    // ── קבלת סשן (תמיד נטען כדי לא להפסיד הקשר) ──
+    const session = await fbGet(`sessions/${chatId}`);
+
     // ── תמונה ──
     if (photo && photo.length > 0) {
-      const session = await fbGet(`sessions/${chatId}`);
       if (!session?.active) {
-        await sendTelegram(chatId, '📸 התקבלה תמונה, אבל אין נכס פתוח.\nנא לשלוח "דירה מוכר" או "דירה מתווך" קודם.');
+        await sendTelegram(chatId, '📸 התקבלה תמונה, אבל אין נכס פתוח.\nנא לשלוח "דירה מוכר" או "דירה מתווך" תחילה.');
         return res.status(200).json({ status: 'ok' });
       }
 
       await sendTelegram(chatId, '⏳ מעלים תמונה...');
-      const fileId = photo[photo.length - 1].file_id;
-      const fileInfo = await (await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`)).json();
+      const fileId  = photo[photo.length - 1].file_id;
+      const fileInfo= await (await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`)).json();
       const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`;
-      const url = await uploadCloudinary(fileUrl);
+      const url     = await uploadCloudinary(fileUrl);
       if (!url) {
         await sendTelegram(chatId, '❌ שגיאה בהעלאת התמונה. נא לנסות שוב.');
         return res.status(200).json({ status: 'ok' });
@@ -242,31 +290,39 @@ export default async function handler(req, res) {
       const photos = session.photos || [];
       photos.push(url);
       session.photos = photos;
-      await fbSet(`sessions/${chatId}`, session);
 
-      // אם יש caption עם פרטים, לשמור אותו גם
-      if (caption && !session.rawText) {
-        session.rawText = caption;
-        await fbSet(`sessions/${chatId}`, session);
+      // אם caption מכיל פרטים, לשמור
+      if (caption) {
+        session.rawText = session.rawText ? session.rawText + '\n' + caption : caption;
       }
 
-      await sendTelegram(chatId, `✅ תמונה #${photos.length} הועלתה!\n\n📸 ניתן לשלוח עוד תמונות או טקסט עם פרטי הנכס.\n✅ בסיום — נא לשלוח "סיום"`);
+      await fbSet(`sessions/${chatId}`, session);
+      await sendTelegram(chatId, `✅ תמונה #${photos.length} הועלתה!\n\n📸 ניתן לשלוח עוד תמונות.\n✅ בסיום — נא לשלוח "סיום"`);
       return res.status(200).json({ status: 'ok' });
     }
 
-    // ── פקודות (/ או עברית טבעית) ──
-    if (cmd) {
+    // ── פקודות ──
+    if (intent) {
+      const { cmd, type, args } = intent;
+
+      // ביטול — בכל מצב
+      if (cmd === 'ביטול') {
+        await fbDelete(`sessions/${chatId}`);
+        await sendTelegram(chatId, '❌ הפעולה בוטלה.');
+        return res.status(200).json({ status: 'ok' });
+      }
+
       switch(cmd) {
         case 'start':
           await sendTelegram(chatId, [
-            '🏠 ברוכים הבאים ל-NadlanPro!', '',
-            'אני מוטי, הבוט החכם לניהול נדל"ן 🤖', '',
+            '🏠 *ברוכים הבאים ל-NadlanPro!*', '',
+            'אני מוטי, הבוט לניהול נדל"ן 🤖', '',
             '📌 "דירה מוכר" — הוספת נכס מוכר',
             '📌 "דירה מתווך" — הוספת נכס מתווך',
             '📊 "סטטוס" — סטטוס המערכת',
-            '🔛 "הפעל" / 😴 "כבה"',
+            '🔛 "הפעל" | 😴 "כבה"',
             '❓ "עזרה"', '',
-            'אפשר גם עם / לפני הפקודה.', '',
+            'ניתן לשלוח גם עם / לפני הפקודה.',
             'יאללה, מתחילים! 💪',
           ].join('\n'));
           break;
@@ -278,69 +334,75 @@ export default async function handler(req, res) {
 
         case 'off':
           await fbSet('settings/mottiActive', false);
-          await sendTelegram(chatId, '🔴 מוטי כבוי. נא לשלוח "הפעל" או /on להפעלה.');
+          await sendTelegram(chatId, '🔴 מוטי כבוי.\nנא לשלוח "הפעל" או /on להפעלה.');
           break;
 
-        case 'דירה_מוכר':
-        case 'דירה_מתווך': {
-          const type = cmd === 'דירה_מוכר' ? 'seller' : 'agent';
-          const args = extractArgsAfterCommand(text);
+        case 'סטטוס': {
+          const active = await fbGet('settings/mottiActive');
+          const [sellers, agents] = await Promise.all([
+            fbGet('apartments/seller'), fbGet('apartments/agent'),
+          ]);
+          const sc = sellers ? Object.keys(sellers).length : 0;
+          const ac = agents  ? Object.keys(agents).length  : 0;
+          await sendTelegram(chatId, [
+            '📊 *סטטוס NadlanPro*', '',
+            `🤖 מוטי: ${active !== false ? '🟢 פעיל' : '🔴 כבוי'}`,
+            `⏰ שליחה החוצה: ${canSendExternal() ? '✅ מותר' : '🚫 מחוץ לשעות'}`,
+            `🏠 נכסי מוכר: ${sc}`,
+            `🤝 נכסי מתווך: ${ac}`,
+            `📦 סה"כ: ${sc + ac}`, '',
+            `🕐 ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}`,
+          ].join('\n'));
+          break;
+        }
 
-          await fbSet(`sessions/${chatId}`, {
+        case 'עזרה':
+          await sendTelegram(chatId, [
+            '❓ *עזרה — מוטי NadlanPro*', '',
+            '📌 "דירה מוכר" — הוספת נכס מוכר',
+            '📌 "דירה מתווך" — הוספת נכס מתווך',
+            '📊 "סטטוס" / "מצב"',
+            '🔛 "הפעל" / "הדלק"',
+            '😴 "כבה" / "כיבוי"',
+            '❌ "ביטול" / "בטל"', '',
+            '💡 *איך להוסיף דירה:*',
+            '1. שלח "דירה מוכר"',
+            '2. שלח טקסט חופשי עם הפרטים + תמונות',
+            '3. שלח "סיום"',
+            '4. מוטי מכין פרסום ושולח לאישור',
+          ].join('\n'));
+          break;
+
+        case 'דירה': {
+          const label = type === 'seller' ? 'מוכר' : 'מתווך';
+          const newSession = {
             active: true,
             type,
             step: 'collecting',
             rawText: args || '',
             photos: [],
+            apartment: null,
+            promoText: null,
             created_at: new Date().toISOString(),
-          });
+          };
+          await fbSet(`sessions/${chatId}`, newSession);
 
-          if (args.length > 10) {
-            // כבר יש טקסט עם הפקודה — לאסוף תמונות
-            await sendTelegram(chatId, '📋 קיבלתי את הפרטים!\n\n📸 נא לשלוח תמונות של הנכס.\n✅ בסיום — נא לשלוח "סיום"');
+          if (args && args.length > 5) {
+            await sendTelegram(chatId,
+              `📋 קיבלתי! נכס *${label}*.\n\n` +
+              `📸 ניתן לשלוח תמונות של הנכס.\n` +
+              `✅ בסיום — שלח "סיום"`
+            );
           } else {
-            await sendTelegram(chatId, '📋 שולחים פרטים ותמונות של הנכס, מוטי יטפל בשאר 🤖\n\n💬 ניתן לשלוח טקסט חופשי עם כל הפרטים + תמונות.\n✅ בסיום — נא לשלוח "סיום"');
+            await sendTelegram(chatId,
+              `📋 נא לשלוח את פרטי הנכס — כתובת, חדרים, קומה, גודל, מחיר ופרטי קשר.\n` +
+              `מוטי ידאג לשאר 🤖\n\n` +
+              `📸 ניתן לצרף גם תמונות.\n` +
+              `✅ בסיום — שלח "סיום"`
+            );
           }
           break;
         }
-
-        case 'סטטוס': {
-          const active = await fbGet('settings/mottiActive');
-          const [sellers, agents] = await Promise.all([fbGet('apartments/seller'), fbGet('apartments/agent')]);
-          const sc = sellers ? Object.keys(sellers).length : 0;
-          const ac = agents ? Object.keys(agents).length : 0;
-          const timeOk = canSendExternal();
-          await sendTelegram(chatId, [
-            '📊 סטטוס NadlanPro', '',
-            `🤖 מוטי: ${active !== false ? '🟢 פעיל' : '🔴 כבוי'}`,
-            `⏰ שליחה החוצה: ${timeOk ? '✅ מותר' : '🚫 מחוץ לשעות'}`,
-            `🏠 נכסי מוכר: ${sc}`,
-            `🤝 נכסי מתווך: ${ac}`,
-            `📦 סה"כ: ${sc+ac}`, '',
-            `🕐 ${new Date().toLocaleString('he-IL',{timeZone:'Asia/Jerusalem'})}`,
-          ].join('\n'));
-          break;
-        }
-
-        case 'ביטול':
-          await fbDelete(`sessions/${chatId}`);
-          await sendTelegram(chatId, '❌ הפעולה בוטלה.\nנא לשלוח "עזרה" לרשימת פקודות.');
-          break;
-
-        case 'עזרה':
-          await sendTelegram(chatId, [
-            '❓ עזרה — מוטי NadlanPro', '',
-            '📌 "דירה מוכר" — הוספת נכס מוכר',
-            '📌 "דירה מתווך" — הוספת נכס מתווך',
-            '📊 "סטטוס" / "מצב" — סטטוס המערכת',
-            '🔛 "הפעל" / "הדלק" — הפעלת מוטי',
-            '😴 "כבה" / "כיבוי" — כיבוי מוטי',
-            '❌ "ביטול" / "בטל" — ביטול פעולה', '',
-            '💡 דוגמה:',
-            'דירה מוכר 3 חדרים בבאר שבע רינגלבלום 5 קומה 3 85 מר 1,200,000', '',
-            '📸 אפשר לשלוח תמונות + טקסט חופשי, מוטי מסדר הכל!',
-          ].join('\n'));
-          break;
 
         default:
           await sendTelegram(chatId, '🤷 לא הבנתי.\nנא לשלוח "עזרה" לרשימת פקודות.');
@@ -349,121 +411,222 @@ export default async function handler(req, res) {
     }
 
     // ── סשן פעיל ──
-    const session = await fbGet(`sessions/${chatId}`);
     if (session?.active) {
-      const lower = text.trim();
+      const lower = text.toLowerCase().trim();
 
-      // ביטול בכל שלב
-      if (['ביטול','בטל'].includes(lower)) {
+      // ביטול
+      if (['ביטול','בטל','עזוב'].includes(lower)) {
         await fbDelete(`sessions/${chatId}`);
         await sendTelegram(chatId, '❌ בוטל.');
         return res.status(200).json({ status: 'ok' });
       }
 
-      // ── שלב: איסוף פרטים ותמונות ──
+      // ════ שלב: איסוף ════
       if (session.step === 'collecting') {
-        if (['סיום','done','שמור','save'].includes(lower)) {
-          // סיום איסוף — שליחה ל-Claude לפירסור ויצירת פרסום
-          if (!session.rawText) {
-            await sendTelegram(chatId, '⚠️ לא התקבלו פרטים על הנכס.\nנא לשלוח טקסט עם פרטי הנכס לפני סיום.');
+        if (['סיום','done','שמור','save','סיים'].includes(lower)) {
+          if (!session.rawText || session.rawText.trim().length < 5) {
+            await sendTelegram(chatId,
+              '⚠️ לא התקבלו פרטים על הנכס.\n' +
+              'נא לשלוח טקסט עם פרטי הנכס (כתובת, חדרים, מחיר...) לפני סיום.'
+            );
             return res.status(200).json({ status: 'ok' });
           }
 
-          await sendTelegram(chatId, '🧠 מוטי מנתח את הפרטים ומכין פרסום...');
-
-          // פירסור הפרטים
+          await sendTelegram(chatId, '🧠 מוטי מנתח את הפרטים...');
           const parsed = await parseWithClaude(session.rawText);
           if (!parsed) {
             await sendTelegram(chatId, '❌ לא הצלחתי לנתח את הפרטים. נא לנסות שוב.');
             return res.status(200).json({ status: 'ok' });
           }
 
-          // יצירת טקסט פרסום
-          const promoText = await generatePromoWithClaude(parsed);
-          if (!promoText) {
-            await sendTelegram(chatId, '❌ שגיאה ביצירת הפרסום. נא לנסות שוב.');
+          session.apartment = parsed;
+
+          // בדיקת שדות קריטיים חסרים
+          const missing = getMissingCritical(parsed);
+          if (missing.length > 0) {
+            session.step = 'ask_missing';
+            session.missingQueue = missing.map(f => f.key);
+            session.currentMissing = missing[0].key;
+            await fbSet(`sessions/${chatId}`, session);
+            await sendTelegram(chatId, `📍 חסר מידע:\n\n${missing[0].q}`);
             return res.status(200).json({ status: 'ok' });
           }
 
-          // שמירת הנכס ב-Firebase
-          const apartment = {
-            ...parsed,
-            source: session.type,
-            photos: session.photos || [],
-            created_at: session.created_at,
-          };
-          const aptResult = await fbPush(`apartments/${session.type}`, apartment);
-          const aptId = aptResult.name;
+          // אם אין תמונות — לשאול
+          if (!session.photos || session.photos.length === 0) {
+            session.step = 'ask_photos';
+            await fbSet(`sessions/${chatId}`, session);
+            await sendTelegram(chatId,
+              '📸 רוצים לצרף תמונות?\n' +
+              'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
+            );
+            return res.status(200).json({ status: 'ok' });
+          }
 
-          // עדכון הסשן לשלב אישור פרסום
-          session.step = 'confirm_promo';
-          session.apartment = apartment;
-          session.apartment_id = aptId;
-          session.promoText = promoText;
-          await fbSet(`sessions/${chatId}`, session);
-
-          await sendTelegram(chatId, `✅ הנכס נשמר!\n\n📝 הנה הפרסום המוכן:\n\n${promoText}\n\n━━━━━━━━━━━━━━━━\n✅ לאישור — נא לשלוח "אישור" או "כן"\n✏️ לתיקון — נא לשלוח את התיקון (למשל: "תחליף מחיר ל-1,500,000")`);
-          return res.status(200).json({ status: 'ok' });
+          // הכל מוכן — יצירת פרסום
+          return await createAndSendPromo(chatId, session);
         }
 
-        // טקסט רגיל — לאסוף כפרטי נכס
-        if (session.rawText) {
-          session.rawText += '\n' + text;
-        } else {
-          session.rawText = text;
-        }
+        // טקסט חופשי — לצבור
+        session.rawText = session.rawText
+          ? session.rawText + '\n' + text
+          : text;
         await fbSet(`sessions/${chatId}`, session);
-        await sendTelegram(chatId, '✅ קיבלתי!\n\n📸 ניתן לשלוח עוד תמונות או פרטים.\n✅ בסיום — נא לשלוח "סיום"');
+        await sendTelegram(chatId,
+          '✅ קיבלתי!\n\n📸 ניתן לשלוח תמונות.\n✅ בסיום — שלח "סיום"'
+        );
         return res.status(200).json({ status: 'ok' });
       }
 
-      // ── שלב: אישור פרסום ──
-      if (session.step === 'confirm_promo') {
-        if (['אישור','כן','ok','yes','אשר'].includes(lower)) {
-          // שמירת הפרסום ב-promotions
-          await fbPush('promotions', {
-            apartment_id: session.apartment_id,
-            type: session.type,
-            text: session.promoText,
-            photos: session.photos || [],
-            status: 'approved',
-            created_at: session.created_at,
-            approved_at: new Date().toISOString(),
-          });
+      // ════ שלב: שאלת שדות חסרים ════
+      if (session.step === 'ask_missing') {
+        const fieldKey = session.currentMissing;
+        // שמור את התשובה
+        if (fieldKey === 'rooms' || fieldKey === 'price') {
+          const n = parseFloat(text.replace(/[^\d.]/g, ''));
+          session.apartment[fieldKey] = isNaN(n) ? text : n;
+        } else {
+          session.apartment[fieldKey] = text;
+        }
 
-          await fbDelete(`sessions/${chatId}`);
-          await sendTelegram(chatId, '✅ הפרסום אושר ונשמר!\n\n📌 הפרסום מוכן לשליחה. אף הודעה לא תישלח ללקוחות בלי אישור נוסף.');
+        // הסר מהתור
+        session.missingQueue = (session.missingQueue || []).filter(k => k !== fieldKey);
+
+        if (session.missingQueue.length > 0) {
+          // עוד שדות חסרים
+          session.currentMissing = session.missingQueue[0];
+          const nextField = CRITICAL_FIELDS.find(f => f.key === session.currentMissing);
+          await fbSet(`sessions/${chatId}`, session);
+          await sendTelegram(chatId, nextField.q);
           return res.status(200).json({ status: 'ok' });
         }
 
-        // תיקון — שליחה ל-Claude לתיקון
-        await sendTelegram(chatId, '🧠 מוטי מתקן את הפרסום...');
-        const fixedPromo = await fixPromoWithClaude(session.promoText, text);
-        if (!fixedPromo) {
+        // אין יותר שדות חסרים — שואלים תמונות
+        session.step = 'ask_photos';
+        session.currentMissing = null;
+        session.missingQueue = [];
+        await fbSet(`sessions/${chatId}`, session);
+
+        if (!session.photos || session.photos.length === 0) {
+          await sendTelegram(chatId,
+            '📸 רוצים לצרף תמונות?\n' +
+            'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
+          );
+        } else {
+          return await createAndSendPromo(chatId, session);
+        }
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: שאלת תמונות ════
+      if (session.step === 'ask_photos') {
+        if (['סיום','done','לא','skip','בלי','ללא'].includes(lower)) {
+          return await createAndSendPromo(chatId, session);
+        }
+        await sendTelegram(chatId,
+          '📸 ניתן לשלוח תמונות, או "סיום" להמשיך בלי תמונות.'
+        );
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: אישור פרסום ════
+      if (session.step === 'confirm_promo') {
+        if (['אישור','כן','ok','yes','אשר','אשרי'].includes(lower)) {
+          // שמור promotions
+          await fbPush('promotions', {
+            apartment_id: session.apartment_id || null,
+            type:         session.type,
+            text:         session.promoText,
+            photos:       session.photos || [],
+            status:       'approved',
+            created_at:   session.created_at,
+            approved_at:  new Date().toISOString(),
+          });
+          await fbDelete(`sessions/${chatId}`);
+          await sendTelegram(chatId,
+            '✅ *הפרסום אושר ונשמר!*\n\n' +
+            '📌 הפרסום מוכן לשליחה.\n' +
+            'אף הודעה לא תישלח ללקוחות בלי אישור נוסף.'
+          );
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        // תיקון
+        await sendTelegram(chatId, '🧠 מתקן את הפרסום...');
+        const fixed = await fixPromoWithClaude(session.promoText, text);
+        if (!fixed) {
           await sendTelegram(chatId, '❌ שגיאה בתיקון. נא לנסות שוב.');
           return res.status(200).json({ status: 'ok' });
         }
-
-        session.promoText = fixedPromo;
+        session.promoText = fixed;
         await fbSet(`sessions/${chatId}`, session);
-
-        await sendTelegram(chatId, `📝 הנה הפרסום המתוקן:\n\n${fixedPromo}\n\n━━━━━━━━━━━━━━━━\n✅ לאישור — "אישור" או "כן"\n✏️ לתיקון נוסף — נא לשלוח את התיקון`);
+        await sendTelegram(chatId,
+          `📝 הפרסום המתוקן:\n\n${fixed}\n\n` +
+          `━━━━━━━━━━━━━━━━\n` +
+          `✅ "אישור" / "כן" לשמירה\n` +
+          `✏️ לתיקון נוסף — שלח את השינוי`
+        );
         return res.status(200).json({ status: 'ok' });
       }
 
       // שלב לא מוכר — חזרה לאיסוף
       session.step = 'collecting';
       await fbSet(`sessions/${chatId}`, session);
-      await sendTelegram(chatId, '📋 נא לשלוח פרטים ותמונות של הנכס.\n✅ בסיום — "סיום"');
+      await sendTelegram(chatId, '📋 נא לשלוח פרטים ותמונות.\n✅ בסיום — "סיום"');
       return res.status(200).json({ status: 'ok' });
     }
 
-    // ── הודעה חופשית בלי סשן ──
-    await sendTelegram(chatId, '🤖 מוטי כאן!\n\nנא לשלוח "עזרה" לרשימת פקודות.');
+    // ── הודעה חופשית, אין סשן ──
+    await sendTelegram(chatId,
+      '🤖 מוטי כאן!\n\nנא לשלוח "עזרה" לרשימת פקודות.'
+    );
     return res.status(200).json({ status: 'ok' });
 
   } catch(err) {
-    console.error('שגיאה:', err);
+    console.error('Handler error:', err);
     return res.status(200).json({ error: err.message });
   }
+}
+
+// ═══ פונקציית עזר: יצירת פרסום ושליחה לאישור ═══
+async function createAndSendPromo(chatId, session) {
+  await sendTelegram(chatId, '🧠 מוטי מכין טקסט פרסום...');
+
+  // שמור נכס ב-Firebase
+  const apartment = {
+    ...session.apartment,
+    source:     session.type,
+    photos:     session.photos || [],
+    created_at: session.created_at,
+  };
+  let aptId = null;
+  try {
+    const aptResult = await fbPush(`apartments/${session.type}`, apartment);
+    aptId = aptResult.name;
+  } catch(e) {
+    console.error('fbPush apartment error:', e);
+  }
+
+  // יצירת פרסום
+  const promoText = await generatePromoWithClaude(apartment);
+  if (!promoText) {
+    await sendTelegram(chatId, '❌ שגיאה ביצירת הפרסום. נא לנסות שוב.');
+    return { status: 200, body: { status: 'promo_error' } };
+  }
+
+  session.step         = 'confirm_promo';
+  session.apartment    = apartment;
+  session.apartment_id = aptId;
+  session.promoText    = promoText;
+  await fbSet(`sessions/${chatId}`, session);
+
+  await sendTelegram(chatId,
+    `✅ הנכס נשמר!\n\n📝 *הנה הפרסום המוכן:*\n\n${promoText}\n\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `✅ לאישור — שלח "אישור" או "כן"\n` +
+    `✏️ לתיקון — שלח את השינוי (למשל: "תחליף מחיר ל-1,500,000")`
+  );
+
+  // This function is called inside the main handler which returns after it
+  return { status: 'ok' };
 }
