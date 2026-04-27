@@ -270,7 +270,7 @@ export default async function handler(req, res) {
     // ── קבלת סשן (תמיד נטען כדי לא להפסיד הקשר) ──
     const session = await fbGet(`sessions/${chatId}`);
 
-    // ── תמונה ──
+    // ── 1. תמונה ──
     if (photo && photo.length > 0) {
       if (!session?.active) {
         await sendTelegram(chatId, '📸 התקבלה תמונה, אבל אין נכס פתוח.\nנא לשלוח "דירה מוכר" או "דירה מתווך" תחילה.');
@@ -301,7 +301,171 @@ export default async function handler(req, res) {
       return res.status(200).json({ status: 'ok' });
     }
 
-    // ── פקודות ──
+    // ── 2. סשן פעיל קודם — כל טקסט בזמן סשן הולך לסשן ──
+    // יוצא מן הכלל: ביטול slash + on/off slash מקבלים עדיפות עליונה לבטיחות
+    const isSlashEscape = ['/ביטול', '/off', '/on', '/start'].includes(text);
+
+    if (session?.active && !isSlashEscape) {
+      const lower = text.toLowerCase().trim();
+
+      // ביטול בכל מצב (מילים)
+      if (['ביטול','בטל','עזוב','/ביטול'].includes(lower)) {
+        await fbDelete(`sessions/${chatId}`);
+        await sendTelegram(chatId, '❌ בוטל.');
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: איסוף ════
+      if (session.step === 'collecting') {
+        if (['סיום','done','שמור','save','סיים'].includes(lower)) {
+          if (!session.rawText || session.rawText.trim().length < 5) {
+            await sendTelegram(chatId,
+              '⚠️ לא התקבלו פרטים על הנכס.\n' +
+              'נא לשלוח טקסט עם פרטי הנכס (כתובת, חדרים, מחיר...) לפני סיום.'
+            );
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          await sendTelegram(chatId, '🧠 מוטי מנתח את הפרטים...');
+          const parsed = await parseWithClaude(session.rawText);
+          if (!parsed) {
+            await sendTelegram(chatId, '❌ לא הצלחתי לנתח את הפרטים. נא לנסות שוב.');
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          session.apartment = parsed;
+
+          // בדיקת שדות קריטיים חסרים
+          const missing = getMissingCritical(parsed);
+          if (missing.length > 0) {
+            session.step = 'ask_missing';
+            session.missingQueue = missing.map(f => f.key);
+            session.currentMissing = missing[0].key;
+            await fbSet(`sessions/${chatId}`, session);
+            await sendTelegram(chatId, `📍 חסר מידע:\n\n${missing[0].q}`);
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          // אם אין תמונות — לשאול
+          if (!session.photos || session.photos.length === 0) {
+            session.step = 'ask_photos';
+            await fbSet(`sessions/${chatId}`, session);
+            await sendTelegram(chatId,
+              '📸 רוצים לצרף תמונות?\n' +
+              'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
+            );
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          await createAndSendPromo(chatId, session);
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        // טקסט חופשי — לצבור
+        session.rawText = session.rawText
+          ? session.rawText + '\n' + text
+          : text;
+        await fbSet(`sessions/${chatId}`, session);
+        await sendTelegram(chatId,
+          '✅ קיבלתי!\n\n📸 ניתן לשלוח תמונות.\n✅ בסיום — שלח "סיום"'
+        );
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: שאלת שדות חסרים ════
+      if (session.step === 'ask_missing') {
+        const fieldKey = session.currentMissing;
+        if (fieldKey === 'rooms' || fieldKey === 'price') {
+          const n = parseFloat(text.replace(/[^\d.]/g, ''));
+          session.apartment[fieldKey] = isNaN(n) ? text : n;
+        } else {
+          session.apartment[fieldKey] = text;
+        }
+
+        session.missingQueue = (session.missingQueue || []).filter(k => k !== fieldKey);
+
+        if (session.missingQueue.length > 0) {
+          session.currentMissing = session.missingQueue[0];
+          const nextField = CRITICAL_FIELDS.find(f => f.key === session.currentMissing);
+          await fbSet(`sessions/${chatId}`, session);
+          await sendTelegram(chatId, nextField.q);
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        session.step = 'ask_photos';
+        session.currentMissing = null;
+        session.missingQueue = [];
+        await fbSet(`sessions/${chatId}`, session);
+
+        if (!session.photos || session.photos.length === 0) {
+          await sendTelegram(chatId,
+            '📸 רוצים לצרף תמונות?\n' +
+            'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
+          );
+        } else {
+          await createAndSendPromo(chatId, session);
+        }
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: שאלת תמונות ════
+      if (session.step === 'ask_photos') {
+        if (['סיום','done','לא','skip','בלי','ללא'].includes(lower)) {
+          await createAndSendPromo(chatId, session);
+          return res.status(200).json({ status: 'ok' });
+        }
+        await sendTelegram(chatId,
+          '📸 ניתן לשלוח תמונות, או "סיום" להמשיך בלי תמונות.'
+        );
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ שלב: אישור פרסום ════
+      if (session.step === 'confirm_promo') {
+        if (['אישור','כן','ok','yes','אשר','אשרי'].includes(lower)) {
+          await fbPush('promotions', {
+            apartment_id: session.apartment_id || null,
+            type:         session.type,
+            text:         session.promoText,
+            photos:       session.photos || [],
+            status:       'approved',
+            created_at:   session.created_at,
+            approved_at:  new Date().toISOString(),
+          });
+          await fbDelete(`sessions/${chatId}`);
+          await sendTelegram(chatId,
+            '✅ *הפרסום אושר ונשמר!*\n\n' +
+            '📌 הפרסום מוכן לשליחה.\n' +
+            'אף הודעה לא תישלח ללקוחות בלי אישור נוסף.'
+          );
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        await sendTelegram(chatId, '🧠 מתקן את הפרסום...');
+        const fixed = await fixPromoWithClaude(session.promoText, text);
+        if (!fixed) {
+          await sendTelegram(chatId, '❌ שגיאה בתיקון. נא לנסות שוב.');
+          return res.status(200).json({ status: 'ok' });
+        }
+        session.promoText = fixed;
+        await fbSet(`sessions/${chatId}`, session);
+        await sendTelegram(chatId,
+          `📝 הפרסום המתוקן:\n\n${fixed}\n\n` +
+          `━━━━━━━━━━━━━━━━\n` +
+          `✅ "אישור" / "כן" לשמירה\n` +
+          `✏️ לתיקון נוסף — שלח את השינוי`
+        );
+        return res.status(200).json({ status: 'ok' });
+      }
+
+      // שלב לא מוכר — חזרה לאיסוף
+      session.step = 'collecting';
+      await fbSet(`sessions/${chatId}`, session);
+      await sendTelegram(chatId, '📋 נא לשלוח פרטים ותמונות.\n✅ בסיום — "סיום"');
+      return res.status(200).json({ status: 'ok' });
+    }
+
+    // ── 3. פקודות (רק אם אין סשן פעיל, או slash escape) ──
     if (intent) {
       const { cmd, type, args } = intent;
 
@@ -410,173 +574,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ status: 'ok' });
     }
 
-    // ── סשן פעיל ──
-    if (session?.active) {
-      const lower = text.toLowerCase().trim();
-
-      // ביטול
-      if (['ביטול','בטל','עזוב'].includes(lower)) {
-        await fbDelete(`sessions/${chatId}`);
-        await sendTelegram(chatId, '❌ בוטל.');
-        return res.status(200).json({ status: 'ok' });
-      }
-
-      // ════ שלב: איסוף ════
-      if (session.step === 'collecting') {
-        if (['סיום','done','שמור','save','סיים'].includes(lower)) {
-          if (!session.rawText || session.rawText.trim().length < 5) {
-            await sendTelegram(chatId,
-              '⚠️ לא התקבלו פרטים על הנכס.\n' +
-              'נא לשלוח טקסט עם פרטי הנכס (כתובת, חדרים, מחיר...) לפני סיום.'
-            );
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          await sendTelegram(chatId, '🧠 מוטי מנתח את הפרטים...');
-          const parsed = await parseWithClaude(session.rawText);
-          if (!parsed) {
-            await sendTelegram(chatId, '❌ לא הצלחתי לנתח את הפרטים. נא לנסות שוב.');
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          session.apartment = parsed;
-
-          // בדיקת שדות קריטיים חסרים
-          const missing = getMissingCritical(parsed);
-          if (missing.length > 0) {
-            session.step = 'ask_missing';
-            session.missingQueue = missing.map(f => f.key);
-            session.currentMissing = missing[0].key;
-            await fbSet(`sessions/${chatId}`, session);
-            await sendTelegram(chatId, `📍 חסר מידע:\n\n${missing[0].q}`);
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          // אם אין תמונות — לשאול
-          if (!session.photos || session.photos.length === 0) {
-            session.step = 'ask_photos';
-            await fbSet(`sessions/${chatId}`, session);
-            await sendTelegram(chatId,
-              '📸 רוצים לצרף תמונות?\n' +
-              'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
-            );
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          // הכל מוכן — יצירת פרסום
-          return await createAndSendPromo(chatId, session);
-        }
-
-        // טקסט חופשי — לצבור
-        session.rawText = session.rawText
-          ? session.rawText + '\n' + text
-          : text;
-        await fbSet(`sessions/${chatId}`, session);
-        await sendTelegram(chatId,
-          '✅ קיבלתי!\n\n📸 ניתן לשלוח תמונות.\n✅ בסיום — שלח "סיום"'
-        );
-        return res.status(200).json({ status: 'ok' });
-      }
-
-      // ════ שלב: שאלת שדות חסרים ════
-      if (session.step === 'ask_missing') {
-        const fieldKey = session.currentMissing;
-        // שמור את התשובה
-        if (fieldKey === 'rooms' || fieldKey === 'price') {
-          const n = parseFloat(text.replace(/[^\d.]/g, ''));
-          session.apartment[fieldKey] = isNaN(n) ? text : n;
-        } else {
-          session.apartment[fieldKey] = text;
-        }
-
-        // הסר מהתור
-        session.missingQueue = (session.missingQueue || []).filter(k => k !== fieldKey);
-
-        if (session.missingQueue.length > 0) {
-          // עוד שדות חסרים
-          session.currentMissing = session.missingQueue[0];
-          const nextField = CRITICAL_FIELDS.find(f => f.key === session.currentMissing);
-          await fbSet(`sessions/${chatId}`, session);
-          await sendTelegram(chatId, nextField.q);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // אין יותר שדות חסרים — שואלים תמונות
-        session.step = 'ask_photos';
-        session.currentMissing = null;
-        session.missingQueue = [];
-        await fbSet(`sessions/${chatId}`, session);
-
-        if (!session.photos || session.photos.length === 0) {
-          await sendTelegram(chatId,
-            '📸 רוצים לצרף תמונות?\n' +
-            'ניתן לשלוח תמונות עכשיו, או לכתוב "סיום" בלי תמונות.'
-          );
-        } else {
-          return await createAndSendPromo(chatId, session);
-        }
-        return res.status(200).json({ status: 'ok' });
-      }
-
-      // ════ שלב: שאלת תמונות ════
-      if (session.step === 'ask_photos') {
-        if (['סיום','done','לא','skip','בלי','ללא'].includes(lower)) {
-          return await createAndSendPromo(chatId, session);
-        }
-        await sendTelegram(chatId,
-          '📸 ניתן לשלוח תמונות, או "סיום" להמשיך בלי תמונות.'
-        );
-        return res.status(200).json({ status: 'ok' });
-      }
-
-      // ════ שלב: אישור פרסום ════
-      if (session.step === 'confirm_promo') {
-        if (['אישור','כן','ok','yes','אשר','אשרי'].includes(lower)) {
-          // שמור promotions
-          await fbPush('promotions', {
-            apartment_id: session.apartment_id || null,
-            type:         session.type,
-            text:         session.promoText,
-            photos:       session.photos || [],
-            status:       'approved',
-            created_at:   session.created_at,
-            approved_at:  new Date().toISOString(),
-          });
-          await fbDelete(`sessions/${chatId}`);
-          await sendTelegram(chatId,
-            '✅ *הפרסום אושר ונשמר!*\n\n' +
-            '📌 הפרסום מוכן לשליחה.\n' +
-            'אף הודעה לא תישלח ללקוחות בלי אישור נוסף.'
-          );
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // תיקון
-        await sendTelegram(chatId, '🧠 מתקן את הפרסום...');
-        const fixed = await fixPromoWithClaude(session.promoText, text);
-        if (!fixed) {
-          await sendTelegram(chatId, '❌ שגיאה בתיקון. נא לנסות שוב.');
-          return res.status(200).json({ status: 'ok' });
-        }
-        session.promoText = fixed;
-        await fbSet(`sessions/${chatId}`, session);
-        await sendTelegram(chatId,
-          `📝 הפרסום המתוקן:\n\n${fixed}\n\n` +
-          `━━━━━━━━━━━━━━━━\n` +
-          `✅ "אישור" / "כן" לשמירה\n` +
-          `✏️ לתיקון נוסף — שלח את השינוי`
-        );
-        return res.status(200).json({ status: 'ok' });
-      }
-
-      // שלב לא מוכר — חזרה לאיסוף
-      session.step = 'collecting';
-      await fbSet(`sessions/${chatId}`, session);
-      await sendTelegram(chatId, '📋 נא לשלוח פרטים ותמונות.\n✅ בסיום — "סיום"');
-      return res.status(200).json({ status: 'ok' });
-    }
-
-    // ── הודעה חופשית, אין סשן ──
+    // ── 4. הודעה חופשית, אין סשן ולא פקודה ──
     await sendTelegram(chatId,
       '🤖 מוטי כאן!\n\nנא לשלוח "עזרה" לרשימת פקודות.'
     );
