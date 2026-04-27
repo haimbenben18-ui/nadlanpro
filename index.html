@@ -198,6 +198,47 @@ async function sendDirectMessage(phone,text){
     }else{toast("❌ שגיאה: "+(d.error||"unknown"));return false}
   }catch(e){toast("❌ "+e.message);return false}
 }
+
+function buildAgentCaption(prop){
+  const city=prop.city||"באר שבע";
+  const rooms=prop.rooms||"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor||"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  const addr=prop.address||prop.name||"";
+  let msg="דירה למכירה\n";
+  msg+="📍 "+addr+(city?", "+city:"")+"\n";
+  const parts=[];
+  if(rooms)parts.push("🛏️ "+rooms+" חד'");
+  if(floor)parts.push("🏢 ק' "+floor);
+  if(size)parts.push("📐 "+size);
+  if(parts.length)msg+=parts.join(" | ")+"\n";
+  if(price)msg+="💰 "+price+"\n";
+  msg+="📞 חיים 0509444030";
+  return msg;
+}
+
+async function sendPropertyToMultipleAgents(prop,agents){
+  if(!agents||agents.length===0){toast("⚠️ אין מתווכים");return false}
+  const cap=buildAgentCaption(prop);
+  const media=prop.images||[];
+  let okCount=0;
+  for(let i=0;i<agents.length;i++){
+    const a=agents[i];
+    toast("📤 נשלח ל-"+(i+1)+" מתוך "+agents.length+" — "+(a.name||a.phone||""));
+    if(!a.phone){continue}
+    if(media.length>0){
+      const ok=await sendWhatsAppMedia(a.phone,cap,media);
+      if(ok)okCount++;
+    }else{
+      const ok=await sendDirectMessage(a.phone,cap);
+      if(ok)okCount++;
+    }
+    if(i<agents.length-1)await new Promise(r=>setTimeout(r,3000));
+  }
+  toast("✅ נשלח ל-"+okCount+" מתוך "+agents.length+" מתווכים");
+  return true;
+}
 </script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
@@ -619,7 +660,7 @@ function AddTaskModal({client,onClose,onAdd}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts}){
   const[tab,setTab]=useState(initialTab||"sellers");
   useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);
   // seller form
@@ -758,6 +799,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {sel.tenantPhone&&<Btn sm ch="שוכר 💬" c={GR} onClick={()=>openWA(sel.tenantPhone)}/>}
         {sel.tenantPhone&&<Btn sm ch="שוכר 📞" c={BL} onClick={()=>window.location.href='tel:'+sel.tenantPhone}/>}
         <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("choose")} icon="📤"/>
+        <Btn sm ch="שלח לכל המתווכים" c={TE} onClick={()=>{if(!agentsContacts||agentsContacts.length===0){toast("⚠️ אין מתווכים ברשת");return}if(!confirm("לשלוח דירה זו ל-"+agentsContacts.length+" מתווכים?"))return;sendPropertyToMultipleAgents(sel,agentsContacts)}} icon="📒"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
@@ -919,7 +961,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
 }
 
 // ━━━ BROKER PROPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
+function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
@@ -990,6 +1032,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps}){
 
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
         <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("chooseMethod")} icon="📤"/>
+        <Btn sm ch="שלח לכל המתווכים" c={TE} onClick={()=>{if(!agentsContacts||agentsContacts.length===0){toast("⚠️ אין מתווכים ברשת");return}if(!confirm("לשלוח דירה זו ל-"+agentsContacts.length+" מתווכים?"))return;sendPropertyToMultipleAgents(sel,agentsContacts)}} icon="📒"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
@@ -1181,7 +1224,7 @@ function Archive({sellers,setSellers,buyers,setBuyers}){
 // ━━━ APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const TABS=[
   {k:"home",l:"בית",i:"🏠"},{k:"recruit",l:"גיוס",i:"📤"},{k:"daily",l:"יומי",i:"📅"},
-  {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"report",l:"דיווח",i:"📊"},
+  {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"agents",l:"רשת",i:"📒"},{k:"report",l:"דיווח",i:"📊"},
   {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"archive",l:"ארכיון",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
 
@@ -1208,6 +1251,137 @@ const IB=[
 {id:120,name:"עוז אלמקייס",phone:"0507755962",grade:"A",budget:"",notes:"יד 2, שכונת הפארק. מחפש 4 חדרים עם האבא",sentProperties:[],actions:[],archived:false,logs:[{text:"נוספה",time:"11/04/26"}]},
 ];
 
+function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
+  const[mode,setMode]=useState("list");
+  const[search,setSearch]=useState("");
+  const[editing,setEditing]=useState(null);
+  const[fName,setFName]=useState("");const[fPhone,setFPhone]=useState("");const[fCompany,setFCompany]=useState("");const[fArea,setFArea]=useState("");
+  const[sendModal,setSendModal]=useState(null);
+  const[broadcastSel,setBroadcastSel]=useState(null);
+
+  function resetForm(){setFName("");setFPhone("");setFCompany("");setFArea("");setEditing(null)}
+  function startEdit(a){setEditing(a);setFName(a.name||"");setFPhone(a.phone||"");setFCompany(a.company||"");setFArea(a.area||"");setMode("form")}
+
+  function saveAgent(){
+    if(!fName&&!fPhone){toast("⚠️ נדרש שם או טלפון");return}
+    const data={name:fName.trim(),phone:fPhone.trim(),company:fCompany.trim(),area:fArea.trim()};
+    if(editing){
+      const upd=agentsContacts.map(a=>a.id===editing.id?{...a,...data}:a);
+      setAgentsContacts(upd);
+      toast("✅ עודכן");
+    }else{
+      const newAgent={id:Date.now()+"_"+Math.random().toString(36).slice(2,8),...data,created:nowStr()};
+      const upd=[...agentsContacts,newAgent];
+      setAgentsContacts(upd);
+      toast("✅ נוסף");
+    }
+    resetForm();setMode("list");
+  }
+
+  function deleteAgent(id){
+    if(!confirm("למחוק את המתווך?"))return;
+    const upd=agentsContacts.filter(a=>a.id!==id);
+    setAgentsContacts(upd);
+    toast("🗑 נמחק");
+  }
+
+  async function importFromContacts(){
+    if(!('contacts' in navigator)||!('select' in (navigator.contacts||{}))){
+      toast("⚠️ ייבוא אנשי קשר זמין רק מהטלפון");
+      return;
+    }
+    try{
+      const props=['name','tel'];
+      const opts={multiple:true};
+      const contacts=await navigator.contacts.select(props,opts);
+      if(!contacts||contacts.length===0){toast("לא נבחרו אנשי קשר");return}
+      const newOnes=[];
+      contacts.forEach(c=>{
+        const name=(c.name&&c.name[0])||"";
+        const phones=c.tel||[];
+        const phone=phones[0]||"";
+        if(!name&&!phone)return;
+        const exists=agentsContacts.some(a=>a.phone===phone&&phone);
+        if(exists)return;
+        newOnes.push({id:Date.now()+"_"+Math.random().toString(36).slice(2,8),name,phone,company:"",area:"",created:nowStr()});
+      });
+      if(newOnes.length===0){toast("לא נוספו מתווכים חדשים (כפולים?)");return}
+      const upd=[...agentsContacts,...newOnes];
+      setAgentsContacts(upd);
+      toast("✅ יובאו "+newOnes.length+" מתווכים");
+    }catch(e){
+      console.error(e);
+      toast("❌ "+e.message);
+    }
+  }
+
+  async function sendPropertyToAgent(agent,prop){
+    const cap=buildAgentCaption(prop);
+    const media=prop.images||[];
+    if(media.length>0){
+      await sendWhatsAppMedia(agent.phone,cap,media);
+    }else{
+      await sendDirectMessage(agent.phone,cap);
+    }
+  }
+
+  const allProps=[...(sellers||[]).map(s=>({...s,_src:"seller"})),...(brokerProps||[]).map(p=>({...p,_src:"broker"}))];
+
+  const fA=agentsContacts.filter(a=>!search||((a.name||"")+(a.phone||"")+(a.company||"")+(a.area||"")).toLowerCase().includes(search.toLowerCase()));
+
+  if(mode==="form"){return <div style={{padding:S.pg}} className="fade">
+    <button onClick={()=>{resetForm();setMode("list")}} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button>
+    <div style={{...S.cg}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:22,color:"#ede8f5",marginBottom:18}}>{editing?"עריכת מתווך":"הוסף מתווך"}</div>
+      <Inp label="שם" val={fName} set={setFName} icon="👤"/>
+      <Inp label="טלפון" val={fPhone} set={setFPhone} icon="📞" type="tel"/>
+      <Inp label="חברה (לא חובה)" val={fCompany} set={setFCompany} icon="🏢"/>
+      <Inp label="אזור (לא חובה)" val={fArea} set={setFArea} icon="📍"/>
+      <Btn full ch={editing?"💾 שמור שינויים":"➕ הוסף מתווך"} c={GR} onClick={saveAgent}/>
+    </div>
+  </div>}
+
+  return <div style={{padding:S.pg}} className="fade">
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div>
+        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:24,color:G}}>רשת מתווכים</div>
+        <div style={{color:"#777",fontSize:12,marginTop:3}}>{agentsContacts.length} מתווכים ברשת</div>
+      </div>
+    </div>
+
+    <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+      <Btn sm ch="➕ הוסף ידנית" c={G} onClick={()=>{resetForm();setMode("form")}}/>
+      <Btn sm ch="📱 ייבוא מאנשי קשר" c={BL} onClick={importFromContacts}/>
+    </div>
+
+    <input placeholder="🔍 חיפוש שם / טלפון / חברה / אזור" value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:14}}/>
+
+    {fA.length===0?<Empty icon="📒" text={agentsContacts.length===0?"עדיין אין מתווכים — הוסף ידנית או ייבא":"לא נמצאו תוצאות"}/>:fA.map(a=><div key={a.id} style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,marginBottom:10}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:800,color:"#ede8f5",fontSize:16}}>{a.name||"(ללא שם)"}</div>
+          <div style={{color:"#777",fontSize:13,marginTop:3}}>{a.phone||"—"}</div>
+          {(a.company||a.area)&&<div style={{color:"#9b8ec4",fontSize:12,marginTop:4}}>{[a.company,a.area].filter(Boolean).join(" · ")}</div>}
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn sm ch="📤 שלח דירה" c={GR} onClick={()=>setSendModal(a)}/>
+        <Btn sm ch="✏️ ערוך" c={BL} ghost onClick={()=>startEdit(a)}/>
+        <Btn sm ch="💬" c={GR} ghost onClick={()=>openWA(a.phone,"")}/>
+        <Btn sm ch="🗑" c={RE} ghost onClick={()=>deleteAgent(a.id)}/>
+      </div>
+    </div>)}
+
+    {sendModal&&<Modal title={"📤 שלח דירה ל-"+(sendModal.name||sendModal.phone)} color={GR} onClose={()=>setSendModal(null)}>
+      <Lbl t="בחר דירה לשליחה"/>
+      {allProps.length===0?<div style={{color:"#777",padding:14}}>אין דירות זמינות</div>:allProps.map(p=><div key={p._src+"_"+p.id} onClick={async()=>{const ag=sendModal;setSendModal(null);toast("📤 שולח ל-"+(ag.name||ag.phone)+"...");await sendPropertyToAgent(ag,p)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+        <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{p.address||p.name||"—"}</div><div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד'":""} {p.price?" · "+fmtP(p.price):""} {p._src==="broker"?" · 🤝":""}</div></div>
+        <span style={{color:GR,fontSize:18}}>📤</span>
+      </div>)}
+    </Modal>}
+  </div>
+}
+
 function App(){
   const[tab,setTab]=useState("home");const[crmInitTab,setCrmInitTab]=useState("sellers");
   const[loaded,setLoaded]=useState(false);
@@ -1217,6 +1391,7 @@ function App(){
   const[brokerProps,_setBrokerProps]=useState([]);
   const[hotProps,setHotProps]=useState(()=>lv("hotProps",[]));
   const[prospects,_setProspects]=useState([]);
+  const[agentsContacts,_setAgentsContacts]=useState([]);
 
   function fsWrite(name,items){try{const size=JSON.stringify(items).length;if(size>900000){toast("⚠️ יותר מדי תמונות — מחק כמה");return}db.collection("data").doc(name).set({items})}catch(e){console.error("Firestore write error:",e)}}
   function setBuyers(v){_setBuyers(v);sv("buyers",v);fsWrite("buyers",v)}
@@ -1224,6 +1399,7 @@ function App(){
   function setTasks(v){_setTasks(v);sv("tasks",v);fsWrite("tasks",v)}
   function setBrokerProps(v){_setBrokerProps(v);sv("brokerProps",v);fsWrite("brokerProps",v)}
   function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
+  function setAgentsContacts(v){_setAgentsContacts(v);sv("agentsContacts",v);fsWrite("agentsContacts",v)}
 
   useEffect(()=>{
     let unsubs=[];
@@ -1236,10 +1412,11 @@ function App(){
           await db.collection("data").doc("tasks").set({items:[]});
           await db.collection("data").doc("brokerProps").set({items:[]});
           await db.collection("data").doc("prospects").set({items:[]});
+          await db.collection("data").doc("agentsContacts").set({items:[]});
           await db.collection("data").doc("_init").set({done:true,time:new Date().toISOString()});
         }
       }catch(e){console.error("Firestore init error:",e)}
-      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects]];
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts]];
       collections.forEach(([name,setter])=>{
         const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
           if(doc.exists){const items=doc.data().items||[];setter(items);sv(name,items)}
@@ -1264,8 +1441,9 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks}/>}
-      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts}/>}
+      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts}/>}
+      {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
       {tab==="uni"&&<University/>}
