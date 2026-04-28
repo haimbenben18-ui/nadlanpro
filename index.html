@@ -321,7 +321,12 @@ const FB_GROUPS_BUILTIN=(()=>{
     'פרסום עסקים - ירושלים, בית שמש, מודיעין והבקעה',
     'ירושלים',
     'דירות בחולון, בת ים וראשל"צ - המונופול',
-    'THAI PROPERTY'
+    'THAI PROPERTY',
+    'באר שבע ביחד',
+    'באר שבע שלנו',
+    'באר שבע ביחד לכולם',
+    'דירות/מסחרי להשקעה, למכירה, להשכרה',
+    'נדל"ן מכל סוג למכירה או השכרה'
   ];
   return [
     ...mk("inv","investor",investor),
@@ -353,9 +358,10 @@ function buildInvestorCaption(prop){
       msg+="📈 תשואה משוערת: ~"+yld+"%\n";
     }
   }
-  msg+="📞 חיים בן סימון\n";
-  msg+="💬 https://wa.me/972544740691\n";
-  msg+="RE/MAX באר שבע";
+  msg+="📞 חיים בן סימון 054-474-0691\n";
+  msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
+  msg+="🏠 RE/MAX באר שבע\n\n";
+  msg+="⚠️ אני זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
   return msg;
 }
 
@@ -375,9 +381,10 @@ function buildLocalCaption(prop){
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
   if(prop.notes)msg+="📝 "+prop.notes+"\n";
-  msg+="📞 חיים בן סימון\n";
-  msg+="💬 https://wa.me/972544740691\n";
-  msg+="RE/MAX באר שבע";
+  msg+="📞 חיים בן סימון 054-474-0691\n";
+  msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
+  msg+="🏠 RE/MAX באר שבע\n\n";
+  msg+="⚠️ אני זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
   return msg;
 }
 
