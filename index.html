@@ -1342,7 +1342,56 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
   const[shareText,setShareText]=useState(sourceText);
   const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
+  const[members,setMembers]=useState(()=>lv("fb_member_groups",[]));
+  const[joinPending,setJoinPending]=useState([]);
+  const[joinWizard,setJoinWizard]=useState(null); // null or {ordered, idx}
   const images=(prop.images||[]).filter(i=>i.type!=="video");
+
+  function isMember(g){return members.includes(g.id)}
+  function isPending(g){return joinPending.includes(g.id)}
+
+  function joinGroup(g){
+    window.open(g.url,"_blank");
+    if(!joinPending.includes(g.id))setJoinPending([...joinPending,g.id]);
+    toast("📂 הקבוצה נפתחה — שלח בקשת הצטרפות");
+  }
+
+  function confirmMember(g){
+    if(members.includes(g.id))return;
+    const nm=[...members,g.id];
+    setMembers(nm);sv("fb_member_groups",nm);
+    setJoinPending(joinPending.filter(id=>id!==g.id));
+    toast("✅ סומנת כחבר ב-"+g.name);
+  }
+
+  function startJoinWizard(){
+    const notMembers=allGroups.filter(g=>!members.includes(g.id));
+    if(notMembers.length===0){toast("✅ אתה כבר חבר בכל הקבוצות!");return}
+    setJoinWizard({ordered:notMembers,idx:0});
+    window.open(notMembers[0].url,"_blank");
+    if(!joinPending.includes(notMembers[0].id))setJoinPending([...joinPending,notMembers[0].id]);
+  }
+
+  function joinWizardAnswer(approved){
+    if(!joinWizard)return;
+    const cur=joinWizard.ordered[joinWizard.idx];
+    let nm=members;
+    if(approved&&!members.includes(cur.id)){
+      nm=[...members,cur.id];
+      setMembers(nm);sv("fb_member_groups",nm);
+      setJoinPending(joinPending.filter(id=>id!==cur.id));
+    }
+    const next=joinWizard.idx+1;
+    if(next>=joinWizard.ordered.length){
+      setJoinWizard(null);
+      toast("✅ סבב הצטרפות הסתיים");
+      return;
+    }
+    const ng=joinWizard.ordered[next];
+    window.open(ng.url,"_blank");
+    if(!joinPending.includes(ng.id)&&!nm.includes(ng.id))setJoinPending(p=>p.includes(ng.id)?p:[...p,ng.id]);
+    setJoinWizard({...joinWizard,idx:next});
+  }
 
   function markPosted(ids){
     const set=new Set([...posted,...ids]);
@@ -1351,6 +1400,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
 
   async function copyAndOpen(group){
+    if(!isMember(group)){toast("⚠️ הצטרף לקבוצה לפני שליחה");return}
     const isAlready=posted.includes(group.id);
     if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
@@ -1360,8 +1410,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
 
   async function broadcastCategory(category){
-    const groups=category==="investor"?allInvestor:allLocal;
-    if(groups.length===0){toast("אין קבוצות");return}
+    const all=category==="investor"?allInvestor:allLocal;
+    const groups=all.filter(g=>isMember(g));
+    if(groups.length===0){toast("⚠️ אינך חבר באף קבוצה — הצטרף קודם");return}
+    if(groups.length<all.length&&!confirm("חבר רק ב-"+groups.length+" מתוך "+all.length+" קבוצות. להמשיך?"))return;
     if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
     groups.forEach((g,i)=>setTimeout(()=>{try{window.open(g.url,"_blank")}catch(e){}},i*400));
@@ -1370,10 +1422,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
 
   async function startQuickDistribution(){
-    if(allGroups.length===0){toast("אין קבוצות");return}
-    // Order: not-posted first, posted last
-    const notPosted=allGroups.filter(g=>!posted.includes(g.id));
-    const alreadyPosted=allGroups.filter(g=>posted.includes(g.id));
+    const memberGroups=allGroups.filter(g=>isMember(g));
+    if(memberGroups.length===0){toast("⚠️ אינך חבר באף קבוצה — הצטרף קודם");return}
+    const notPosted=memberGroups.filter(g=>!posted.includes(g.id));
+    const alreadyPosted=memberGroups.filter(g=>posted.includes(g.id));
     const ordered=[...notPosted,...alreadyPosted];
     setWizard({orderedGroups:ordered,idx:0});
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
@@ -1430,7 +1482,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         const ext=(blob.type.split("/")[1]||"jpg").split(";")[0];
         files.push(new File([blob],"image_"+(i+1)+"."+ext,{type:blob.type||"image/jpeg"}));
       }
-      const shareData={files,title:prop.address||"נכס",text:investorMsg};
+      const shareData={files,title:prop.address||"נכס",text:shareText};
       if(navigator.canShare&&!navigator.canShare(shareData)){toast("⚠️ הדפדפן לא תומך בשיתוף קבצים — נסה הורד");return}
       await navigator.share(shareData);
     }catch(e){
@@ -1462,13 +1514,44 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
 
   function GroupBtn({g}){
     const isPosted=posted.includes(g.id);
+    const member=isMember(g);
+    const pending=isPending(g);
     return <div style={{display:"flex",gap:6,alignItems:"stretch",marginBottom:8}}>
-      <button onClick={()=>copyAndOpen(g)} style={{flex:1,background:isPosted?"rgba(126,201,126,0.12)":"rgba(255,255,255,0.04)",border:"1px solid "+(isPosted?"rgba(126,201,126,0.45)":"rgba(255,255,255,0.1)"),borderRadius:12,padding:"12px 14px",color:isPosted?"#7ec97e":"#ede8f5",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
+      {member?
+        <div title="חבר בקבוצה" style={{display:"flex",alignItems:"center",justifyContent:"center",width:42,background:"rgba(126,201,126,0.14)",border:"1px solid rgba(126,201,126,0.45)",borderRadius:12,color:"#7ec97e",fontSize:18,fontWeight:900}}>✓</div>
+      :pending?
+        <button onClick={()=>confirmMember(g)} title="סמן כחבר" style={{background:"linear-gradient(135deg,"+GR+","+GR+"bb)",border:"none",borderRadius:12,padding:"0 12px",color:"#fff",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>אושרתי ✓</button>
+      :
+        <button onClick={()=>joinGroup(g)} title="הצטרף לקבוצה" style={{background:"linear-gradient(135deg,"+OR+","+OR+"bb)",border:"none",borderRadius:12,padding:"0 12px",color:"#1a1208",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>+ הצטרף</button>
+      }
+      <button onClick={member?()=>copyAndOpen(g):undefined} disabled={!member} style={{flex:1,background:isPosted?"rgba(126,201,126,0.12)":(member?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.02)"),border:"1px solid "+(isPosted?"rgba(126,201,126,0.45)":(member?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.05)")),borderRadius:12,padding:"12px 14px",color:isPosted?"#7ec97e":(member?"#ede8f5":"#555"),fontSize:14,fontWeight:700,cursor:member?"pointer":"not-allowed",opacity:member?1:0.55,fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
         <span>{g.name}</span>
-        <span style={{fontSize:16}}>{isPosted?"✓":"📋"}</span>
+        <span style={{fontSize:16}}>{isPosted?"✓":(member?"📋":"🔒")}</span>
       </button>
       {g.custom&&<button onClick={()=>deleteCustomGroup(g)} title="מחק" style={{background:"rgba(201,126,126,0.12)",border:"1px solid rgba(201,126,126,0.3)",borderRadius:12,padding:"0 12px",color:RE,cursor:"pointer",fontSize:16}}>🗑</button>}
     </div>;
+  }
+
+  // Join wizard view
+  if(joinWizard){
+    const cur=joinWizard.ordered[joinWizard.idx];
+    return <Modal title={"🤝 סבב הצטרפות — "+(joinWizard.idx+1)+" מתוך "+joinWizard.ordered.length} color={OR} onClose={()=>setJoinWizard(null)}>
+      <div style={{...S.cg,marginBottom:14}}>
+        <div style={{color:OR,fontSize:13,fontWeight:700,marginBottom:6}}>{cur.category==="investor"?"🔥 משקיעים":"🏘️ מקומי"}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}</div>
+        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{cur.url}</div>
+      </div>
+      <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:12,padding:12,marginBottom:14,color:"#f5b06b",fontSize:13,lineHeight:1.6}}>
+        💡 הקבוצה נפתחה בטאב חדש. שלח בקשת הצטרפות, חזור לכאן ובחר:
+      </div>
+      <div style={{display:"flex",gap:8,flexDirection:"column"}}>
+        <Btn full ch="✅ אושרתי / כבר חבר — סמן והמשך" c={GR} onClick={()=>joinWizardAnswer(true)}/>
+        <Btn full ch="⏭ דלג (עדיין ממתין לאישור)" c={"#888"} ghost onClick={()=>joinWizardAnswer(false)}/>
+        <Btn sm ghost ch="🔗 פתח שוב" c={BL} onClick={()=>window.open(cur.url,"_blank")}/>
+        <Btn sm ghost ch="✖ סיים סבב" c={RE} onClick={()=>{if(confirm("לסיים את סבב ההצטרפות?"))setJoinWizard(null)}}/>
+      </div>
+      <div style={{marginTop:14,color:"#666",fontSize:11,textAlign:"center"}}>חבר כרגע ב-{members.length} מתוך {allGroups.length} קבוצות</div>
+    </Modal>;
   }
 
   // Wizard view
@@ -1513,6 +1596,14 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       </div>
       <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7}}/>
       {!(prop.savedAds&&prop.savedAds.facebook)&&<div style={{color:"#666",fontSize:11,marginTop:6}}>💡 טיפ: צור פרסום פייסבוק בכרטיסיית הנכס כדי להשתמש בו אוטומטית כאן</div>}
+    </div>
+
+    {/* Membership status + join wizard */}
+    <div style={{background:"rgba(126,201,126,0.06)",border:"1px solid rgba(126,201,126,0.25)",borderRadius:14,padding:12,marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+      <div style={{fontSize:13,color:"#ede8f5",fontWeight:700}}>
+        🤝 חבר ב-<span style={{color:GR,fontSize:16}}>{members.length}</span> מתוך {allGroups.length} קבוצות
+      </div>
+      {members.length<allGroups.length&&<Btn sm ch="🤝 סבב הצטרפות" c={OR} onClick={startJoinWizard}/>}
     </div>
 
     {/* Quick distribution */}
