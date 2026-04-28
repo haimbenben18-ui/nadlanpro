@@ -1595,8 +1595,21 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
 
   async function copyToClipboard(text){
+    console.log("[copyToClipboard] called. type=",typeof text,"len=",(text||"").length,"preview=",JSON.stringify((text||"").slice(0,80)));
+    if(typeof text!=="string"||text.length===0){
+      console.warn("[copyToClipboard] text is empty/invalid — nothing to copy");
+      return false;
+    }
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      try{await navigator.clipboard.writeText(text);return true}catch(e){}
+      try{
+        await navigator.clipboard.writeText(text);
+        console.log("[copyToClipboard] ✓ navigator.clipboard.writeText succeeded");
+        return true;
+      }catch(e){
+        console.warn("[copyToClipboard] navigator.clipboard.writeText failed:",e);
+      }
+    }else{
+      console.warn("[copyToClipboard] navigator.clipboard.writeText not available");
     }
     try{
       const ta=document.createElement("textarea");
@@ -1607,15 +1620,21 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       ta.select();
       const ok=document.execCommand("copy");
       document.body.removeChild(ta);
+      console.log("[copyToClipboard] execCommand fallback result=",ok);
       return !!ok;
-    }catch(e){return false}
+    }catch(e){
+      console.error("[copyToClipboard] execCommand fallback threw:",e);
+      return false;
+    }
   }
 
   async function copyAndOpen(group){
     if(!isMember(group)){toast("⚠️ הצטרף לקבוצה לפני שליחה");return}
     const isAlready=posted.includes(group.id);
     if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
+    console.log("[copyAndOpen] group=",group.name,"shareText.length=",(shareText||"").length);
     const copied=await copyToClipboard(shareText);
+    console.log("[copyAndOpen] copied=",copied,"opening URL:",urlOf(group));
     window.open(urlOf(group),"_blank");
     if(!isAlready)markPosted([group.id]);
     if(!copied){
