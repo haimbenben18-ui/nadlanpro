@@ -374,6 +374,28 @@ function buildInvestorCaption(prop){
   return msg;
 }
 
+function buildFacebookCaption(prop){
+  const city=prop.city||"באר שבע";
+  const addr=prop.address||prop.name||"";
+  const rooms=prop.rooms||"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor||"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  let msg="🏠 דירה למכירה!\n\n";
+  msg+="📍 "+city+(addr?", "+addr:"")+"\n";
+  if(rooms)msg+="🛏️ "+rooms+" חדרים\n";
+  if(floor)msg+="🏢 קומה "+floor+"\n";
+  if(size)msg+="📐 "+size+"\n";
+  if(price)msg+="💰 "+price+"\n";
+  if(prop.notes)msg+="\n📝 "+prop.notes+"\n";
+  msg+="\n---\n";
+  msg+="📞 חיים בן סימון 054-474-0691\n";
+  msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
+  msg+="🏠 RE/MAX באר שבע\n\n";
+  msg+="⚠️ זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
+  return msg;
+}
+
 function buildLocalCaption(prop){
   const city=prop.city||"באר שבע";
   const addr=prop.address||prop.name||"";
@@ -1449,7 +1471,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   const allGroups=[...allInvestor,...allLocal];
 
   function sourceText(){
-    return (prop.savedAds&&prop.savedAds.facebook&&prop.savedAds.facebook.text)||buildInvestorCaption(prop);
+    return (prop.savedAds&&prop.savedAds.facebook&&prop.savedAds.facebook.text)||buildFacebookCaption(prop);
   }
   const[shareText,setShareText]=useState(sourceText);
   const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
