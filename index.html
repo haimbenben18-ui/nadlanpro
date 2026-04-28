@@ -219,24 +219,116 @@ function buildAgentCaption(prop){
   return msg;
 }
 
-const FB_GROUPS_BUILTIN=[
-  {id:"inv_1",name:'נדל"ן בשכל',category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בשכל'),builtin:true},
-  {id:"inv_2",name:"פורום הנדל\"ן",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('פורום הנדל"ן'),builtin:true},
-  {id:"inv_3",name:"השקעות נדל\"ן בישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('השקעות נדל"ן בישראל'),builtin:true},
-  {id:"inv_4",name:"דירות להשקעה ונדל\"ן",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('דירות להשקעה ונדל"ן'),builtin:true},
-  {id:"inv_5",name:"השקעות נדל\"ן בבאר שבע",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('השקעות נדל"ן בבאר שבע'),builtin:true},
-  {id:"inv_6",name:"נדל\"ן להשקעה - ישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן להשקעה ישראל'),builtin:true},
-  {id:"inv_7",name:"משקיעי נדל\"ן ישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('משקיעי נדל"ן ישראל'),builtin:true},
-  {id:"inv_8",name:"קבוצת נדל\"ן מניב",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('קבוצת נדל"ן מניב'),builtin:true},
-  {id:"loc_1",name:"באר שבע ביחד",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("באר שבע ביחד"),builtin:true},
-  {id:"loc_2",name:"נדל\"ן בבאר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בבאר שבע'),builtin:true},
-  {id:"loc_3",name:"דירות למכירה/השכרה בב\"ש",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('דירות למכירה השכרה באר שבע'),builtin:true},
-  {id:"loc_4",name:"נדל\"ן במיתר והסביבה",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן במיתר והסביבה'),builtin:true},
-  {id:"loc_5",name:"פורום באר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("פורום באר שבע"),builtin:true},
-  {id:"loc_6",name:"נדל\"ן בדרום",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בדרום'),builtin:true},
-  {id:"loc_7",name:"דירות בבאר שבע והסביבה",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("דירות בבאר שבע והסביבה"),builtin:true},
-  {id:"loc_8",name:"קבוצת תושבי באר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("קבוצת תושבי באר שבע"),builtin:true},
-];
+const FB_GROUPS_BUILTIN=(()=>{
+  const FB_SEARCH="https://www.facebook.com/search/groups/?q=";
+  function mk(prefix,cat,names,extra){
+    return names.map((name,i)=>({
+      id:prefix+"_"+(i+1),
+      name,
+      category:cat,
+      url:FB_SEARCH+encodeURIComponent(name.replace(/\s+\d+$/,"")),
+      builtin:true,
+      ...(extra||{})
+    }));
+  }
+  const investor=[
+    'הזדמנויות נדל"ן למשקיעים בישראל',
+    'נדל"ן זה כאן - קונה | מוכר | השכרה',
+    'דירות למכירה וקנייה בבאר שבע',
+    'דירה עם מחיר - באר שבע',
+    'דירות באר שבע',
+    'דירות למכירה באר שבע',
+    'השקעות בנדל"ן',
+    'דירות להשקעה 1',
+    'דירות להשקעה. נדלן למשקיעים בלבד. מכירה או קנייה',
+    'נדל"ן ולעניין',
+    'מתווכים שיתוף פעולה',
+    'דירות להשקעה 2',
+    'דירות למכירה, להשכרה ולהשקעה ארצי',
+    'דירה בהנחה | מחיר למשתכן | מחיר מטרה | דירות קבלן | דירות להשקעה',
+    'השקעות נדל"ן - דירות להשקעה - משקיעים חכם',
+    'השקעות נדל"ן מניבות',
+    'נדל"ן זה כאן',
+    'פרסום נכסים והשקעות נדל"ן',
+    'דירות / נדל"ן מסחרי להשכרה ולמכירה בכל הארץ',
+    'נדל"ן - Marketplace',
+    'פורום נדל"ן מסחרי, מגרשים, מניבים',
+    'לוח פרסום עסקים נדל"ן מכירה קנייה השכרה',
+    'השקעות חכמות בנדל"ן',
+    'הכל נדלן',
+    'נדל"ן להשקעה - מכירה והשכרה',
+    'קבוצת הומלי - לוח נדל"ן',
+    'נדל"ן ישראל - תיווך והשקעות ישראל',
+    'נדל"ן',
+    'נדל"ן ישראל',
+    'דירות ונכסים למכירה והשכרה - נדל"ן',
+    'נדל"ן מניב - השקעות נדל"ן (השקעות משתלמות)',
+    'השקעות בישראל',
+    'עסקים נדלן שיווק יזמים פרסום מסחרי, השקעות נכסים דירות חנויות',
+    'נדל"ן יד 2 ירושלים והסביבה',
+    'דירות למכירה וקניה בבאר שבע והסביבה',
+    'דירות להשקעה בבאר שבע',
+    'השקעות נדל"ן בבאר שבע'
+  ];
+  const local=[
+    'באר שבע והסביבה בפייסבוק',
+    'סטודנטים דירות להשכרה באר שבע',
+    "באר שבע - Be'er Sheva",
+    'פורום עסקים באר שבע והסביבה',
+    'באר שבע ביחד 1',
+    'ביחד בבאר שבע',
+    'באר שבע שלנו 1',
+    'באר שבע שלנו 2',
+    'באר שבע העיר שלי IL',
+    'באר שבע ביחד 2',
+    'באר שבע וכל מה שמסביב',
+    'באר שבע ביחד 3',
+    'פרסום חופשי בבאר שבע',
+    'באר שבע (באמת) ביחד',
+    'באר שבע ביחד באמת',
+    'באר שבע צעירה',
+    'באר שבע לכולנו',
+    'באר שבע בירת הנגב 1',
+    'באר שבע בירת הנגב 2',
+    'באר שבע ביחד פרסום חופשי',
+    'באר שבע העיר שלי 1',
+    'באר שבע העיר שלי 2',
+    'באר שבע והסביבה 1',
+    'באר שבע והסביבה 2',
+    'באר שבע שלי',
+    'באר שבע אונליין',
+    'באר שבע ביחד נדל"ן',
+    'באר שבע העיר שלנו 1',
+    'באר שבע העיר שלנו 2',
+    'באר שבע ביחד עכשיו',
+    'באר שבע ללא הפסקה',
+    'דירות להשכרה בבאר שבע',
+    'באר שבע והדרום 1',
+    'באר שבע והדרום 2',
+    'באר שבע',
+    'באר שבע בירת הנגב שלנו',
+    'באר שבע והסביבה מדברים על הכל',
+    'באר שבע ביחד 4',
+    'באר שבע ישראל ביחד',
+    'באר שבע העיר שלנו 3',
+    'beer sheva - באר שבע',
+    'שכונת הפארק באר שבע ביחד',
+    'נווה זאב באר שבע',
+    'לוח הדירות הגדול באר שבע והסביבה',
+    "גרים בשכונה ב' באר-שבע"
+  ];
+  const pending=[
+    'פרסום עסקים - ירושלים, בית שמש, מודיעין והבקעה',
+    'ירושלים',
+    'דירות בחולון, בת ים וראשל"צ - המונופול',
+    'THAI PROPERTY'
+  ];
+  return [
+    ...mk("inv","investor",investor),
+    ...mk("loc","local",local),
+    ...mk("pen","pending",pending,{pending:true})
+  ];
+})();
 
 function buildInvestorCaption(prop){
   const city=prop.city||"באר שבע";
@@ -1337,6 +1429,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   const customGroups=(fbGroups||[]).map(g=>({...g,id:g._docId||("custom_"+(g._docId||"")),custom:true}));
   const allInvestor=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="investor"),...customGroups.filter(g=>g.category==="investor")];
   const allLocal=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="local"),...customGroups.filter(g=>g.category==="local")];
+  const allPending=FB_GROUPS_BUILTIN.filter(g=>g.pending);
   const allGroups=[...allInvestor,...allLocal];
 
   function sourceText(){
@@ -1344,7 +1437,15 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   }
   const[shareText,setShareText]=useState(sourceText);
   const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
-  const[members,setMembers]=useState(()=>lv("fb_member_groups",[]));
+  const[members,setMembers]=useState(()=>{
+    const stored=lv("fb_member_groups_v2",null);
+    if(stored===null){
+      const defaults=FB_GROUPS_BUILTIN.filter(g=>!g.pending).map(g=>g.id);
+      sv("fb_member_groups_v2",defaults);
+      return defaults;
+    }
+    return stored;
+  });
   const[joinPending,setJoinPending]=useState([]);
   const[joinWizard,setJoinWizard]=useState(null); // null or {ordered, idx}
   const images=(prop.images||[]).filter(i=>i.type!=="video");
@@ -1361,7 +1462,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   function confirmMember(g){
     if(members.includes(g.id))return;
     const nm=[...members,g.id];
-    setMembers(nm);sv("fb_member_groups",nm);
+    setMembers(nm);sv("fb_member_groups_v2",nm);
     setJoinPending(joinPending.filter(id=>id!==g.id));
     toast("✅ סומנת כחבר ב-"+g.name);
   }
@@ -1380,7 +1481,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     let nm=members;
     if(approved&&!members.includes(cur.id)){
       nm=[...members,cur.id];
-      setMembers(nm);sv("fb_member_groups",nm);
+      setMembers(nm);sv("fb_member_groups_v2",nm);
       setJoinPending(joinPending.filter(id=>id!==cur.id));
     }
     const next=joinWizard.idx+1;
@@ -1643,6 +1744,32 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       <div style={{height:8}}/>
       {allLocal.map(g=><GroupBtn key={g.id} g={g}/>)}
     </div>
+
+    {/* Pending section */}
+    {allPending.length>0&&<div style={{marginBottom:18}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{color:"#f5b06b",fontSize:14,fontWeight:800}}>⏳ ממתינות לאישור</div>
+        <div style={{color:"#777",fontSize:11}}>אין פרסום עד אישור</div>
+      </div>
+      <div style={{color:"#777",fontSize:11,marginBottom:8,lineHeight:1.5}}>קבוצות שעדיין לא אושרת בהן — לחץ "הצטרף" כדי לשלוח בקשה, ולאחר אישור סמן "אושרתי".</div>
+      {allPending.map(g=>{
+        const member=isMember(g);
+        const pending=isPending(g);
+        return <div key={g.id} style={{display:"flex",gap:6,alignItems:"stretch",marginBottom:8}}>
+          {member?
+            <div title="אושרת" style={{display:"flex",alignItems:"center",justifyContent:"center",width:42,background:"rgba(126,201,126,0.14)",border:"1px solid rgba(126,201,126,0.45)",borderRadius:12,color:"#7ec97e",fontSize:18,fontWeight:900}}>✓</div>
+          :pending?
+            <button onClick={()=>confirmMember(g)} title="סמן כאושר" style={{background:"linear-gradient(135deg,"+GR+","+GR+"bb)",border:"none",borderRadius:12,padding:"0 12px",color:"#fff",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>אושרתי ✓</button>
+          :
+            <button onClick={()=>joinGroup(g)} title="הצטרף לקבוצה" style={{background:"linear-gradient(135deg,#f5b06b,#f5b06bbb)",border:"none",borderRadius:12,padding:"0 12px",color:"#1a1208",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>+ הצטרף</button>
+          }
+          <div style={{flex:1,background:"rgba(245,176,107,0.05)",border:"1px solid rgba(245,176,107,0.2)",borderRadius:12,padding:"12px 14px",color:"#ede8f5",fontSize:14,fontWeight:700,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
+            <span>{g.name}</span>
+            <span style={{fontSize:14,color:member?"#7ec97e":"#777"}}>{member?"חבר":(pending?"ממתין":"לא מאושר")}</span>
+          </div>
+        </div>;
+      })}
+    </div>}
 
     {/* Add group */}
     {!adding?<Btn sm full ghost ch="➕ הוסף קבוצה" c={G} onClick={()=>setAdding(true)}/>:<div style={{...S.cg}}>
