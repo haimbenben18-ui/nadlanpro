@@ -1472,6 +1472,15 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     }catch(e){console.error(e);toast("❌ "+e.message)}
   }
 
+  async function shareTextOnly(){
+    if(!navigator.share){toast("⚠️ Web Share לא נתמך בדפדפן זה");return}
+    try{
+      await navigator.share({title:prop.address||"נכס",text:shareText});
+    }catch(e){
+      if(e.name!=="AbortError"){console.error(e);toast("❌ "+e.message)}
+    }
+  }
+
   async function shareImages(){
     if(images.length===0){toast("אין תמונות");return}
     if(!navigator.share){toast("⚠️ Web Share לא נתמך בדפדפן זה");return}
@@ -1584,8 +1593,9 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     {images.length>0&&<div style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:14,padding:14,marginBottom:14}}>
       <Lbl t={"תמונות ("+images.length+")"} icon="📷"/>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        <Btn sm ch="הורד ZIP" c={G} onClick={downloadZip} icon="📦"/>
-        <Btn sm ch="שתף" c={GR} onClick={shareImages} icon="📤"/>
+        <Btn sm ch="שתף בלי תמונות" c={GR} onClick={shareTextOnly} icon="📤"/>
+        <Btn sm ch="שתף עם תמונות" c={GR} ghost onClick={shareImages} icon="🖼"/>
+        <Btn sm ch="הורד ZIP" c={G} ghost onClick={downloadZip} icon="📦"/>
         <Btn sm ch="קישורים" c={BL} ghost onClick={copyImageLinks} icon="🔗"/>
       </div>
     </div>}
@@ -1654,6 +1664,7 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
   const[editing,setEditing]=useState(null);
   const[fName,setFName]=useState("");const[fPhone,setFPhone]=useState("");const[fCompany,setFCompany]=useState("");const[fArea,setFArea]=useState("");
   const[sendModal,setSendModal]=useState(null);
+  const[sendWithImages,setSendWithImages]=useState(false);
   const[broadcastSel,setBroadcastSel]=useState(null);
   const[importOpen,setImportOpen]=useState(false);
   const[pasteText,setPasteText]=useState("");
@@ -1769,9 +1780,9 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
     if(added>0){setPasteText("");setImportOpen(false)}
   }
 
-  async function sendPropertyToAgent(agent,prop){
+  async function sendPropertyToAgent(agent,prop,withImages){
     const cap=buildAgentCaption(prop);
-    const media=prop.images||[];
+    const media=(withImages&&prop.images)?prop.images:[];
     if(media.length>0){
       await sendWhatsAppMedia(agent.phone,cap,media);
     }else{
@@ -1853,8 +1864,15 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
     </div>)}
 
     {sendModal&&<Modal title={"📤 שלח דירה ל-"+(sendModal.name||sendModal.phone)} color={GR} onClose={()=>setSendModal(null)}>
+      <label style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:sendWithImages?"rgba(126,201,126,0.10)":"rgba(255,255,255,0.04)",border:"1px solid "+(sendWithImages?"rgba(126,201,126,0.45)":"rgba(255,255,255,0.1)"),borderRadius:12,cursor:"pointer",marginBottom:14}}>
+        <input type="checkbox" checked={sendWithImages} onChange={e=>setSendWithImages(e.target.checked)} style={{width:18,height:18,accentColor:GR,cursor:"pointer"}}/>
+        <div style={{flex:1}}>
+          <div style={{color:"#ede8f5",fontSize:14,fontWeight:700}}>📷 צרף תמונות</div>
+          <div style={{color:"#777",fontSize:11,marginTop:2}}>ברירת מחדל: רק טקסט (מהיר יותר ופחות מטריד למתווכים)</div>
+        </div>
+      </label>
       <Lbl t="בחר דירה לשליחה"/>
-      {allProps.length===0?<div style={{color:"#777",padding:14}}>אין דירות זמינות</div>:allProps.map(p=><div key={p._src+"_"+p.id} onClick={async()=>{const ag=sendModal;setSendModal(null);toast("📤 שולח ל-"+(ag.name||ag.phone)+"...");await sendPropertyToAgent(ag,p)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+      {allProps.length===0?<div style={{color:"#777",padding:14}}>אין דירות זמינות</div>:allProps.map(p=><div key={p._src+"_"+p.id} onClick={async()=>{const ag=sendModal;const wi=sendWithImages;setSendModal(null);toast("📤 שולח ל-"+(ag.name||ag.phone)+(wi?" (עם תמונות)":"")+"...");await sendPropertyToAgent(ag,p,wi)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
         <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:14}}>{p.address||p.name||"—"}</div><div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד'":""} {p.price?" · "+fmtP(p.price):""} {p._src==="broker"?" · 🤝":""}</div></div>
         <span style={{color:GR,fontSize:18}}>📤</span>
       </div>)}
