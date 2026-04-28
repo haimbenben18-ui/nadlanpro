@@ -416,7 +416,7 @@ const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c",RE="#c97e7
 const PX="np7_";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
-let _tt;function toast(m){const o=document.querySelector('.toast');if(o)o.remove();clearTimeout(_tt);const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);_tt=setTimeout(()=>e.remove(),2500)}
+let _tt;function toast(m,dur){const o=document.querySelector('.toast');if(o)o.remove();clearTimeout(_tt);const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);_tt=setTimeout(()=>e.remove(),dur||2500)}
 
 function getKey(){return localStorage.getItem(PX+"claude_key")||""}
 
@@ -1456,6 +1456,8 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   const[joinPending,setJoinPending]=useState([]);
   const[joinWizard,setJoinWizard]=useState(null); // null or {ordered, idx}
   const[customUrls,setCustomUrls]=useState(()=>lv("fb_group_urls",{}));
+  const[linkModal,setLinkModal]=useState(null); // null or {group, value}
+  const[urlWizard,setUrlWizard]=useState(null); // null or {groups, total, idx}
   const images=(prop.images||[]).filter(i=>i.type!=="video");
 
   function isMember(g){return members.includes(g.id)}
@@ -1463,23 +1465,75 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   function urlOf(g){return (customUrls&&customUrls[g.id])||g.url}
   function hasDirectUrl(g){return !!(customUrls&&customUrls[g.id])}
 
-  function updateGroupUrl(g){
-    const cur=customUrls[g.id]||"";
-    const v=prompt("הדבק את הקישור הישיר של הקבוצה \""+g.name+"\":\n(לדוגמה https://www.facebook.com/groups/123456...)\n\nהשאר ריק כדי לאפס לחיפוש ברירת מחדל.",cur);
-    if(v===null)return;
-    const trimmed=v.trim();
+  function saveGroupUrl(g,raw,silent){
+    const trimmed=(raw||"").trim();
     const next={...customUrls};
     if(trimmed===""){
-      delete next[g.id];
-      toast("🔄 הקישור אופס לחיפוש");
+      if(g.id in next){delete next[g.id];if(!silent)toast("🔄 הקישור אופס לחיפוש")}
+      else if(!silent){toast("אין קישור לאפס");return false}
     }else if(!/^https?:\/\//i.test(trimmed)){
       toast("⚠️ הקישור חייב להתחיל ב-https://");
-      return;
+      return false;
     }else{
       next[g.id]=trimmed;
-      toast("✅ קישור ישיר נשמר ל-"+g.name);
+      if(!silent)toast("✅ קישור ישיר נשמר ל-"+g.name);
     }
     setCustomUrls(next);sv("fb_group_urls",next);
+    return true;
+  }
+
+  async function readClipboard(){
+    if(!navigator.clipboard||!navigator.clipboard.readText){
+      toast("⚠️ הדפדפן לא תומך בקריאה אוטומטית — הדבק ידנית");
+      return null;
+    }
+    try{
+      const v=await navigator.clipboard.readText();
+      return (v||"").trim();
+    }catch(e){
+      toast("⚠️ אין הרשאה לקרוא מה-clipboard — הדבק ידנית");
+      return null;
+    }
+  }
+
+  function updateGroupUrl(g){setLinkModal({group:g,value:customUrls[g.id]||""})}
+
+  async function pasteIntoLinkModal(){
+    const v=await readClipboard();
+    if(v===null)return;
+    if(!v){toast("⚠️ ה-clipboard ריק");return}
+    setLinkModal(m=>m?{...m,value:v}:m);
+  }
+
+  function startUrlWizard(){
+    const all=[...allInvestor,...allLocal,...allPending];
+    const todo=all.filter(g=>!hasDirectUrl(g));
+    if(todo.length===0){toast("✅ כל הקבוצות כבר עם קישור ישיר!");return}
+    setUrlWizard({groups:todo,total:all.length,idx:0});
+    window.open(urlOf(todo[0]),"_blank");
+    toast("🌐 הקבוצה נפתחה — העתק את הכתובת מהדפדפן ולחץ הדבק",4000);
+  }
+
+  function urlWizardAdvance(savedNow){
+    if(!urlWizard)return;
+    const next=urlWizard.idx+1;
+    if(next>=urlWizard.groups.length){
+      setUrlWizard(null);
+      toast("✅ סבב עדכון הקישורים הסתיים");
+      return;
+    }
+    const ng=urlWizard.groups[next];
+    window.open(urlOf(ng),"_blank");
+    setUrlWizard({...urlWizard,idx:next});
+  }
+
+  async function urlWizardPaste(){
+    if(!urlWizard)return;
+    const cur=urlWizard.groups[urlWizard.idx];
+    const v=await readClipboard();
+    if(v===null||!v){toast("⚠️ ה-clipboard ריק");return}
+    if(!saveGroupUrl(cur,v))return;
+    urlWizardAdvance(true);
   }
 
   function joinGroup(g){
@@ -1538,7 +1592,11 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
     window.open(urlOf(group),"_blank");
     if(!isAlready)markPosted([group.id]);
-    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+    if(hasDirectUrl(group)){
+      toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+    }else{
+      toast("📋 הטקסט הועתק! אחרי שתיכנס לקבוצה — העתק את הכתובת מהדפדפן ולחץ 🔗 כדי לשמור קישור ישיר",6000);
+    }
   }
 
   async function broadcastCategory(category){
@@ -1670,9 +1728,59 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         <span style={{display:"flex",alignItems:"center",gap:6}}>{direct&&<span title="קישור ישיר נשמר" style={{color:GR,fontSize:13}}>🎯</span>}{g.name}</span>
         <span style={{fontSize:16}}>{isPosted?"✓":(member?"📋":"🔒")}</span>
       </button>
+      <button onClick={async()=>{const v=await readClipboard();if(v===null)return;if(!v){toast("⚠️ ה-clipboard ריק");return}saveGroupUrl(g,v)}} title="הדבק קישור מה-clipboard ושמור" style={{background:"rgba(126,201,126,0.10)",border:"1px solid rgba(126,201,126,0.35)",borderRadius:12,padding:"0 10px",color:GR,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>📥</button>
       <button onClick={()=>updateGroupUrl(g)} title={direct?"עדכן/אפס קישור ישיר":"שמור קישור ישיר"} style={{background:direct?"rgba(126,201,126,0.10)":"rgba(155,142,196,0.08)",border:"1px solid "+(direct?"rgba(126,201,126,0.35)":"rgba(155,142,196,0.25)"),borderRadius:12,padding:"0 10px",color:direct?GR:PU,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>🔗</button>
       {g.custom&&<button onClick={()=>deleteCustomGroup(g)} title="מחק" style={{background:"rgba(201,126,126,0.12)",border:"1px solid rgba(201,126,126,0.3)",borderRadius:12,padding:"0 12px",color:RE,cursor:"pointer",fontSize:16}}>🗑</button>}
     </div>;
+  }
+
+  // Link modal (per-group URL editor)
+  if(linkModal){
+    const g=linkModal.group;
+    const direct=hasDirectUrl(g);
+    return <Modal title={"🔗 קישור ישיר — "+g.name} color={GR} onClose={()=>setLinkModal(null)}>
+      <div style={{...S.cg,marginBottom:14}}>
+        <Lbl t="קישור נוכחי" icon="🌐"/>
+        <div style={{color:direct?"#7ec97e":"#777",fontSize:12,wordBreak:"break-all",lineHeight:1.5}}>{direct?customUrls[g.id]:"(אין — נפתח חיפוש ברירת מחדל)"}</div>
+      </div>
+      <div style={{background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:14,padding:14,marginBottom:14}}>
+        <div style={{color:"#9b8ec4",fontSize:13,marginBottom:10,lineHeight:1.6}}>📋 העתק את הכתובת מסרגל הדפדפן בקבוצה (לדוגמה <span dir="ltr">facebook.com/groups/123456</span>) ולחץ:</div>
+        <Btn full ch="📋 הדבק מהדפדפן" c={GR} onClick={pasteIntoLinkModal} icon="✨"/>
+      </div>
+      <Lbl t="או הדבק ידנית" icon="✏️"/>
+      <textarea value={linkModal.value} onChange={e=>setLinkModal({...linkModal,value:e.target.value})} placeholder="https://www.facebook.com/groups/..." rows={3} style={{...S.inp,resize:"none",fontSize:13,lineHeight:1.6,marginBottom:12,direction:"ltr",textAlign:"left"}}/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn ch="💾 שמור" c={GR} onClick={()=>{if(saveGroupUrl(g,linkModal.value))setLinkModal(null)}}/>
+        <Btn ch="🔄 אפס" c={"#888"} ghost onClick={()=>{if(saveGroupUrl(g,"",false))setLinkModal(null)}}/>
+        <Btn ch="ביטול" c={RE} ghost onClick={()=>setLinkModal(null)}/>
+      </div>
+    </Modal>;
+  }
+
+  // Bulk URL update wizard
+  if(urlWizard){
+    const cur=urlWizard.groups[urlWizard.idx];
+    const savedCount=Object.keys(customUrls).length;
+    const direct=hasDirectUrl(cur);
+    return <Modal title={"🔗 עדכון קישורים — "+(urlWizard.idx+1)+" מתוך "+urlWizard.groups.length} color={GR} onClose={()=>setUrlWizard(null)}>
+      <div style={{background:"rgba(126,201,126,0.06)",border:"1px solid rgba(126,201,126,0.25)",borderRadius:12,padding:10,marginBottom:14,textAlign:"center",fontSize:13,fontWeight:700,color:"#7ec97e"}}>
+        ✅ עודכנו {savedCount} מתוך {urlWizard.total} קבוצות
+      </div>
+      <div style={{...S.cg,marginBottom:14}}>
+        <div style={{color:cur.category==="investor"?OR:(cur.category==="local"?TE:"#f5b06b"),fontSize:13,fontWeight:700,marginBottom:6}}>{cur.category==="investor"?"🔥 משקיעים":(cur.category==="local"?"🏘️ מקומי":"⏳ ממתין")}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}{direct&&<span title="קישור ישיר נשמר" style={{marginRight:6,color:GR,fontSize:14}}>🎯</span>}</div>
+        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{urlOf(cur)}</div>
+      </div>
+      <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:12,padding:12,marginBottom:14,color:"#f5b06b",fontSize:13,lineHeight:1.6}}>
+        💡 הקבוצה נפתחה בטאב חדש. כשאתה בקבוצה — העתק את הכתובת מסרגל הדפדפן ולחץ "הדבק ושמור".
+      </div>
+      <div style={{display:"flex",gap:8,flexDirection:"column"}}>
+        <Btn full ch="📋 הדבק ושמור — והמשך לקבוצה הבאה" c={GR} onClick={urlWizardPaste}/>
+        <Btn full ch="⏭ דלג (בלי לשמור)" c={"#888"} ghost onClick={()=>urlWizardAdvance(false)}/>
+        <Btn sm ghost ch="🔗 פתח שוב" c={BL} onClick={()=>window.open(urlOf(cur),"_blank")}/>
+        <Btn sm ghost ch="✖ סיים סבב" c={RE} onClick={()=>{if(confirm("לסיים את סבב העדכון?"))setUrlWizard(null)}}/>
+      </div>
+    </Modal>;
   }
 
   // Join wizard view
@@ -1800,7 +1908,8 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
             <span style={{display:"flex",alignItems:"center",gap:6}}>{direct&&<span title="קישור ישיר נשמר" style={{color:GR,fontSize:13}}>🎯</span>}{g.name}</span>
             <span style={{fontSize:14,color:member?"#7ec97e":"#777"}}>{member?"חבר":(pending?"ממתין":"לא מאושר")}</span>
           </div>
-          <button onClick={()=>updateGroupUrl(g)} title={direct?"עדכן/אפס קישור ישיר":"שמור קישור ישיר"} style={{background:direct?"rgba(126,201,126,0.10)":"rgba(155,142,196,0.08)",border:"1px solid "+(direct?"rgba(126,201,126,0.35)":"rgba(155,142,196,0.25)"),borderRadius:12,padding:"0 10px",color:direct?GR:PU,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>🔗</button>
+          <button onClick={async()=>{const v=await readClipboard();if(v===null)return;if(!v){toast("⚠️ ה-clipboard ריק");return}saveGroupUrl(g,v)}} title="הדבק קישור מה-clipboard ושמור" style={{background:"rgba(126,201,126,0.10)",border:"1px solid rgba(126,201,126,0.35)",borderRadius:12,padding:"0 10px",color:GR,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>📥</button>
+      <button onClick={()=>updateGroupUrl(g)} title={direct?"עדכן/אפס קישור ישיר":"שמור קישור ישיר"} style={{background:direct?"rgba(126,201,126,0.10)":"rgba(155,142,196,0.08)",border:"1px solid "+(direct?"rgba(126,201,126,0.35)":"rgba(155,142,196,0.25)"),borderRadius:12,padding:"0 10px",color:direct?GR:PU,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>🔗</button>
         </div>;
       })}
     </div>}
