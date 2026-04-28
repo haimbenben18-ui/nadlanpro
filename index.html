@@ -220,7 +220,7 @@ function buildAgentCaption(prop){
 }
 
 const FB_GROUPS_BUILTIN=(()=>{
-  const FB_SEARCH="https://www.facebook.com/search/groups/?q=";
+  const FB_SEARCH="https://www.facebook.com/groups/search/?q=";
   function mk(prefix,cat,names,extra){
     return names.map((name,i)=>({
       id:prefix+"_"+(i+1),
@@ -1455,13 +1455,35 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   });
   const[joinPending,setJoinPending]=useState([]);
   const[joinWizard,setJoinWizard]=useState(null); // null or {ordered, idx}
+  const[customUrls,setCustomUrls]=useState(()=>lv("fb_group_urls",{}));
   const images=(prop.images||[]).filter(i=>i.type!=="video");
 
   function isMember(g){return members.includes(g.id)}
   function isPending(g){return joinPending.includes(g.id)}
+  function urlOf(g){return (customUrls&&customUrls[g.id])||g.url}
+  function hasDirectUrl(g){return !!(customUrls&&customUrls[g.id])}
+
+  function updateGroupUrl(g){
+    const cur=customUrls[g.id]||"";
+    const v=prompt("הדבק את הקישור הישיר של הקבוצה \""+g.name+"\":\n(לדוגמה https://www.facebook.com/groups/123456...)\n\nהשאר ריק כדי לאפס לחיפוש ברירת מחדל.",cur);
+    if(v===null)return;
+    const trimmed=v.trim();
+    const next={...customUrls};
+    if(trimmed===""){
+      delete next[g.id];
+      toast("🔄 הקישור אופס לחיפוש");
+    }else if(!/^https?:\/\//i.test(trimmed)){
+      toast("⚠️ הקישור חייב להתחיל ב-https://");
+      return;
+    }else{
+      next[g.id]=trimmed;
+      toast("✅ קישור ישיר נשמר ל-"+g.name);
+    }
+    setCustomUrls(next);sv("fb_group_urls",next);
+  }
 
   function joinGroup(g){
-    window.open(g.url,"_blank");
+    window.open(urlOf(g),"_blank");
     if(!joinPending.includes(g.id))setJoinPending([...joinPending,g.id]);
     toast("📂 הקבוצה נפתחה — שלח בקשת הצטרפות");
   }
@@ -1478,7 +1500,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const notMembers=allGroups.filter(g=>!members.includes(g.id));
     if(notMembers.length===0){toast("✅ אתה כבר חבר בכל הקבוצות!");return}
     setJoinWizard({ordered:notMembers,idx:0});
-    window.open(notMembers[0].url,"_blank");
+    window.open(urlOf(notMembers[0]),"_blank");
     if(!joinPending.includes(notMembers[0].id))setJoinPending([...joinPending,notMembers[0].id]);
   }
 
@@ -1498,7 +1520,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       return;
     }
     const ng=joinWizard.ordered[next];
-    window.open(ng.url,"_blank");
+    window.open(urlOf(ng),"_blank");
     if(!joinPending.includes(ng.id)&&!nm.includes(ng.id))setJoinPending(p=>p.includes(ng.id)?p:[...p,ng.id]);
     setJoinWizard({...joinWizard,idx:next});
   }
@@ -1514,7 +1536,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const isAlready=posted.includes(group.id);
     if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
-    window.open(group.url,"_blank");
+    window.open(urlOf(group),"_blank");
     if(!isAlready)markPosted([group.id]);
     toast("📋 הטקסט הועתק! הדביקו בקבוצה");
   }
@@ -1526,7 +1548,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     if(groups.length<all.length&&!confirm("חבר רק ב-"+groups.length+" מתוך "+all.length+" קבוצות. להמשיך?"))return;
     if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
-    groups.forEach((g,i)=>setTimeout(()=>{try{window.open(g.url,"_blank")}catch(e){}},i*400));
+    groups.forEach((g,i)=>setTimeout(()=>{try{window.open(urlOf(g),"_blank")}catch(e){}},i*400));
     markPosted(groups.map(g=>g.id));
     toast("📋 הטקסט הועתק! הקבוצות נפתחות...");
   }
@@ -1539,7 +1561,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const ordered=[...notPosted,...alreadyPosted];
     setWizard({orderedGroups:ordered,idx:0});
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
-    if(ordered[0]){window.open(ordered[0].url,"_blank")}
+    if(ordered[0]){window.open(urlOf(ordered[0]),"_blank")}
     if(!posted.includes(ordered[0].id))markPosted([ordered[0].id]);
     toast("📋 הטקסט הועתק! הדביקו בקבוצה");
   }
@@ -1550,7 +1572,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     if(next>=wizard.orderedGroups.length){toast("✅ הושלם — אין עוד קבוצות");setWizard(null);return}
     const g=wizard.orderedGroups[next];
     try{await navigator.clipboard.writeText(shareText)}catch(e){}
-    window.open(g.url,"_blank");
+    window.open(urlOf(g),"_blank");
     if(!posted.includes(g.id))markPosted([g.id]);
     setWizard({...wizard,idx:next});
     toast("📋 הטקסט הועתק! הדביקו בקבוצה");
@@ -1635,6 +1657,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const isPosted=posted.includes(g.id);
     const member=isMember(g);
     const pending=isPending(g);
+    const direct=hasDirectUrl(g);
     return <div style={{display:"flex",gap:6,alignItems:"stretch",marginBottom:8}}>
       {member?
         <div title="חבר בקבוצה" style={{display:"flex",alignItems:"center",justifyContent:"center",width:42,background:"rgba(126,201,126,0.14)",border:"1px solid rgba(126,201,126,0.45)",borderRadius:12,color:"#7ec97e",fontSize:18,fontWeight:900}}>✓</div>
@@ -1644,9 +1667,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         <button onClick={()=>joinGroup(g)} title="הצטרף לקבוצה" style={{background:"linear-gradient(135deg,"+OR+","+OR+"bb)",border:"none",borderRadius:12,padding:"0 12px",color:"#1a1208",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>+ הצטרף</button>
       }
       <button onClick={member?()=>copyAndOpen(g):undefined} disabled={!member} style={{flex:1,background:isPosted?"rgba(126,201,126,0.12)":(member?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.02)"),border:"1px solid "+(isPosted?"rgba(126,201,126,0.45)":(member?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.05)")),borderRadius:12,padding:"12px 14px",color:isPosted?"#7ec97e":(member?"#ede8f5":"#555"),fontSize:14,fontWeight:700,cursor:member?"pointer":"not-allowed",opacity:member?1:0.55,fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
-        <span>{g.name}</span>
+        <span style={{display:"flex",alignItems:"center",gap:6}}>{direct&&<span title="קישור ישיר נשמר" style={{color:GR,fontSize:13}}>🎯</span>}{g.name}</span>
         <span style={{fontSize:16}}>{isPosted?"✓":(member?"📋":"🔒")}</span>
       </button>
+      <button onClick={()=>updateGroupUrl(g)} title={direct?"עדכן/אפס קישור ישיר":"שמור קישור ישיר"} style={{background:direct?"rgba(126,201,126,0.10)":"rgba(155,142,196,0.08)",border:"1px solid "+(direct?"rgba(126,201,126,0.35)":"rgba(155,142,196,0.25)"),borderRadius:12,padding:"0 10px",color:direct?GR:PU,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>🔗</button>
       {g.custom&&<button onClick={()=>deleteCustomGroup(g)} title="מחק" style={{background:"rgba(201,126,126,0.12)",border:"1px solid rgba(201,126,126,0.3)",borderRadius:12,padding:"0 12px",color:RE,cursor:"pointer",fontSize:16}}>🗑</button>}
     </div>;
   }
@@ -1657,8 +1681,8 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     return <Modal title={"🤝 סבב הצטרפות — "+(joinWizard.idx+1)+" מתוך "+joinWizard.ordered.length} color={OR} onClose={()=>setJoinWizard(null)}>
       <div style={{...S.cg,marginBottom:14}}>
         <div style={{color:OR,fontSize:13,fontWeight:700,marginBottom:6}}>{cur.category==="investor"?"🔥 משקיעים":"🏘️ מקומי"}</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}</div>
-        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{cur.url}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}{hasDirectUrl(cur)&&<span title="קישור ישיר נשמר" style={{marginRight:6,color:GR,fontSize:14}}>🎯</span>}</div>
+        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{urlOf(cur)}</div>
       </div>
       <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:12,padding:12,marginBottom:14,color:"#f5b06b",fontSize:13,lineHeight:1.6}}>
         💡 הקבוצה נפתחה בטאב חדש. שלח בקשת הצטרפות, חזור לכאן ובחר:
@@ -1666,7 +1690,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       <div style={{display:"flex",gap:8,flexDirection:"column"}}>
         <Btn full ch="✅ אושרתי / כבר חבר — סמן והמשך" c={GR} onClick={()=>joinWizardAnswer(true)}/>
         <Btn full ch="⏭ דלג (עדיין ממתין לאישור)" c={"#888"} ghost onClick={()=>joinWizardAnswer(false)}/>
-        <Btn sm ghost ch="🔗 פתח שוב" c={BL} onClick={()=>window.open(cur.url,"_blank")}/>
+        <Btn sm ghost ch="🔗 פתח שוב" c={BL} onClick={()=>window.open(urlOf(cur),"_blank")}/>
         <Btn sm ghost ch="✖ סיים סבב" c={RE} onClick={()=>{if(confirm("לסיים את סבב ההצטרפות?"))setJoinWizard(null)}}/>
       </div>
       <div style={{marginTop:14,color:"#666",fontSize:11,textAlign:"center"}}>חבר כרגע ב-{members.length} מתוך {allGroups.length} קבוצות</div>
@@ -1679,14 +1703,15 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     return <Modal title={"🚀 הפצה מהירה — קבוצה "+(wizard.idx+1)+" מתוך "+wizard.orderedGroups.length} color={OR} onClose={()=>setWizard(null)}>
       <div style={{...S.cg,marginBottom:14}}>
         <div style={{color:OR,fontSize:13,fontWeight:700,marginBottom:6}}>{cur.category==="investor"?"🔥 משקיעים":"🏘️ מקומי"}</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}</div>
-        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{cur.url}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}{hasDirectUrl(cur)&&<span title="קישור ישיר נשמר" style={{marginRight:6,color:GR,fontSize:14}}>🎯</span>}</div>
+        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{urlOf(cur)}</div>
       </div>
       <Lbl t="הטקסט שהועתק" icon="📋"/>
       <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
         <Btn sm ch="📋 העתק שוב" c={BL} ghost onClick={async()=>{try{await navigator.clipboard.writeText(shareText);toast("📋 הועתק")}catch(e){}}}/>
-        <Btn sm ch="פתח שוב" c={PU} ghost onClick={()=>window.open(cur.url,"_blank")} icon="🔗"/>
+        <Btn sm ch="פתח שוב" c={PU} ghost onClick={()=>window.open(urlOf(cur),"_blank")} icon="🔗"/>
+        <Btn sm ch="עדכן קישור" c={G} ghost onClick={()=>updateGroupUrl(cur)} icon="🔗"/>
       </div>
       <div style={{display:"flex",gap:8}}>
         {wizard.idx<wizard.orderedGroups.length-1?<Btn full ch={"הבא ← "+wizard.orderedGroups[wizard.idx+1].name} c={OR} onClick={nextGroup}/>:<Btn full ch="✅ סיים הפצה" c={GR} onClick={()=>{setWizard(null);toast("✅ הפצה הסתיימה")}}/>}
@@ -1762,6 +1787,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       {allPending.map(g=>{
         const member=isMember(g);
         const pending=isPending(g);
+        const direct=hasDirectUrl(g);
         return <div key={g.id} style={{display:"flex",gap:6,alignItems:"stretch",marginBottom:8}}>
           {member?
             <div title="אושרת" style={{display:"flex",alignItems:"center",justifyContent:"center",width:42,background:"rgba(126,201,126,0.14)",border:"1px solid rgba(126,201,126,0.45)",borderRadius:12,color:"#7ec97e",fontSize:18,fontWeight:900}}>✓</div>
@@ -1771,9 +1797,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
             <button onClick={()=>joinGroup(g)} title="הצטרף לקבוצה" style={{background:"linear-gradient(135deg,#f5b06b,#f5b06bbb)",border:"none",borderRadius:12,padding:"0 12px",color:"#1a1208",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>+ הצטרף</button>
           }
           <div style={{flex:1,background:"rgba(245,176,107,0.05)",border:"1px solid rgba(245,176,107,0.2)",borderRadius:12,padding:"12px 14px",color:"#ede8f5",fontSize:14,fontWeight:700,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
-            <span>{g.name}</span>
+            <span style={{display:"flex",alignItems:"center",gap:6}}>{direct&&<span title="קישור ישיר נשמר" style={{color:GR,fontSize:13}}>🎯</span>}{g.name}</span>
             <span style={{fontSize:14,color:member?"#7ec97e":"#777"}}>{member?"חבר":(pending?"ממתין":"לא מאושר")}</span>
           </div>
+          <button onClick={()=>updateGroupUrl(g)} title={direct?"עדכן/אפס קישור ישיר":"שמור קישור ישיר"} style={{background:direct?"rgba(126,201,126,0.10)":"rgba(155,142,196,0.08)",border:"1px solid "+(direct?"rgba(126,201,126,0.35)":"rgba(155,142,196,0.25)"),borderRadius:12,padding:"0 10px",color:direct?GR:PU,cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>🔗</button>
         </div>;
       })}
     </div>}
