@@ -1594,38 +1594,38 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     setPosted(arr);sv(storageKey,arr);
   }
 
-  async function copyToClipboard(text){
+  function copyToClipboard(text){
     console.log("[copyToClipboard] called. type=",typeof text,"len=",(text||"").length,"preview=",JSON.stringify((text||"").slice(0,80)));
     if(typeof text!=="string"||text.length===0){
       console.warn("[copyToClipboard] text is empty/invalid — nothing to copy");
       return false;
     }
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      try{
-        await navigator.clipboard.writeText(text);
-        console.log("[copyToClipboard] ✓ navigator.clipboard.writeText succeeded");
-        return true;
-      }catch(e){
-        console.warn("[copyToClipboard] navigator.clipboard.writeText failed:",e);
-      }
-    }else{
-      console.warn("[copyToClipboard] navigator.clipboard.writeText not available");
-    }
+    // Synchronous execCommand FIRST — finishes before window.open can steal focus.
+    // navigator.clipboard.writeText is async and can lose the race even with await.
+    let execOk=false;
     try{
       const ta=document.createElement("textarea");
       ta.value=text;
       ta.style.position="fixed";ta.style.left="-9999px";ta.style.top="0";
       ta.setAttribute("readonly","");
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
-      const ok=document.execCommand("copy");
+      ta.setSelectionRange(0,text.length);
+      execOk=document.execCommand("copy");
       document.body.removeChild(ta);
-      console.log("[copyToClipboard] execCommand fallback result=",ok);
-      return !!ok;
+      console.log("[copyToClipboard] execCommand result=",execOk);
     }catch(e){
-      console.error("[copyToClipboard] execCommand fallback threw:",e);
-      return false;
+      console.warn("[copyToClipboard] execCommand threw:",e);
     }
+    // Fire-and-forget the async API as redundancy. Don't await — we already returned.
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(
+        ()=>console.log("[copyToClipboard] (async) clipboard.writeText also succeeded"),
+        e=>console.warn("[copyToClipboard] (async) clipboard.writeText failed:",e)
+      );
+    }
+    return execOk;
   }
 
   async function copyAndOpen(group){
