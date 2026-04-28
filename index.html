@@ -1594,13 +1594,34 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     setPosted(arr);sv(storageKey,arr);
   }
 
+  async function copyToClipboard(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      try{await navigator.clipboard.writeText(text);return true}catch(e){}
+    }
+    try{
+      const ta=document.createElement("textarea");
+      ta.value=text;
+      ta.style.position="fixed";ta.style.left="-9999px";ta.style.top="0";
+      ta.setAttribute("readonly","");
+      document.body.appendChild(ta);
+      ta.select();
+      const ok=document.execCommand("copy");
+      document.body.removeChild(ta);
+      return !!ok;
+    }catch(e){return false}
+  }
+
   async function copyAndOpen(group){
     if(!isMember(group)){toast("⚠️ הצטרף לקבוצה לפני שליחה");return}
     const isAlready=posted.includes(group.id);
     if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
-    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    const copied=await copyToClipboard(shareText);
     window.open(urlOf(group),"_blank");
     if(!isAlready)markPosted([group.id]);
+    if(!copied){
+      toast("⚠️ ההעתקה נכשלה — העתק ידנית מהטקסט למעלה",4000);
+      return;
+    }
     if(hasDirectUrl(group)){
       toast("📋 הטקסט הועתק! הדביקו בקבוצה");
     }else{
