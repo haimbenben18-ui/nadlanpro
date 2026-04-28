@@ -1654,10 +1654,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     if(groups.length===0){toast("⚠️ אינך חבר באף קבוצה — הצטרף קודם");return}
     if(groups.length<all.length&&!confirm("חבר רק ב-"+groups.length+" מתוך "+all.length+" קבוצות. להמשיך?"))return;
     if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
-    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    const copied=await copyToClipboard(shareText);
     groups.forEach((g,i)=>setTimeout(()=>{try{window.open(urlOf(g),"_blank")}catch(e){}},i*400));
     markPosted(groups.map(g=>g.id));
-    toast("📋 הטקסט הועתק! הקבוצות נפתחות...");
+    toast(copied?"📋 הטקסט הועתק! הקבוצות נפתחות...":"⚠️ ההעתקה נכשלה — העתק ידנית");
   }
 
   async function startQuickDistribution(){
@@ -1667,10 +1667,10 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const alreadyPosted=memberGroups.filter(g=>posted.includes(g.id));
     const ordered=[...notPosted,...alreadyPosted];
     setWizard({orderedGroups:ordered,idx:0});
-    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    const copied=await copyToClipboard(shareText);
     if(ordered[0]){window.open(urlOf(ordered[0]),"_blank")}
     if(!posted.includes(ordered[0].id))markPosted([ordered[0].id]);
-    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+    toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה":"⚠️ ההעתקה נכשלה — העתק ידנית מהטקסט למעלה",copied?2500:4000);
   }
 
   async function nextGroup(){
@@ -1678,11 +1678,11 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const next=wizard.idx+1;
     if(next>=wizard.orderedGroups.length){toast("✅ הושלם — אין עוד קבוצות");setWizard(null);return}
     const g=wizard.orderedGroups[next];
-    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    const copied=await copyToClipboard(shareText);
     window.open(urlOf(g),"_blank");
     if(!posted.includes(g.id))markPosted([g.id]);
     setWizard({...wizard,idx:next});
-    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+    toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה":"⚠️ ההעתקה נכשלה — העתק ידנית",copied?2500:4000);
   }
 
   async function downloadZip(){
@@ -1866,7 +1866,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       <Lbl t="הטקסט שהועתק" icon="📋"/>
       <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-        <Btn sm ch="📋 העתק שוב" c={BL} ghost onClick={async()=>{try{await navigator.clipboard.writeText(shareText);toast("📋 הועתק")}catch(e){}}}/>
+        <Btn sm ch="📋 העתק שוב" c={BL} ghost onClick={async()=>{const ok=await copyToClipboard(shareText);toast(ok?"📋 הועתק":"⚠️ ההעתקה נכשלה")}}/>
         <Btn sm ch="פתח שוב" c={PU} ghost onClick={()=>window.open(urlOf(cur),"_blank")} icon="🔗"/>
         <Btn sm ch="עדכן קישור" c={G} ghost onClick={()=>updateGroupUrl(cur)} icon="🔗"/>
       </div>
