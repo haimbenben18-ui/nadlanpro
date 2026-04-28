@@ -261,7 +261,8 @@ function buildInvestorCaption(prop){
       msg+="📈 תשואה משוערת: ~"+yld+"%\n";
     }
   }
-  msg+="📞 חיים בן סימון 0544740691\n";
+  msg+="📞 חיים בן סימון\n";
+  msg+="💬 https://wa.me/972544740691\n";
   msg+="RE/MAX באר שבע";
   return msg;
 }
@@ -282,7 +283,8 @@ function buildLocalCaption(prop){
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
   if(prop.notes)msg+="📝 "+prop.notes+"\n";
-  msg+="📞 חיים בן סימון 0544740691\n";
+  msg+="📞 חיים בן סימון\n";
+  msg+="💬 https://wa.me/972544740691\n";
   msg+="RE/MAX באר שבע";
   return msg;
 }
@@ -1941,12 +1943,6 @@ function App(){
       {tab==="uni"&&<University/>}
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
-
-      <div style={{padding:"32px 18px 18px",textAlign:"center",borderTop:"1px solid rgba(201,168,76,0.08)",marginTop:30}}>
-        <div style={{color:G,fontSize:15,fontWeight:800,marginBottom:6,fontFamily:"'Frank Ruhl Libre',serif"}}>צריכים שירות? זמינים עבורכם</div>
-        <div style={{color:"#777",fontSize:12,marginBottom:14}}>חיים בן סימון · RE/MAX באר שבע</div>
-        <a href="https://wa.me/972544740691?text=שלום חיים, אשמח לפרטים נוספים" target="_blank" rel="noopener" style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,"+GR+","+GR+"bb)",color:"#fff",border:"none",borderRadius:14,padding:"13px 26px",fontSize:15,fontWeight:800,textDecoration:"none",boxShadow:"0 4px 16px rgba(37,211,102,0.28)"}}>💬 ווטסאפ — 054-474-0691</a>
-      </div>
 
       <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(201,168,76,0.1)",display:"flex",zIndex:200,padding:"6px 0 12px",overflowX:"auto"}}>
         {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:"0 0 auto",minWidth:54,background:"none",border:"none",cursor:"pointer",padding:"6px 6px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
