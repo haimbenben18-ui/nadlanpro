@@ -215,7 +215,7 @@ function buildAgentCaption(prop){
   if(size)parts.push("📐 "+size);
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
-  msg+="📞 חיים 0509444030";
+  msg+="📞 חיים 0544740691";
   return msg;
 }
 
@@ -261,7 +261,7 @@ function buildInvestorCaption(prop){
       msg+="📈 תשואה משוערת: ~"+yld+"%\n";
     }
   }
-  msg+="📞 חיים בן סימון 0509444030\n";
+  msg+="📞 חיים בן סימון 0544740691\n";
   msg+="RE/MAX באר שבע";
   return msg;
 }
@@ -282,7 +282,7 @@ function buildLocalCaption(prop){
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
   if(prop.notes)msg+="📝 "+prop.notes+"\n";
-  msg+="📞 חיים בן סימון 0509444030\n";
+  msg+="📞 חיים בן סימון 0544740691\n";
   msg+="RE/MAX באר שבע";
   return msg;
 }
@@ -1335,9 +1335,13 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   const customGroups=(fbGroups||[]).map(g=>({...g,id:g._docId||("custom_"+(g._docId||"")),custom:true}));
   const allInvestor=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="investor"),...customGroups.filter(g=>g.category==="investor")];
   const allLocal=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="local"),...customGroups.filter(g=>g.category==="local")];
+  const allGroups=[...allInvestor,...allLocal];
 
-  const investorMsg=buildInvestorCaption(prop);
-  const localMsg=buildLocalCaption(prop);
+  function sourceText(){
+    return (prop.savedAds&&prop.savedAds.facebook&&prop.savedAds.facebook.text)||buildInvestorCaption(prop);
+  }
+  const[shareText,setShareText]=useState(sourceText);
+  const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
   const images=(prop.images||[]).filter(i=>i.type!=="video");
 
   function markPosted(ids){
@@ -1349,8 +1353,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   async function copyAndOpen(group){
     const isAlready=posted.includes(group.id);
     if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
-    const text=group.category==="investor"?investorMsg:localMsg;
-    try{await navigator.clipboard.writeText(text)}catch(e){}
+    try{await navigator.clipboard.writeText(shareText)}catch(e){}
     window.open(group.url,"_blank");
     if(!isAlready)markPosted([group.id]);
     toast("📋 הטקסט הועתק! הדביקו בקבוצה");
@@ -1360,11 +1363,35 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     const groups=category==="investor"?allInvestor:allLocal;
     if(groups.length===0){toast("אין קבוצות");return}
     if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
-    const text=category==="investor"?investorMsg:localMsg;
-    try{await navigator.clipboard.writeText(text)}catch(e){}
+    try{await navigator.clipboard.writeText(shareText)}catch(e){}
     groups.forEach((g,i)=>setTimeout(()=>{try{window.open(g.url,"_blank")}catch(e){}},i*400));
     markPosted(groups.map(g=>g.id));
     toast("📋 הטקסט הועתק! הקבוצות נפתחות...");
+  }
+
+  async function startQuickDistribution(){
+    if(allGroups.length===0){toast("אין קבוצות");return}
+    // Order: not-posted first, posted last
+    const notPosted=allGroups.filter(g=>!posted.includes(g.id));
+    const alreadyPosted=allGroups.filter(g=>posted.includes(g.id));
+    const ordered=[...notPosted,...alreadyPosted];
+    setWizard({orderedGroups:ordered,idx:0});
+    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    if(ordered[0]){window.open(ordered[0].url,"_blank")}
+    if(!posted.includes(ordered[0].id))markPosted([ordered[0].id]);
+    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+  }
+
+  async function nextGroup(){
+    if(!wizard)return;
+    const next=wizard.idx+1;
+    if(next>=wizard.orderedGroups.length){toast("✅ הושלם — אין עוד קבוצות");setWizard(null);return}
+    const g=wizard.orderedGroups[next];
+    try{await navigator.clipboard.writeText(shareText)}catch(e){}
+    window.open(g.url,"_blank");
+    if(!posted.includes(g.id))markPosted([g.id]);
+    setWizard({...wizard,idx:next});
+    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
   }
 
   async function downloadZip(){
@@ -1444,6 +1471,29 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
     </div>;
   }
 
+  // Wizard view
+  if(wizard){
+    const cur=wizard.orderedGroups[wizard.idx];
+    return <Modal title={"🚀 הפצה מהירה — קבוצה "+(wizard.idx+1)+" מתוך "+wizard.orderedGroups.length} color={OR} onClose={()=>setWizard(null)}>
+      <div style={{...S.cg,marginBottom:14}}>
+        <div style={{color:OR,fontSize:13,fontWeight:700,marginBottom:6}}>{cur.category==="investor"?"🔥 משקיעים":"🏘️ מקומי"}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#ede8f5",marginBottom:4}}>{cur.name}</div>
+        <div style={{color:"#777",fontSize:12,wordBreak:"break-all"}}>{cur.url}</div>
+      </div>
+      <Lbl t="הטקסט שהועתק" icon="📋"/>
+      <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+        <Btn sm ch="📋 העתק שוב" c={BL} ghost onClick={async()=>{try{await navigator.clipboard.writeText(shareText);toast("📋 הועתק")}catch(e){}}}/>
+        <Btn sm ch="פתח שוב" c={PU} ghost onClick={()=>window.open(cur.url,"_blank")} icon="🔗"/>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        {wizard.idx<wizard.orderedGroups.length-1?<Btn full ch={"הבא ← "+wizard.orderedGroups[wizard.idx+1].name} c={OR} onClick={nextGroup}/>:<Btn full ch="✅ סיים הפצה" c={GR} onClick={()=>{setWizard(null);toast("✅ הפצה הסתיימה")}}/>}
+        <Btn ghost ch="✖" c={RE} onClick={()=>{if(confirm("לסיים את ההפצה?"))setWizard(null)}}/>
+      </div>
+      <div style={{marginTop:14,color:"#666",fontSize:11,textAlign:"center"}}>פורסם בסה"כ ב-{posted.length} מתוך {allGroups.length} קבוצות היום</div>
+    </Modal>;
+  }
+
   return <Modal title={"📢 מרכז הפצה — "+(prop.address||prop.name||"")} color={PU} onClose={onClose}>
     {/* Image actions */}
     {images.length>0&&<div style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:14,padding:14,marginBottom:14}}>
@@ -1454,6 +1504,20 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         <Btn sm ch="קישורים" c={BL} ghost onClick={copyImageLinks} icon="🔗"/>
       </div>
     </div>}
+
+    {/* Editable text */}
+    <div style={{...S.cg,marginBottom:14}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <Lbl t={prop.savedAds&&prop.savedAds.facebook?"טקסט מהפרסום השמור":"טקסט לפרסום"} icon="✏️"/>
+        <Btn sm ghost ch="🔄 שחזר מקור" c={BL} onClick={()=>{setShareText(sourceText());toast("🔄 שוחזר")}}/>
+      </div>
+      <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7}}/>
+      {!(prop.savedAds&&prop.savedAds.facebook)&&<div style={{color:"#666",fontSize:11,marginTop:6}}>💡 טיפ: צור פרסום פייסבוק בכרטיסיית הנכס כדי להשתמש בו אוטומטית כאן</div>}
+    </div>
+
+    {/* Quick distribution */}
+    <Btn full ch="🚀 התחל הפצה מהירה (קבוצה אחר קבוצה)" c={OR} onClick={startQuickDistribution}/>
+    <div style={{height:14}}/>
 
     {/* Investor section */}
     <div style={{marginBottom:18}}>
@@ -1786,6 +1850,12 @@ function App(){
       {tab==="uni"&&<University/>}
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
+
+      <div style={{padding:"32px 18px 18px",textAlign:"center",borderTop:"1px solid rgba(201,168,76,0.08)",marginTop:30}}>
+        <div style={{color:G,fontSize:15,fontWeight:800,marginBottom:6,fontFamily:"'Frank Ruhl Libre',serif"}}>צריכים שירות? זמינים עבורכם</div>
+        <div style={{color:"#777",fontSize:12,marginBottom:14}}>חיים בן סימון · RE/MAX באר שבע</div>
+        <a href="https://wa.me/972544740691?text=שלום חיים, אשמח לפרטים נוספים" target="_blank" rel="noopener" style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,"+GR+","+GR+"bb)",color:"#fff",border:"none",borderRadius:14,padding:"13px 26px",fontSize:15,fontWeight:800,textDecoration:"none",boxShadow:"0 4px 16px rgba(37,211,102,0.28)"}}>💬 ווטסאפ — 054-474-0691</a>
+      </div>
 
       <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(201,168,76,0.1)",display:"flex",zIndex:200,padding:"6px 0 12px",overflowX:"auto"}}>
         {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:"0 0 auto",minWidth:54,background:"none",border:"none",cursor:"pointer",padding:"6px 6px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
