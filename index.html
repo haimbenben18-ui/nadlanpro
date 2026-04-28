@@ -16,6 +16,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px;line-height:1.5;overscroll-behavior:none}
@@ -215,6 +216,74 @@ function buildAgentCaption(prop){
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
   msg+="📞 חיים 0509444030";
+  return msg;
+}
+
+const FB_GROUPS_BUILTIN=[
+  {id:"inv_1",name:'נדל"ן בשכל',category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בשכל'),builtin:true},
+  {id:"inv_2",name:"פורום הנדל\"ן",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('פורום הנדל"ן'),builtin:true},
+  {id:"inv_3",name:"השקעות נדל\"ן בישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('השקעות נדל"ן בישראל'),builtin:true},
+  {id:"inv_4",name:"דירות להשקעה ונדל\"ן",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('דירות להשקעה ונדל"ן'),builtin:true},
+  {id:"inv_5",name:"השקעות נדל\"ן בבאר שבע",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('השקעות נדל"ן בבאר שבע'),builtin:true},
+  {id:"inv_6",name:"נדל\"ן להשקעה - ישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן להשקעה ישראל'),builtin:true},
+  {id:"inv_7",name:"משקיעי נדל\"ן ישראל",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('משקיעי נדל"ן ישראל'),builtin:true},
+  {id:"inv_8",name:"קבוצת נדל\"ן מניב",category:"investor",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('קבוצת נדל"ן מניב'),builtin:true},
+  {id:"loc_1",name:"באר שבע ביחד",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("באר שבע ביחד"),builtin:true},
+  {id:"loc_2",name:"נדל\"ן בבאר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בבאר שבע'),builtin:true},
+  {id:"loc_3",name:"דירות למכירה/השכרה בב\"ש",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('דירות למכירה השכרה באר שבע'),builtin:true},
+  {id:"loc_4",name:"נדל\"ן במיתר והסביבה",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן במיתר והסביבה'),builtin:true},
+  {id:"loc_5",name:"פורום באר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("פורום באר שבע"),builtin:true},
+  {id:"loc_6",name:"נדל\"ן בדרום",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent('נדל"ן בדרום'),builtin:true},
+  {id:"loc_7",name:"דירות בבאר שבע והסביבה",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("דירות בבאר שבע והסביבה"),builtin:true},
+  {id:"loc_8",name:"קבוצת תושבי באר שבע",category:"local",url:"https://www.facebook.com/search/groups/?q="+encodeURIComponent("קבוצת תושבי באר שבע"),builtin:true},
+];
+
+function buildInvestorCaption(prop){
+  const city=prop.city||"באר שבע";
+  const addr=prop.address||prop.name||"";
+  const rooms=prop.rooms||"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor||"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  let msg="🔥 הזדמנות השקעה!\n";
+  msg+="📍 "+city+(addr?", "+addr:"")+"\n";
+  const parts=[];
+  if(rooms)parts.push("🛏️ "+rooms+" חד'");
+  if(floor)parts.push("🏢 ק' "+floor);
+  if(size)parts.push("📐 "+size);
+  if(parts.length)msg+=parts.join(" | ")+"\n";
+  if(price)msg+="💰 "+price+"\n";
+  const rentMatch=(prop.notes||"").match(/(\d{3,5})\s*(?:ש"ח|שח|₪|ב-?)/);
+  if(rentMatch&&prop.price&&!isNaN(Number(prop.price))){
+    const rent=parseInt(rentMatch[1]);
+    if(rent>=1000&&rent<=20000){
+      const yld=((rent*12)/Number(prop.price)*100).toFixed(1);
+      msg+="📈 תשואה משוערת: ~"+yld+"%\n";
+    }
+  }
+  msg+="📞 חיים בן סימון 0509444030\n";
+  msg+="RE/MAX באר שבע";
+  return msg;
+}
+
+function buildLocalCaption(prop){
+  const city=prop.city||"באר שבע";
+  const addr=prop.address||prop.name||"";
+  const rooms=prop.rooms||"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor||"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  let msg="🏠 דירה למכירה!\n";
+  msg+="📍 "+city+(addr?", "+addr:"")+"\n";
+  const parts=[];
+  if(rooms)parts.push("🛏️ "+rooms+" חד'");
+  if(floor)parts.push("🏢 ק' "+floor);
+  if(size)parts.push("📐 "+size);
+  if(parts.length)msg+=parts.join(" | ")+"\n";
+  if(price)msg+="💰 "+price+"\n";
+  if(prop.notes)msg+="📝 "+prop.notes+"\n";
+  msg+="📞 חיים בן סימון 0509444030\n";
+  msg+="RE/MAX באר שבע";
   return msg;
 }
 
@@ -660,9 +729,9 @@ function AddTaskModal({client,onClose,onAdd}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts,fbGroups,addFbGroup,delFbGroup}){
   const[tab,setTab]=useState(initialTab||"sellers");
-  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);
+  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);const[distOpen,setDistOpen]=useState(false);
   // seller form
   const[sn,setSn]=useState("");const[sp,setSp]=useState("");const[sa,setSa]=useState("");const[sc,setSc]=useState("באר שבע");const[sr,setSr]=useState("");const[ss,setSs]=useState("");const[sf,setSf]=useState("");const[sprice,setSprice]=useState("");const[sred,setSred]=useState("");const[ses,setSes]=useState("");const[see,setSee]=useState("");const[snotes,setSnotes]=useState("");const[simgs,setSimgs]=useState([]);const[svid,setSvid]=useState("");
   // buyer form
@@ -800,6 +869,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {sel.tenantPhone&&<Btn sm ch="שוכר 📞" c={BL} onClick={()=>window.location.href='tel:'+sel.tenantPhone}/>}
         <Btn sm ch="שלח נכס" c={OR} onClick={()=>setSendModal("choose")} icon="📤"/>
         <Btn sm ch="שלח לכל המתווכים" c={TE} onClick={()=>{if(!agentsContacts||agentsContacts.length===0){toast("⚠️ אין מתווכים ברשת");return}if(!confirm("לשלוח דירה זו ל-"+agentsContacts.length+" מתווכים?"))return;sendPropertyToMultipleAgents(sel,agentsContacts)}} icon="📒"/>
+        <Btn sm ch="מרכז הפצה" c={PU} onClick={()=>setDistOpen(true)} icon="📢"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
@@ -867,6 +937,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       </div>
     </div>
     {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=>img.type==='video'?<video key={img.id} src={img.url} controls style={{width:"100%",borderRadius:12,display:"block"}}/>:<img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
+    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
   </div>}
 
   // VIEW BUYER
@@ -961,11 +1032,11 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
 }
 
 // ━━━ BROKER PROPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts}){
+function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts,fbGroups,addFbGroup,delFbGroup}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
-  const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");
+  const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");const[distOpen,setDistOpen]=useState(false);
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
@@ -1033,6 +1104,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
         <Btn sm ch="שלח נכס" c={GR} onClick={()=>setPubOpen("chooseMethod")} icon="📤"/>
         <Btn sm ch="שלח לכל המתווכים" c={TE} onClick={()=>{if(!agentsContacts||agentsContacts.length===0){toast("⚠️ אין מתווכים ברשת");return}if(!confirm("לשלוח דירה זו ל-"+agentsContacts.length+" מתווכים?"))return;sendPropertyToMultipleAgents(sel,agentsContacts)}} icon="📒"/>
+        <Btn sm ch="מרכז הפצה" c={PU} onClick={()=>setDistOpen(true)} icon="📢"/>
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
@@ -1089,6 +1161,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       </div>}
     </div>
     {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=>img.type==='video'?<video key={img.id} src={img.url} controls style={{width:"100%",borderRadius:12,display:"block"}}/>:<img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
+    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
   </div>}
 
   if(mode==="add"){return <div style={{padding:S.pg}} className="fade"><button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button><div style={{...S.card,border:"1px solid "+TE+"44"}}><div style={{fontWeight:800,color:TE,fontSize:18,marginBottom:20}}>🤝 נכס ממתווך</div><Inp label="שם מתווך (פנימי)" val={bagent} set={setBagent} mb={10} icon="🤝"/><Inp label="כתובת *" ph="רחוב 10" val={ba} set={setBa} mb={10}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="עיר" val={bc} set={setBc} mb={10}/><Inp label="מחיר" val={bprice} set={setBprice} mb={10}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><Inp label="חדרים" val={br2} set={setBr2} mb={10}/><Inp label="מ״ר" val={bs} set={setBs} mb={10}/><Inp label="קומה" val={bf} set={setBf} mb={10}/></div><Inp label="טלפון" val={bp} set={setBp} mb={10}/><Inp label="הערות" val={bnotes} set={setBnotes} rows={2} mb={14}/><Inp label="קישור סרטון" ph="https://..." val={bvid} set={setBvid} mb={14} icon="🎬"/><div style={{marginBottom:18}}><Lbl t="תמונות" icon="📷"/><ImgUp images={bimgs} onAdd={img=>setBimgs(p=>[...p,...(Array.isArray(img)?img:[img])])} onRemove={id=>setBimgs(p=>p.filter(i=>i.id!==id))}/></div><div style={{display:"flex",gap:10}}><Btn full ch="שמור" onClick={addProp} dis={!ba&&!bn} c={TE} icon="💾"/><Btn ghost ch="ביטול" onClick={()=>setMode("list")}/></div></div></div>}
@@ -1250,6 +1323,173 @@ const IB=[
 {id:119,name:"מרי",phone:"0505929790",grade:"A",budget:"",notes:"יד 2 פישינג. באה השבוע לסיור",sentProperties:[],actions:[],archived:false,logs:[{text:"נוספה",time:"11/04/26"}]},
 {id:120,name:"עוז אלמקייס",phone:"0507755962",grade:"A",budget:"",notes:"יד 2, שכונת הפארק. מחפש 4 חדרים עם האבא",sentProperties:[],actions:[],archived:false,logs:[{text:"נוספה",time:"11/04/26"}]},
 ];
+
+function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
+  const today=new Date().toISOString().slice(0,10);
+  const propIdStr=String(prop.id);
+  const storageKey="fb_posted_"+propIdStr+"_"+today;
+  const[posted,setPosted]=useState(()=>lv(storageKey,[]));
+  const[adding,setAdding]=useState(false);
+  const[gName,setGName]=useState("");const[gUrl,setGUrl]=useState("");const[gCat,setGCat]=useState("investor");
+
+  const customGroups=(fbGroups||[]).map(g=>({...g,id:g._docId||("custom_"+(g._docId||"")),custom:true}));
+  const allInvestor=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="investor"),...customGroups.filter(g=>g.category==="investor")];
+  const allLocal=[...FB_GROUPS_BUILTIN.filter(g=>g.category==="local"),...customGroups.filter(g=>g.category==="local")];
+
+  const investorMsg=buildInvestorCaption(prop);
+  const localMsg=buildLocalCaption(prop);
+  const images=(prop.images||[]).filter(i=>i.type!=="video");
+
+  function markPosted(ids){
+    const set=new Set([...posted,...ids]);
+    const arr=Array.from(set);
+    setPosted(arr);sv(storageKey,arr);
+  }
+
+  async function copyAndOpen(group){
+    const isAlready=posted.includes(group.id);
+    if(isAlready&&!confirm("כבר פורסם היום בקבוצה זו. לפרסם שוב?"))return;
+    const text=group.category==="investor"?investorMsg:localMsg;
+    try{await navigator.clipboard.writeText(text)}catch(e){}
+    window.open(group.url,"_blank");
+    if(!isAlready)markPosted([group.id]);
+    toast("📋 הטקסט הועתק! הדביקו בקבוצה");
+  }
+
+  async function broadcastCategory(category){
+    const groups=category==="investor"?allInvestor:allLocal;
+    if(groups.length===0){toast("אין קבוצות");return}
+    if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
+    const text=category==="investor"?investorMsg:localMsg;
+    try{await navigator.clipboard.writeText(text)}catch(e){}
+    groups.forEach((g,i)=>setTimeout(()=>{try{window.open(g.url,"_blank")}catch(e){}},i*400));
+    markPosted(groups.map(g=>g.id));
+    toast("📋 הטקסט הועתק! הקבוצות נפתחות...");
+  }
+
+  async function downloadZip(){
+    if(images.length===0){toast("אין תמונות");return}
+    if(!window.JSZip){toast("⚠️ JSZip עוד לא נטען");return}
+    toast("⏳ מכין ZIP מ-"+images.length+" תמונות...");
+    try{
+      const zip=new window.JSZip();
+      for(let i=0;i<images.length;i++){
+        try{
+          const r=await fetch(images[i].url);
+          const blob=await r.blob();
+          const ext=(blob.type.split("/")[1]||"jpg").split(";")[0];
+          zip.file("image_"+(i+1)+"."+ext,blob);
+        }catch(e){console.error(e)}
+      }
+      const blob=await zip.generateAsync({type:"blob"});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download=((prop.address||prop.name||"property").replace(/[^\w\u0590-\u05FF]+/g,"_"))+"_images.zip";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+      toast("✅ ה-ZIP הורד");
+    }catch(e){console.error(e);toast("❌ "+e.message)}
+  }
+
+  async function shareImages(){
+    if(images.length===0){toast("אין תמונות");return}
+    if(!navigator.share){toast("⚠️ Web Share לא נתמך בדפדפן זה");return}
+    try{
+      toast("⏳ מכין תמונות...");
+      const files=[];
+      for(let i=0;i<images.length;i++){
+        const r=await fetch(images[i].url);
+        const blob=await r.blob();
+        const ext=(blob.type.split("/")[1]||"jpg").split(";")[0];
+        files.push(new File([blob],"image_"+(i+1)+"."+ext,{type:blob.type||"image/jpeg"}));
+      }
+      const shareData={files,title:prop.address||"נכס",text:investorMsg};
+      if(navigator.canShare&&!navigator.canShare(shareData)){toast("⚠️ הדפדפן לא תומך בשיתוף קבצים — נסה הורד");return}
+      await navigator.share(shareData);
+    }catch(e){
+      if(e.name!=="AbortError"){console.error(e);toast("❌ "+e.message)}
+    }
+  }
+
+  async function copyImageLinks(){
+    if(images.length===0){toast("אין תמונות");return}
+    const links=images.map(i=>i.url).join("\n");
+    try{await navigator.clipboard.writeText(links);toast("📋 "+images.length+" קישורים הועתקו")}
+    catch(e){toast("❌ "+e.message)}
+  }
+
+  function saveCustomGroup(){
+    if(!gName.trim()||!gUrl.trim()){toast("⚠️ שם ו-URL נדרשים");return}
+    addFbGroup({name:gName.trim(),url:gUrl.trim(),category:gCat,fbGroupId:""});
+    setGName("");setGUrl("");setGCat("investor");setAdding(false);
+    toast("✅ קבוצה נוספה");
+  }
+
+  function deleteCustomGroup(g){
+    if(!confirm("למחוק את הקבוצה?"))return;
+    if(g._docId)delFbGroup(g._docId);
+  }
+
+  const investorPosted=allInvestor.filter(g=>posted.includes(g.id)).length;
+  const localPosted=allLocal.filter(g=>posted.includes(g.id)).length;
+
+  function GroupBtn({g}){
+    const isPosted=posted.includes(g.id);
+    return <div style={{display:"flex",gap:6,alignItems:"stretch",marginBottom:8}}>
+      <button onClick={()=>copyAndOpen(g)} style={{flex:1,background:isPosted?"rgba(126,201,126,0.12)":"rgba(255,255,255,0.04)",border:"1px solid "+(isPosted?"rgba(126,201,126,0.45)":"rgba(255,255,255,0.1)"),borderRadius:12,padding:"12px 14px",color:isPosted?"#7ec97e":"#ede8f5",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"right"}}>
+        <span>{g.name}</span>
+        <span style={{fontSize:16}}>{isPosted?"✓":"📋"}</span>
+      </button>
+      {g.custom&&<button onClick={()=>deleteCustomGroup(g)} title="מחק" style={{background:"rgba(201,126,126,0.12)",border:"1px solid rgba(201,126,126,0.3)",borderRadius:12,padding:"0 12px",color:RE,cursor:"pointer",fontSize:16}}>🗑</button>}
+    </div>;
+  }
+
+  return <Modal title={"📢 מרכז הפצה — "+(prop.address||prop.name||"")} color={PU} onClose={onClose}>
+    {/* Image actions */}
+    {images.length>0&&<div style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:14,padding:14,marginBottom:14}}>
+      <Lbl t={"תמונות ("+images.length+")"} icon="📷"/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn sm ch="הורד ZIP" c={G} onClick={downloadZip} icon="📦"/>
+        <Btn sm ch="שתף" c={GR} onClick={shareImages} icon="📤"/>
+        <Btn sm ch="קישורים" c={BL} ghost onClick={copyImageLinks} icon="🔗"/>
+      </div>
+    </div>}
+
+    {/* Investor section */}
+    <div style={{marginBottom:18}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{color:OR,fontSize:14,fontWeight:800}}>🔥 קבוצות משקיעים</div>
+        <div style={{color:"#777",fontSize:11}}>פורסם ב-{investorPosted} מתוך {allInvestor.length}</div>
+      </div>
+      <Btn sm full ch={"📤 הפצה לכל "+allInvestor.length+" קבוצות"} c={OR} onClick={()=>broadcastCategory("investor")}/>
+      <div style={{height:8}}/>
+      {allInvestor.map(g=><GroupBtn key={g.id} g={g}/>)}
+    </div>
+
+    {/* Local section */}
+    <div style={{marginBottom:18}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{color:TE,fontSize:14,fontWeight:800}}>🏘️ קבוצות מקומיות</div>
+        <div style={{color:"#777",fontSize:11}}>פורסם ב-{localPosted} מתוך {allLocal.length}</div>
+      </div>
+      <Btn sm full ch={"📤 הפצה לכל "+allLocal.length+" קבוצות"} c={TE} onClick={()=>broadcastCategory("local")}/>
+      <div style={{height:8}}/>
+      {allLocal.map(g=><GroupBtn key={g.id} g={g}/>)}
+    </div>
+
+    {/* Add group */}
+    {!adding?<Btn sm full ghost ch="➕ הוסף קבוצה" c={G} onClick={()=>setAdding(true)}/>:<div style={{...S.cg}}>
+      <Lbl t="קבוצה חדשה" icon="➕"/>
+      <Inp label="שם הקבוצה" val={gName} set={setGName} mb={10}/>
+      <Inp label="קישור (URL)" val={gUrl} set={setGUrl} ph="https://www.facebook.com/groups/..." mb={10}/>
+      <Sel label="קטגוריה" val={gCat} set={setGCat} opts={[{v:"investor",l:"משקיעים"},{v:"local",l:"מקומי"}]} mb={12}/>
+      <div style={{display:"flex",gap:8}}>
+        <Btn sm ch="שמור" c={GR} onClick={saveCustomGroup}/>
+        <Btn sm ghost ch="ביטול" c={"#888"} onClick={()=>{setAdding(false);setGName("");setGUrl("")}}/>
+      </div>
+    </div>}
+  </Modal>;
+}
 
 function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
   const[mode,setMode]=useState("list");
@@ -1475,6 +1715,16 @@ function App(){
   const[hotProps,setHotProps]=useState(()=>lv("hotProps",[]));
   const[prospects,_setProspects]=useState([]);
   const[agentsContacts,_setAgentsContacts]=useState([]);
+  const[fbGroups,setFbGroups]=useState([]);
+
+  function addFbGroup(g){
+    try{db.collection("fb_groups").add({...g,created:new Date().toISOString()})}
+    catch(e){console.error("fb_groups add err",e)}
+  }
+  function delFbGroup(docId){
+    try{db.collection("fb_groups").doc(docId).delete()}
+    catch(e){console.error("fb_groups del err",e)}
+  }
 
   function fsWrite(name,items){try{const size=JSON.stringify(items).length;if(size>900000){toast("⚠️ יותר מדי תמונות — מחק כמה");return}db.collection("data").doc(name).set({items})}catch(e){console.error("Firestore write error:",e)}}
   function setBuyers(v){_setBuyers(v);sv("buyers",v);fsWrite("buyers",v)}
@@ -1506,6 +1756,10 @@ function App(){
         },e=>console.error("Firestore sync error:",name,e));
         unsubs.push(unsub);
       });
+      const fbUnsub=db.collection("fb_groups").onSnapshot(snap=>{
+        const arr=[];snap.forEach(d=>arr.push({_docId:d.id,...d.data()}));setFbGroups(arr);
+      },e=>console.error("fb_groups sync err",e));
+      unsubs.push(fbUnsub);
       setLoaded(true);
     })();
     return()=>unsubs.forEach(u=>u());
@@ -1524,8 +1778,8 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts}/>}
-      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
+      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
