@@ -457,6 +457,30 @@ const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c",RE="#c97e7
 const PX="np7_";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
+
+// Cleanup posted-group marks. Each day uses a new storage key suffixed with
+// YYYY-MM-DD, so a new day implicitly starts with an empty list — but old
+// keys would otherwise accumulate forever. On every page load we drop any
+// np7_fb_posted_* key whose suffix isn't today. A one-shot flag also forces
+// a full wipe (including today's marks) the first time this code ships, so
+// stale data from before this change is cleared immediately.
+(function cleanupPostedMarks(){
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const postedPrefix=PX+"fb_posted_";
+    const wipeFlagKey=PX+"fb_wipe_v1";
+    const fullWipe=!localStorage.getItem(wipeFlagKey);
+    const toRemove=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(!k||!k.startsWith(postedPrefix))continue;
+      if(fullWipe||!k.endsWith("_"+today))toRemove.push(k);
+    }
+    toRemove.forEach(k=>localStorage.removeItem(k));
+    if(fullWipe)localStorage.setItem(wipeFlagKey,"1");
+    if(toRemove.length)console.log("[cleanupPostedMarks] removed "+toRemove.length+" entries"+(fullWipe?" (initial full wipe)":""));
+  }catch(e){console.warn("[cleanupPostedMarks] failed:",e)}
+})();
 let _tt;function toast(m,dur){const o=document.querySelector('.toast');if(o)o.remove();clearTimeout(_tt);const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);_tt=setTimeout(()=>e.remove(),dur||2500)}
 
 function getKey(){return localStorage.getItem(PX+"claude_key")||""}
