@@ -374,6 +374,20 @@ function buildInvestorCaption(prop){
   return msg;
 }
 
+const FB_SIGNATURE="---\n"+
+  "📞 חיים בן סימון 054-474-0691\n"+
+  "💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n"+
+  "🏠 RE/MAX באר שבע\n\n"+
+  "⚠️ זמין בווטסאפ או בשיחת טלפון בלבד, לא בהודעות פייסבוק";
+
+function ensureFbSignature(text){
+  if(typeof text!=="string")return FB_SIGNATURE;
+  // If the unique wa.me link is already present, leave the text alone.
+  if(/wa\.me\/972544740691/.test(text))return text;
+  // Strip trailing whitespace and append signature with a blank line separator.
+  return text.replace(/\s+$/,"")+"\n\n"+FB_SIGNATURE;
+}
+
 function buildFacebookCaption(prop){
   const city=prop.city||"באר שבע";
   const addr=prop.address||prop.name||"";
@@ -388,11 +402,7 @@ function buildFacebookCaption(prop){
   if(size)msg+="📐 "+size+"\n";
   if(price)msg+="💰 "+price+"\n";
   if(prop.notes)msg+="\n📝 "+prop.notes+"\n";
-  msg+="\n---\n";
-  msg+="📞 חיים בן סימון 054-474-0691\n";
-  msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
-  msg+="🏠 RE/MAX באר שבע\n\n";
-  msg+="⚠️ זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
+  msg+="\n"+FB_SIGNATURE;
   return msg;
 }
 
@@ -1471,7 +1481,8 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
   const allGroups=[...allInvestor,...allLocal];
 
   function sourceText(){
-    return (prop.savedAds&&prop.savedAds.facebook&&prop.savedAds.facebook.text)||buildFacebookCaption(prop);
+    const saved=prop.savedAds&&prop.savedAds.facebook&&prop.savedAds.facebook.text;
+    return ensureFbSignature(saved||buildFacebookCaption(prop));
   }
   const[shareText,setShareText]=useState(sourceText);
   const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
