@@ -16,6 +16,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px;line-height:1.5;overscroll-behavior:none}
@@ -1743,30 +1744,30 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
 
   async function downloadImages(){
     if(images.length===0){toast("אין תמונות");return}
+    if(!window.JSZip){toast("⚠️ JSZip עוד לא נטען");return}
     const baseName=(prop.address||prop.name||"property").replace(/[^\w\u0590-\u05FF]+/g,"_");
-    let okCount=0;
-    for(let i=0;i<images.length;i++){
-      toast("📥 מוריד תמונה "+(i+1)+" מתוך "+images.length+"...");
-      try{
-        const r=await fetch(images[i].url);
-        const blob=await r.blob();
-        const ext=((blob.type.split("/")[1]||"jpg").split(";")[0])||"jpg";
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement("a");
-        a.href=url;
-        a.download=baseName+"_"+(i+1)+"."+ext;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),2000);
-        okCount++;
-      }catch(e){
-        console.error("downloadImages",e);
-        toast("⚠️ תמונה "+(i+1)+" נכשלה");
+    toast("⏳ מכין ZIP מ-"+images.length+" תמונות...");
+    try{
+      const zip=new window.JSZip();
+      let okCount=0;
+      for(let i=0;i<images.length;i++){
+        try{
+          const r=await fetch(images[i].url);
+          const blob=await r.blob();
+          const ext=((blob.type.split("/")[1]||"jpg").split(";")[0])||"jpg";
+          zip.file(baseName+"_"+(i+1)+"."+ext,blob);
+          okCount++;
+        }catch(e){console.error("downloadImages item",i,e)}
       }
-      if(i<images.length-1)await new Promise(res=>setTimeout(res,500));
-    }
-    toast("✅ הורדו "+okCount+" מתוך "+images.length+" תמונות");
+      if(okCount===0){toast("❌ לא ניתן היה להוריד אף תמונה");return}
+      const zipBlob=await zip.generateAsync({type:"blob"});
+      const url=URL.createObjectURL(zipBlob);
+      const a=document.createElement("a");
+      a.href=url;a.download=baseName+"_images.zip";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+      toast("✅ ה-ZIP הורד ("+okCount+" תמונות)");
+    }catch(e){console.error(e);toast("❌ "+e.message)}
   }
 
   async function shareTextOnly(){
@@ -1780,7 +1781,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
 
   async function shareImages(){
     if(images.length===0){toast("אין תמונות");return}
-    if(!navigator.share){toast("⚠️ Web Share לא נתמך בדפדפן זה");return}
+    if(!navigator.share){toast("📱 שיתוף תמונות זמין רק מהטלפון");return}
     try{
       toast("⏳ מכין תמונות...");
       const files=[];
@@ -1791,7 +1792,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         files.push(new File([blob],"image_"+(i+1)+"."+ext,{type:blob.type||"image/jpeg"}));
       }
       const shareData={files,title:prop.address||"נכס",text:shareText};
-      if(navigator.canShare&&!navigator.canShare(shareData)){toast("⚠️ הדפדפן לא תומך בשיתוף קבצים — נסה הורד");return}
+      if(navigator.canShare&&!navigator.canShare(shareData)){toast("📱 שיתוף תמונות זמין רק מהטלפון");return}
       await navigator.share(shareData);
     }catch(e){
       if(e.name!=="AbortError"){console.error(e);toast("❌ "+e.message)}
@@ -1944,8 +1945,8 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
       <Lbl t={"תמונות ("+images.length+")"} icon="📷"/>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         <Btn sm ch="שתף בלי תמונות" c={GR} onClick={shareTextOnly} icon="📤"/>
-        <Btn sm ch="שתף עם תמונות" c={GR} ghost onClick={shareImages} icon="🖼"/>
-        <Btn sm ch="הורד תמונות" c={G} ghost onClick={downloadImages} icon="📥"/>
+        <Btn sm ch="שתף תמונות" c={GR} ghost onClick={shareImages} icon="🖼"/>
+        <Btn sm ch="הורד תמונות" c={G} ghost onClick={downloadImages} icon="📦"/>
         <Btn sm ch="קישורים" c={BL} ghost onClick={copyImageLinks} icon="🔗"/>
       </div>
     </div>}
