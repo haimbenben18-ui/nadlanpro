@@ -116,10 +116,6 @@ function buildCaption(prop,buyerName){
   if(floor)msg+="🏢 "+floor+"\n";
   if(price)msg+="\n💰 *"+price+"*\n";
   if(notes)msg+="\n"+notes+"\n";
-  msg+="\n━━━━━━━━━━\n";
-  msg+="📞 *חיים בן סימון*\n";
-  msg+="🏆 RE/MAX באר שבע\n";
-  msg+="📱 054-4740691";
   return msg;
 }
 
@@ -146,10 +142,7 @@ function buildMultiCaption(prop,buyerName,isFirst,totalCount,currentIndex){
   if(price)msg+="\n💰 *"+price+"*\n";
   if(notes)msg+="\n"+notes+"\n";
   if(currentIndex===totalCount-1){
-    msg+="\n━━━━━━━━━━\n";
-    msg+="📞 *חיים בן סימון*\n";
-    msg+="🏆 RE/MAX באר שבע\n";
-    msg+="📱 054-4740691\n\n";
+    msg+="\n";
     if(totalCount>1){
       msg+="איזו מהדירות הכי מעניינת אותך? 😊";
     }else{
@@ -215,7 +208,6 @@ function buildAgentCaption(prop){
   if(size)parts.push("📐 "+size);
   if(parts.length)msg+=parts.join(" | ")+"\n";
   if(price)msg+="💰 "+price+"\n";
-  msg+="📞 חיים 0544740691";
   return msg;
 }
 
@@ -618,7 +610,7 @@ function Dashboard({buyers,setBuyers,sellers,tasks,hotProps,setHotProps,brokerPr
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
                 {b.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+b.phone}/>}
-                {b.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(b.phone,"שלום "+b.name+" 😊\n\nחיים בן סימון מרימקס.\nבהמשך לדירות ששלחתי, רציתי לשמוע מה אתה חושב?\n\n📞 חיים | 054-4740691")}/>}
+                {b.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(b.phone,"שלום "+b.name+" 😊\n\nבהמשך לדירות ששלחתי, רציתי לשמוע מה אתה חושב?")}/>}
               </div>
               <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
                 {STATUSES.filter(x=>x.k!==st.k).map(x=><button key={x.k} onClick={()=>setStatus(b.id,x.k)} style={{background:"transparent",border:"1px solid "+x.c+"55",borderRadius:10,padding:"5px 10px",color:x.c,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>→ {x.i} {x.l}</button>)}
@@ -634,7 +626,7 @@ function Dashboard({buyers,setBuyers,sellers,tasks,hotProps,setHotProps,brokerPr
       <div style={{fontWeight:700,color:OR,marginBottom:12,fontSize:16}}>⚠️ בלעדיויות ({expiring.length})</div>
       {expiring.map(s=>{const days=daysTo(s.exclusiveEnd);return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
         <div><div style={{fontWeight:600,color:"#ede8f5",fontSize:15}}>{s.name}</div><div style={{color:"#777",fontSize:13}}>{s.address}</div></div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}><Tag c={days<=7?RE:OR} ch={days===0?"היום!":days+" ימים"}/>{s.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(s.phone,"שלום "+s.name+", חיים בן סימון מרימקס. רציתי לעדכן לגבי הבלעדיות.")}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><Tag c={days<=7?RE:OR} ch={days===0?"היום!":days+" ימים"}/>{s.phone&&<Btn sm ch="💬" c={GR} onClick={()=>openWA(s.phone,"שלום "+s.name+", רציתי לעדכן לגבי הבלעדיות.")}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}</div>
       </div>})}
     </div>}
   </div>
@@ -704,7 +696,7 @@ function Recruit({prospects,setProspects}){
   const[viewP,setViewP]=useState(null);
   const[mode,setMode]=useState("send"); // send | list
 
-  const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX באר שבע 13 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX | באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX | 13 שנות ניסיון"];
+  const templates=["שלום 👋\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞","שלום 👋\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.","שלום 👋\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות."];
 
   useEffect(()=>{setMsg(templates[selMsg])},[selMsg]);
 
@@ -910,9 +902,9 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
-      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
-      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
-      "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
+      "שלום "+(buyerName||"")+" 😊\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים",
+      "שלום "+(buyerName||"")+" 👋\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?",
+      "היי "+(buyerName||"")+" 😊\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור"
     ];
     return tpls[(variant||0)%tpls.length];
   }
@@ -969,12 +961,11 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       "- כתוב רק את שם הרחוב, בלי מספר בית\n"+
       "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
       "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
-      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
-      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n";
     const prompts={
-      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
+      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋\nאל תכלול חתימה, טלפון, קישורים או שם המתווך.",
       yad2:basePrompt+"\nכתוב מודעת יד2 מקצועית עם כותרת קצרה בשורה ראשונה, תיאור מפתה, פרטים טכניים, ו-CTA. עד 150 מילה.",
-      facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
+      facebook:basePrompt+"- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n"+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
       instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
       tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
     };
@@ -1206,9 +1197,9 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
-      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
-      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
-      "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
+      "שלום "+(buyerName||"")+" 😊\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים",
+      "שלום "+(buyerName||"")+" 👋\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?",
+      "היי "+(buyerName||"")+" 😊\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור"
     ];
     return tpls[(variant||0)%tpls.length];
   }
@@ -1234,11 +1225,10 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       "- כתוב רק את שם הרחוב, בלי מספר בית\n"+
       "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
       "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
-      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
-      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+      "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n";
     const prompts={
-      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
-      facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
+      whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋\nאל תכלול חתימה, טלפון, קישורים או שם המתווך.",
+      facebook:basePrompt+"- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n"+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
       instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
       tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
     };
@@ -1346,7 +1336,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
 
 // ━━━ WEEKLY REPORT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function WeeklyReport({sellers}){
-  const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";
+  const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nדיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!";
   const[template,setTemplate]=useState(lv("report_tpl",DEF));
   const[sel,setSel]=useState(null);const[preview,setPreview]=useState("");const[loading,setLoading]=useState(false);const[views,setViews]=useState("");const[sending,setSending]=useState(false);
   async function sendDirect(){
@@ -1357,7 +1347,7 @@ function WeeklyReport({sellers}){
     setSending(false);
   }
   function genPrev(){if(!sel)return;const s=sel;setPreview(template.replace("{כתובת}",s.address||"").replace("{שם}",s.name||"").replace("{מחיר}",s.price?Number(s.price).toLocaleString():"").replace(/{מספר}/g,Math.floor(Math.random()*5+2)).replace("{צפיות}",views||"0").replace("{המלצה}","להמשיך שיווק אגרסיבי בכל הפלטפורמות"))}
-  async function aiGen(){if(!sel)return;setLoading(true);try{const txt=await aiCall("כתוב דיווח שבועי מקצועי וחם של חיים בן סימון מרימקס לבעל נכס "+sel.name+". נכס: "+sel.address+", "+sel.city+", "+(sel.rooms||"?")+" חד, "+sel.price+"₪. פורסם בפייסבוק טיקטוק אינסטגרם ויד2. "+views+" צפיות. כלול מצב שיווקי, פניות, המלצה. ללא תאריך בלעדיות. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}
+  async function aiGen(){if(!sel)return;setLoading(true);try{const txt=await aiCall("כתוב דיווח שבועי מקצועי וחם לבעל נכס "+sel.name+". נכס: "+sel.address+", "+sel.city+", "+(sel.rooms||"?")+" חד, "+sel.price+"₪. פורסם בפייסבוק טיקטוק אינסטגרם ויד2. "+views+" צפיות. כלול מצב שיווקי, פניות, המלצה. ללא תאריך בלעדיות. אל תכלול חתימה, טלפון, שם מתווך או קישורים. עד 12 שורות.",500);setPreview(txt)}catch(e){}setLoading(false)}
   return <div style={{padding:S.pg}} className="fade">
     <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>📊 דיווח שבועי</div>
     <div style={{color:"#777",fontSize:14,marginBottom:18}}>ערוך תבנית ושלח בלחיצה</div>
