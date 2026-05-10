@@ -837,12 +837,29 @@ function InlineMsgBox({phone,name,onSent}){
 }
 
 // ━━━ ADD TASK MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildGCalUrl(clientType,clientName,clientPhone,desc,date,time){
+  const typeLabel=clientType==="seller"?"מוכר":"קונה";
+  const title=encodeURIComponent(typeLabel+" "+clientName+" — "+desc);
+  const details=encodeURIComponent((clientPhone?"טלפון: "+clientPhone+"\n":"")+desc);
+  const[y,m,d]=date.split("-");
+  const[h,mn]=(time||"10:00").split(":");
+  const pad=n=>String(n).padStart(2,"0");
+  const startDt=y+m+d+"T"+pad(h)+pad(mn)+"00";
+  const endH=Math.min(parseInt(h)+1,23);
+  const endDt=y+m+d+"T"+pad(endH)+pad(mn)+"00";
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+title+"&dates="+startDt+"/"+endDt+"&details="+details;
+}
+
 function AddTaskModal({client,onClose,onAdd}){
   const[clientType,setClientType]=useState(client.type||"buyer");
   const[desc,setDesc]=useState("");
   const[date,setDate]=useState(new Date().toISOString().split("T")[0]);
   const[taskTime,setTaskTime]=useState("10:00");
   const[taskCat,setTaskCat]=useState("call");
+  function openCal(){
+    if(!desc.trim())return;
+    window.open(buildGCalUrl(clientType,client.name,client.phone||"",desc,date,taskTime),"_blank");
+  }
   function create(){
     if(!desc.trim())return;
     const task={
@@ -858,6 +875,7 @@ function AddTaskModal({client,onClose,onAdd}){
     };
     onAdd&&onAdd(task);
     toast("✅ משימה נוצרה — מוצגת בלשונית יומי");
+    if(confirm("להוסיף ליומן Google?"))window.open(buildGCalUrl(clientType,client.name,client.phone||"",desc,date,taskTime),"_blank");
     onClose();
   }
   return <Modal title={"➕ הוסף משימה — "+client.name} color={PU} onClose={onClose}>
@@ -881,8 +899,11 @@ function AddTaskModal({client,onClose,onAdd}){
     <Sel label="סוג פעולה" val={taskCat} set={setTaskCat} opts={[
       {v:"call",l:"📞 שיחה"},{v:"tour",l:"🏠 סיור"},{v:"meeting",l:"🤝 פגישה"},
       {v:"send",l:"📤 שליחה"},{v:"remind",l:"⏰ תזכורת"}
-    ]} mb={18}/>
-    <Btn full ch="צור משימה" onClick={create} dis={!desc.trim()} c={PU} icon="➕"/>
+    ]} mb={14}/>
+    <div style={{display:"flex",gap:8,marginBottom:0}}>
+      <Btn full ch="צור משימה" onClick={create} dis={!desc.trim()} c={PU} icon="➕"/>
+      <Btn full ch="📅 הוסף ליומן" onClick={openCal} dis={!desc.trim()} c={BL}/>
+    </div>
   </Modal>
 }
 
