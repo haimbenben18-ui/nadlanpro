@@ -516,7 +516,7 @@ function Lbl({t,icon}){return <div style={{color:G,fontSize:12,fontWeight:700,ma
 function Inp({label,ph,val,set,type,rows,mb,icon}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label} icon={icon}/>}{rows?<textarea placeholder={ph} value={val} onChange={e=>set(e.target.value)} rows={rows} style={{...S.inp,resize:"none",lineHeight:1.65}}/>:<input type={type||"text"} placeholder={ph} value={val} onChange={e=>set(e.target.value)} style={S.inp}/>}</div>}
 function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label}/>}<select value={val} onChange={e=>set(e.target.value)} style={{...S.inp,background:"#0e0d14"}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>}
 function Empty({icon,text}){return <div style={{...S.card,textAlign:"center",color:"#444",padding:40}}><div style={{fontSize:44,marginBottom:12,opacity:.7}}>{icon}</div><div style={{color:"#555"}}>{text}</div></div>}
-function Modal({children,onClose,title,color}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"#13111c",borderRadius:"22px 22px 18px 18px",padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(255,255,255,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:800,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
+function Modal({children,onClose,title,color,center}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:500,display:"flex",alignItems:center?"center":"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"#13111c",borderRadius:22,padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(255,255,255,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:800,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
 
 function openWA(phone,msg){
   const p=(phone||"").replace(/^0/,"972").replace(/[-\s]/g,"");
@@ -878,7 +878,7 @@ function AddTaskModal({client,onClose,onAdd}){
     if(confirm("להוסיף ליומן Google?"))window.open(buildGCalUrl(clientType,client.name,client.phone||"",desc,date,taskTime),"_blank");
     onClose();
   }
-  return <Modal title={"➕ הוסף משימה — "+client.name} color={PU} onClose={onClose}>
+  return <Modal title={"➕ הוסף משימה — "+client.name} color={PU} onClose={onClose} center>
     <div style={{marginBottom:14}}>
       <Lbl t="סוג לקוח"/>
       <div style={{display:"flex",gap:8}}>
