@@ -975,8 +975,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   const sActs=["שיחה ראשונית","פגישה בנכס","הסכם שיווק","צולמו תמונות","פורסם","הצעה התקבלה","עסקה נסגרה"];
   const bStatuses=["לפני סיור","נשלחו דירות","יצא לסיור","נתן הצעת מחיר","מתלבט","לשלוח דירות נוספות"];
 
-  const fS=sellers.filter(s=>!s.archived&&(!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase())));
-  const fB=buyers.filter(b=>!b.archived&&(!search||(b.name+(b.phone||"")).toLowerCase().includes(search.toLowerCase())));
+  const fS=sellers.filter(s=>!s.archived&&(!search||(s.name+s.address+s.phone).toLowerCase().includes(search.toLowerCase()))).sort((a,b)=>(b.id||0)-(a.id||0));
+  const fB=buyers.filter(b=>!b.archived&&(!search||(b.name+(b.phone||"")).toLowerCase().includes(search.toLowerCase()))).sort((a,b)=>(b.id||0)-(a.id||0));
 
   // VIEW SELLER
   if(mode==="view"&&sel&&tab==="sellers"){
