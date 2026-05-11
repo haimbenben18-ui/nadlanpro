@@ -2313,6 +2313,17 @@ function App(){
           await db.collection("data").doc("prospects").set({items:[]});
           await db.collection("data").doc("agentsContacts").set({items:[]});
           await db.collection("data").doc("_init").set({done:true,time:new Date().toISOString()});
+        }else{
+          const sellersDoc=await db.collection("data").doc("sellers").get();
+          if(!sellersDoc.exists||!(sellersDoc.data()&&sellersDoc.data().items&&sellersDoc.data().items.length)){
+            await db.collection("data").doc("sellers").set({items:IS});
+            console.log("Restored sellers from seed");
+          }
+          const buyersDoc=await db.collection("data").doc("buyers").get();
+          if(!buyersDoc.exists||!(buyersDoc.data()&&buyersDoc.data().items&&buyersDoc.data().items.length)){
+            await db.collection("data").doc("buyers").set({items:IB});
+            console.log("Restored buyers from seed");
+          }
         }
       }catch(e){console.error("Firestore init error:",e)}
       const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts]];
