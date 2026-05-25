@@ -458,27 +458,32 @@ const PX="np7_";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
 
-// Cleanup posted-group marks. Each day uses a new storage key suffixed with
-// YYYY-MM-DD, so a new day implicitly starts with an empty list — but old
-// keys would otherwise accumulate forever. On every page load we drop any
-// np7_fb_posted_* key whose suffix isn't today. A one-shot flag also forces
-// a full wipe (including today's marks) the first time this code ships, so
-// stale data from before this change is cleared immediately.
+// Daily reset for posted-group marks.
+// Compares today's date with a saved "last reset date". When they differ,
+// wipes every np7_fb_posted_* key and updates the saved date. A one-shot
+// version flag also forces an immediate full wipe of all posted marks the
+// first time this code ships.
 (function cleanupPostedMarks(){
   try{
     const today=new Date().toISOString().slice(0,10);
     const postedPrefix=PX+"fb_posted_";
-    const wipeFlagKey=PX+"fb_wipe_v1";
-    const fullWipe=!localStorage.getItem(wipeFlagKey);
-    const toRemove=[];
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i);
-      if(!k||!k.startsWith(postedPrefix))continue;
-      if(fullWipe||!k.endsWith("_"+today))toRemove.push(k);
+    const lastResetKey=PX+"fb_last_reset_date";
+    const lastReset=localStorage.getItem(lastResetKey);
+    const wipeFlagKey=PX+"fb_wipe_v2";
+    const forceWipe=!localStorage.getItem(wipeFlagKey);
+    const dayChanged=lastReset!==today;
+    const shouldWipe=forceWipe||dayChanged;
+    if(shouldWipe){
+      const toRemove=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k&&k.startsWith(postedPrefix))toRemove.push(k);
+      }
+      toRemove.forEach(k=>localStorage.removeItem(k));
+      localStorage.setItem(lastResetKey,today);
+      if(forceWipe)localStorage.setItem(wipeFlagKey,"1");
+      if(toRemove.length)console.log("[cleanupPostedMarks] wiped "+toRemove.length+" entries"+(forceWipe?" (one-shot force wipe)":" (day changed: "+lastReset+" → "+today+")"));
     }
-    toRemove.forEach(k=>localStorage.removeItem(k));
-    if(fullWipe)localStorage.setItem(wipeFlagKey,"1");
-    if(toRemove.length)console.log("[cleanupPostedMarks] removed "+toRemove.length+" entries"+(fullWipe?" (initial full wipe)":""));
   }catch(e){console.warn("[cleanupPostedMarks] failed:",e)}
 })();
 let _tt;function toast(m,dur){const o=document.querySelector('.toast');if(o)o.remove();clearTimeout(_tt);const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);_tt=setTimeout(()=>e.remove(),dur||2500)}
@@ -1781,25 +1786,32 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup,onSaveT
     setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   }
 
-  async function startBatch(groups){
+  function startBatch(groups){
     if(groups.length===0){toast("⚠️ אין קבוצות לפתיחה");return}
-    const copied=await copyToClipboard(shareText);
     const g=groups[0];
-    try{window.open(urlOf(g),"_blank")}catch(e){}
+    // CRITICAL: window.open MUST be called synchronously inside the user-gesture
+    // click handler — no await before it, or the browser blocks the popup.
+    const copied=copyToClipboard(shareText);
+    let win=null;
+    try{win=window.open(urlOf(g),"_blank")}catch(e){console.warn("window.open failed:",e)}
     if(!posted.includes(g.id))markPosted([g.id]);
     setOpenProgress({groups,idx:0});
+    if(!win){toast("⚠️ הדפדפן חסם — אפשר חלונות קופצים לאתר זה",4500);return}
     toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה, סגרו טאב, ולחצו 'הבא'":"⚠️ ההעתקה נכשלה — העתק ידנית",3500);
   }
 
-  async function nextBatch(){
+  function nextBatch(){
     if(!openProgress)return;
     const next=openProgress.idx+1;
     if(next>=openProgress.groups.length){toast("✅ הושלם — אין עוד קבוצות");setOpenProgress(null);return}
     const g=openProgress.groups[next];
-    const copied=await copyToClipboard(shareText);
-    try{window.open(urlOf(g),"_blank")}catch(e){}
+    // Synchronous open BEFORE any other work — preserves the user-gesture.
+    const copied=copyToClipboard(shareText);
+    let win=null;
+    try{win=window.open(urlOf(g),"_blank")}catch(e){console.warn("window.open failed:",e)}
     if(!posted.includes(g.id))markPosted([g.id]);
     setOpenProgress({...openProgress,idx:next});
+    if(!win){toast("⚠️ הדפדפן חסם — אפשר חלונות קופצים לאתר זה",4500);return}
     toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה":"⚠️ ההעתקה נכשלה — העתק ידנית",2500);
   }
 
