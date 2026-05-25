@@ -865,7 +865,19 @@ function AddTaskModal({client,onClose,onAdd}){
       date
     };
     onAdd&&onAdd(task);
-    toast("✅ משימה נוצרה — מוצגת בלשונית יומי");
+    toast("✅ משימה נוצרה — נפתח Google Calendar");
+    try{
+      const typeLabel=clientType==="seller"?"מוכר":"קונה";
+      const title=encodeURIComponent(typeLabel+" "+client.name+" — "+desc);
+      const details=encodeURIComponent((client.phone?"טלפון: "+client.phone+"\n":"")+desc);
+      const[y,m,d]=date.split("-");
+      const[h,mn]=(taskTime||"10:00").split(":");
+      const pad=n=>String(n).padStart(2,"0");
+      const startDt=y+m+d+"T"+pad(h)+pad(mn)+"00";
+      const endH=Math.min(parseInt(h)+1,23);
+      const endDt=y+m+d+"T"+pad(endH)+pad(mn)+"00";
+      window.open("https://calendar.google.com/calendar/render?action=TEMPLATE&text="+title+"&dates="+startDt+"/"+endDt+"&details="+details,"_blank");
+    }catch(e){console.warn("calendar open failed",e)}
     onClose();
   }
   return <Modal title={"➕ הוסף משימה — "+client.name} color={PU} onClose={onClose}>
@@ -907,6 +919,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   // send property modal
   const[sendModal,setSendModal]=useState(null);const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");const[galleryOpen,setGalleryOpen]=useState(null);
   const[sendMultiOpen,setSendMultiOpen]=useState(false);const[selectedProps,setSelectedProps]=useState([]);
+  const[editAd,setEditAd]=useState(null); // {platform,text} or null
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
@@ -1087,11 +1100,20 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
             <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:platform==="tiktok"?PU:G} ch={platform}/>
             <span style={{color:"#555",fontSize:11}}>{ad.time}</span>
           </div>
-          <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
-          <div style={{display:"flex",gap:8,marginTop:8}}>
-            <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
-            {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",ad.text)} icon="📱"/>}
-          </div>
+          {editAd&&editAd.platform===platform?<>
+            <textarea value={editAd.text} onChange={e=>setEditAd({...editAd,text:e.target.value})} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:8}}/>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <Btn sm ch="💾 שמור" c={GR} onClick={()=>{const ads={...(sel.savedAds||{})};ads[platform]={text:editAd.text,time:nowStr()};updS(sel.id,"savedAds",ads);setEditAd(null);toast("💾 נשמר")}}/>
+              <Btn sm ghost ch="ביטול" c={"#888"} onClick={()=>setEditAd(null)}/>
+            </div>
+          </>:<>
+            <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
+            <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
+              <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
+              <Btn sm ch="ערוך" c={PU} onClick={()=>setEditAd({platform,text:ad.text})} icon="✏️"/>
+              {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",ad.text)} icon="📱"/>}
+            </div>
+          </>}
         </div>)}
       </div>}
 
@@ -1103,7 +1125,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       </div>
     </div>
     {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=>img.type==='video'?<video key={img.id} src={img.url} controls style={{width:"100%",borderRadius:12,display:"block"}}/>:<img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
-    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
+    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} onSaveText={(txt)=>{const ads={...(sel.savedAds||{})};ads.facebook={text:txt,time:nowStr()};updS(sel.id,"savedAds",ads)}}/>}
   </div>}
 
   // VIEW BUYER
@@ -1203,6 +1225,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
   const[sendBuyer,setSendBuyer]=useState(null);const[sendMsg,setSendMsg]=useState("");const[distOpen,setDistOpen]=useState(false);
+  const[editAd,setEditAd]=useState(null); // {platform,text} or null
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
@@ -1319,15 +1342,25 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
             <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:PU} ch={platform}/>
             <span style={{color:"#555",fontSize:11}}>{ad.time}</span>
           </div>
-          <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
-          <div style={{display:"flex",gap:8,marginTop:8}}>
-            <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
-          </div>
+          {editAd&&editAd.platform===platform?<>
+            <textarea value={editAd.text} onChange={e=>setEditAd({...editAd,text:e.target.value})} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:8}}/>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <Btn sm ch="💾 שמור" c={GR} onClick={()=>{const ads={...(sel.savedAds||{})};ads[platform]={text:editAd.text,time:nowStr()};updProp(sel.id,"savedAds",ads);setEditAd(null);toast("💾 נשמר")}}/>
+              <Btn sm ghost ch="ביטול" c={"#888"} onClick={()=>setEditAd(null)}/>
+            </div>
+          </>:<>
+            <div style={{color:"#bbb",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{ad.text.substring(0,150)}{ad.text.length>150?"...":""}</div>
+            <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
+              <Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(ad.text);toast("📋!")}} icon="📋"/>
+              <Btn sm ch="ערוך" c={PU} onClick={()=>setEditAd({platform,text:ad.text})} icon="✏️"/>
+              {platform==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",ad.text)} icon="📱"/>}
+            </div>
+          </>}
         </div>)}
       </div>}
     </div>
     {galleryOpen&&<div onClick={()=>setGalleryOpen(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:9999,overflowY:"auto",padding:20}}><button onClick={()=>setGalleryOpen(null)} style={{position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.12)",border:"none",color:"#fff",width:44,height:44,borderRadius:"50%",fontSize:24,cursor:"pointer",zIndex:10000}}>×</button><div style={{maxWidth:500,margin:"60px auto 20px",textAlign:"center",color:"#fff",fontSize:15,lineHeight:1.6,fontFamily:"'Heebo',sans-serif",padding:"16px 20px",background:"rgba(201,168,76,0.15)",borderRadius:16,border:"1px solid rgba(201,168,76,0.35)"}}>📸 לחץ לחיצה ארוכה על כל תמונה כדי לשמור לגלריה של הטלפון. אחר כך לחץ על ווטסאפ ותצרף את התמונות להודעה.</div><div style={{maxWidth:500,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}} onClick={e=>e.stopPropagation()}>{galleryOpen.map(img=>img.type==='video'?<video key={img.id} src={img.url} controls style={{width:"100%",borderRadius:12,display:"block"}}/>:<img key={img.id} src={img.url} style={{width:"100%",borderRadius:12,display:"block"}}/>)}</div></div>}
-    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
+    {distOpen&&<DistributionCenter prop={sel} onClose={()=>setDistOpen(false)} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} onSaveText={(txt)=>{const ads={...(sel.savedAds||{})};ads.facebook={text:txt,time:nowStr()};updProp(sel.id,"savedAds",ads)}}/>}
   </div>}
 
   if(mode==="add"){return <div style={{padding:S.pg}} className="fade"><button onClick={()=>setMode("list")} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button><div style={{...S.card,border:"1px solid "+TE+"44"}}><div style={{fontWeight:800,color:TE,fontSize:18,marginBottom:20}}>🤝 נכס ממתווך</div><Inp label="שם מתווך (פנימי)" val={bagent} set={setBagent} mb={10} icon="🤝"/><Inp label="כתובת *" ph="רחוב 10" val={ba} set={setBa} mb={10}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="עיר" val={bc} set={setBc} mb={10}/><Inp label="מחיר" val={bprice} set={setBprice} mb={10}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><Inp label="חדרים" val={br2} set={setBr2} mb={10}/><Inp label="מ״ר" val={bs} set={setBs} mb={10}/><Inp label="קומה" val={bf} set={setBf} mb={10}/></div><Inp label="טלפון" val={bp} set={setBp} mb={10}/><Inp label="הערות" val={bnotes} set={setBnotes} rows={2} mb={14}/><Inp label="קישור סרטון" ph="https://..." val={bvid} set={setBvid} mb={14} icon="🎬"/><div style={{marginBottom:18}}><Lbl t="תמונות" icon="📷"/><ImgUp images={bimgs} onAdd={img=>setBimgs(p=>[...p,...(Array.isArray(img)?img:[img])])} onRemove={id=>setBimgs(p=>p.filter(i=>i.id!==id))}/></div><div style={{display:"flex",gap:10}}><Btn full ch="שמור" onClick={addProp} dis={!ba&&!bn} c={TE} icon="💾"/><Btn ghost ch="ביטול" onClick={()=>setMode("list")}/></div></div></div>}
@@ -1490,7 +1523,7 @@ const IB=[
 {id:120,name:"עוז אלמקייס",phone:"0507755962",grade:"A",budget:"",notes:"יד 2, שכונת הפארק. מחפש 4 חדרים עם האבא",sentProperties:[],actions:[],archived:false,logs:[{text:"נוספה",time:"11/04/26"}]},
 ];
 
-function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
+function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup,onSaveText}){
   const today=new Date().toISOString().slice(0,10);
   const propIdStr=String(prop.id);
   const storageKey="fb_posted_"+propIdStr+"_"+today;
@@ -2014,6 +2047,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup}){
         <Btn sm ghost ch="🔄 שחזר מקור" c={BL} onClick={()=>{setShareText(sourceText());toast("🔄 שוחזר")}}/>
       </div>
       <textarea value={shareText} onChange={e=>setShareText(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7}}/>
+      {onSaveText&&<div style={{marginTop:8}}><Btn sm ch="💾 שמור עריכה" c={GR} onClick={()=>{onSaveText(shareText);toast("💾 נשמר ב-Firebase")}} icon="💾"/></div>}
       {!(prop.savedAds&&prop.savedAds.facebook)&&<div style={{color:"#666",fontSize:11,marginTop:6}}>💡 טיפ: צור פרסום פייסבוק בכרטיסיית הנכס כדי להשתמש בו אוטומטית כאן</div>}
     </div>
 
