@@ -1544,7 +1544,7 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup,onSaveT
   const[shareText,setShareText]=useState(sourceText);
   const[wizard,setWizard]=useState(null); // null or {orderedGroups, idx}
   const[selectedIds,setSelectedIds]=useState([]);
-  const[openProgress,setOpenProgress]=useState(null); // {opened,total} or null
+  const[openProgress,setOpenProgress]=useState(null); // {groups,idx} or null
   const[members,setMembers]=useState(()=>{
     const stored=lv("fb_member_groups_v2",null);
     if(stored===null){
@@ -1781,36 +1781,38 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup,onSaveT
     setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   }
 
-  async function openGroupsBatch(groups){
+  async function startBatch(groups){
     if(groups.length===0){toast("⚠️ אין קבוצות לפתיחה");return}
-    if(!confirm("לפתוח "+groups.length+" קבוצות בטאבים חדשים?"))return;
     const copied=await copyToClipboard(shareText);
-    toast(copied?"📋 הטקסט הועתק! פותח "+groups.length+" קבוצות...":"⚠️ ההעתקה נכשלה — העתק ידנית",3000);
-    setOpenProgress({opened:0,total:groups.length});
-    let cumulative=0;
-    for(let i=0;i<groups.length;i++){
-      const delay=cumulative;
-      const g=groups[i];
-      setTimeout(()=>{
-        try{window.open(urlOf(g),"_blank")}catch(e){}
-        setOpenProgress(p=>p?{opened:p.opened+1,total:p.total}:p);
-      },delay);
-      cumulative+=Math.floor(Math.random()*280)+2500;
-    }
-    markPosted(groups.map(g=>g.id));
-    setTimeout(()=>setOpenProgress(null),cumulative+5000);
+    const g=groups[0];
+    try{window.open(urlOf(g),"_blank")}catch(e){}
+    if(!posted.includes(g.id))markPosted([g.id]);
+    setOpenProgress({groups,idx:0});
+    toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה, סגרו טאב, ולחצו 'הבא'":"⚠️ ההעתקה נכשלה — העתק ידנית",3500);
+  }
+
+  async function nextBatch(){
+    if(!openProgress)return;
+    const next=openProgress.idx+1;
+    if(next>=openProgress.groups.length){toast("✅ הושלם — אין עוד קבוצות");setOpenProgress(null);return}
+    const g=openProgress.groups[next];
+    const copied=await copyToClipboard(shareText);
+    try{window.open(urlOf(g),"_blank")}catch(e){}
+    if(!posted.includes(g.id))markPosted([g.id]);
+    setOpenProgress({...openProgress,idx:next});
+    toast(copied?"📋 הטקסט הועתק! הדביקו בקבוצה":"⚠️ ההעתקה נכשלה — העתק ידנית",2500);
   }
 
   function openAll(){
     const eligible=allGroups.filter(g=>isMember(g)&&!posted.includes(g.id));
     if(eligible.length===0){toast("✅ אין קבוצות שלא פורסם בהן היום");return}
-    openGroupsBatch(eligible);
+    startBatch(eligible);
   }
 
   function openSelected(){
     const eligible=allGroups.filter(g=>selectedIds.includes(g.id)&&isMember(g));
     if(eligible.length===0){toast("⚠️ לא נבחרו קבוצות שאתה חבר בהן");return}
-    openGroupsBatch(eligible);
+    startBatch(eligible);
   }
 
   async function downloadImages(){
@@ -2016,17 +2018,28 @@ function DistributionCenter({prop,onClose,fbGroups,addFbGroup,delFbGroup,onSaveT
   return <Modal title={"📢 מרכז הפצה — "+(prop.address||prop.name||"")} color={PU} onClose={onClose}>
     {/* Tip banner */}
     <div style={{background:"rgba(245,176,107,0.1)",border:"1px solid rgba(245,176,107,0.35)",borderRadius:12,padding:12,marginBottom:14,fontSize:13,color:"#f5b06b",lineHeight:1.6,fontWeight:600}}>
-      💡 טיפ: לחצו "הורד תמונות" קודם, אחר כך "פתח הכל". בכל קבוצה: הדביקו טקסט, צרפו תמונות, פרסמו. Ctrl+W לסגור טאב ולעבור הלאה.
+      💡 טיפ: "הורד תמונות" קודם, אחר כך "פתח הכל". כל לחיצה על "הבא" פותחת קבוצה אחת — הדביקו טקסט, צרפו תמונות, פרסמו, Ctrl+W, ושוב "הבא". כך הדפדפן לא חוסם.
     </div>
 
     {/* Open all / Open selected */}
     <div style={{background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.25)",borderRadius:14,padding:12,marginBottom:14}}>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:openProgress?10:0}}>
-        <Btn sm ch="🚀 פתח את כל הקבוצות" c={PU} onClick={openAll}/>
+      {openProgress?<div>
+        <div style={{textAlign:"center",color:PU,fontSize:15,fontWeight:800,marginBottom:6}}>
+          📂 קבוצה {openProgress.idx+1} מתוך {openProgress.groups.length}
+        </div>
+        <div style={{textAlign:"center",color:"#ede8f5",fontSize:13,marginBottom:10,fontWeight:600,wordBreak:"break-word"}}>
+          {openProgress.groups[openProgress.idx]&&openProgress.groups[openProgress.idx].name}
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <Btn full ch={openProgress.idx+1>=openProgress.groups.length?"✅ סיים":"➡️ הבא — פתח קבוצה הבאה"} c={OR} onClick={nextBatch}/>
+          <Btn sm ghost ch="עצור" c={RE} onClick={()=>{setOpenProgress(null);toast("⏹ נעצר")}}/>
+        </div>
+        <div style={{color:"#888",fontSize:11,textAlign:"center",marginTop:8,lineHeight:1.5}}>💡 הדביקו בקבוצה, סגרו טאב (Ctrl+W), אחר כך "הבא"</div>
+      </div>:<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn sm ch="🚀 פתח הכל" c={PU} onClick={openAll}/>
         <Btn sm ch={"✅ פתח נבחרות ("+selectedIds.length+")"} c={GR} ghost onClick={openSelected} dis={selectedIds.length===0}/>
         {selectedIds.length>0&&<Btn sm ch="נקה בחירה" c={"#888"} ghost onClick={()=>setSelectedIds([])}/>}
-      </div>
-      {openProgress&&<div style={{color:GR,fontSize:13,fontWeight:700,textAlign:"center"}}>📂 נפתחו {openProgress.opened} מתוך {openProgress.total}</div>}
+      </div>}
     </div>
 
     {/* Image actions */}
