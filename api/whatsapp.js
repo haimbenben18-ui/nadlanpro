@@ -40,6 +40,136 @@ async function fbDelete(path) {
   await fetch(`${FIREBASE_URL}/${path}.json`, { method: 'DELETE' });
 }
 
+// ═══ Firestore REST (for agent automation, which the web app stores in Firestore) ═══
+const FIRESTORE_PROJECT = process.env.FIRESTORE_PROJECT || "nadlanpro-5b041";
+const FIRESTORE_KEY     = process.env.FIRESTORE_API_KEY || "AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew";
+function fsDecodeValue(v) {
+  if (!v) return null;
+  if (v.stringValue   !== undefined) return v.stringValue;
+  if (v.integerValue  !== undefined) return parseInt(v.integerValue, 10);
+  if (v.doubleValue   !== undefined) return v.doubleValue;
+  if (v.booleanValue  !== undefined) return v.booleanValue;
+  if (v.nullValue     !== undefined) return null;
+  if (v.timestampValue!== undefined) return v.timestampValue;
+  if (v.arrayValue)   return (v.arrayValue.values || []).map(fsDecodeValue);
+  if (v.mapValue)     return fsDecodeFields(v.mapValue.fields || {});
+  return null;
+}
+function fsDecodeFields(fields) {
+  const o = {};
+  for (const [k, v] of Object.entries(fields || {})) o[k] = fsDecodeValue(v);
+  return o;
+}
+function fsEncodeValue(v) {
+  if (v === null || v === undefined) return { nullValue: null };
+  if (typeof v === "boolean") return { booleanValue: v };
+  if (typeof v === "number")  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+  if (typeof v === "string")  return { stringValue: v };
+  if (Array.isArray(v))       return { arrayValue: { values: v.map(fsEncodeValue) } };
+  if (typeof v === "object")  return { mapValue: { fields: fsEncodeFields(v) } };
+  return { stringValue: String(v) };
+}
+function fsEncodeFields(obj) {
+  const f = {};
+  for (const [k, v] of Object.entries(obj)) f[k] = fsEncodeValue(v);
+  return f;
+}
+async function fsGetDoc(docPath) {
+  const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents/${docPath}?key=${FIRESTORE_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const j = await r.json();
+  return j && j.fields ? fsDecodeFields(j.fields) : null;
+}
+async function fsSetDoc(docPath, obj) {
+  const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents/${docPath}?key=${FIRESTORE_KEY}`;
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: fsEncodeFields(obj) }),
+  });
+  return r.ok;
+}
+
+// ═══ UltraMsg ═══
+const ULTRAMSG_INSTANCE = process.env.ULTRAMSG_INSTANCE || "instance169955";
+const ULTRAMSG_TOKEN    = process.env.ULTRAMSG_TOKEN    || "slhhpfslyuey11fp";
+async function ultraSend(phone, text) {
+  const p = (phone || "").replace(/^0/, "972").replace(/[-\s+]/g, "");
+  if (!p) return { sent: false, reason: "no_phone" };
+  try {
+    const r = await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: ULTRAMSG_TOKEN, to: p, body: text }),
+    });
+    const d = await r.json();
+    return d.sent ? { sent: true } : { sent: false, reason: d.error || "unknown" };
+  } catch (e) {
+    return { sent: false, reason: e.message };
+  }
+}
+
+// ═══ Agent automation — shared helpers ═══
+function israelNow() {
+  const s = new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" });
+  return new Date(s);
+}
+function todayKey() { return israelNow().toISOString().slice(0, 10); }
+function pickCurrentSlot(sendTimes) {
+  const now = israelNow();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  let best = null;
+  for (const t of (sendTimes || ["09:00", "14:00"])) {
+    const [h, m] = t.split(":").map(Number);
+    const tMin = h * 60 + m;
+    if (nowMin >= tMin && nowMin - tMin <= 240) {
+      if (!best || tMin > best.tMin) best = { t, tMin };
+    }
+  }
+  return best ? best.t : null;
+}
+function buildAgentShortMsg(prop) {
+  const city  = prop.city || "באר שבע";
+  const addr  = prop.address || prop.name || "";
+  const rooms = prop.rooms || "";
+  const size  = prop.size ? `${prop.size} מ"ר` : "";
+  const floor = prop.floor || "";
+  const priceN = Number(prop.price);
+  const price = (prop.price && !isNaN(priceN)) ? `${priceN.toLocaleString()} ₪` : "";
+  let m = "דירה למכירה\n";
+  m += `📍 ${addr}${city ? `, ${city}` : ""}\n`;
+  const parts = [];
+  if (rooms) parts.push(`🛏️ ${rooms} חד'`);
+  if (floor) parts.push(`🏢 ק' ${floor}`);
+  if (size)  parts.push(`📐 ${size}`);
+  if (parts.length) m += `${parts.join(" | ")}\n`;
+  if (price) m += `💰 ${price}\n`;
+  m += "📞 חיים 0544740691";
+  return m;
+}
+async function loadAgentAutomationContext() {
+  const auto       = (await fsGetDoc("data/agentAuto"))   || {};
+  const sellersDoc = (await fsGetDoc("data/sellers"))     || {};
+  const brokerDoc  = (await fsGetDoc("data/brokerProps")) || {};
+  const agentsDoc  = (await fsGetDoc("data/agentsContacts")) || {};
+  const config  = (auto.items && typeof auto.items === "object" && !Array.isArray(auto.items)) ? auto.items : {};
+  const sellers = Array.isArray(sellersDoc.items) ? sellersDoc.items : [];
+  const broker  = Array.isArray(brokerDoc.items)  ? brokerDoc.items  : [];
+  const agents  = Array.isArray(agentsDoc.items)  ? agentsDoc.items  : [];
+  const queue   = Array.isArray(config.items) ? config.items : [];
+  const selectedAgents = Array.isArray(config.selectedAgents) ? config.selectedAgents : [];
+  const all = [
+    ...sellers.map(s => ({ ...s, _src: "s" })),
+    ...broker .map(p => ({ ...p, _src: "b" })),
+  ];
+  const props = queue
+    .map(it => all.find(p => p.id === it.propId && p._src === it.propSrc))
+    .filter(Boolean);
+  const targetAgents = agents.filter(a => selectedAgents.includes(a.id) && a.phone);
+  return { config, props, targetAgents };
+}
+
 // ═══ שעות פעילות ושבת/חגים ═══
 function isWorkingHours() {
   const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
@@ -213,6 +343,10 @@ function detectIntent(text) {
   if (/^(סטטוס|מצב|מה קורה)$/.test(t))       return { cmd: 'סטטוס' };
   if (/^(עזרה|עזור|מה אתה יודע|פקודות)$/.test(t)) return { cmd: 'עזרה' };
   if (/^(ביטול|בטל|עזוב|בלי|לא)$/.test(t))   return { cmd: 'ביטול' };
+
+  // Agent-automation approval / skip — explicit human consent only.
+  if (/^(שלח\s+(ל)?מתווכים|אשר\s+שליחה)$/.test(t))   return { cmd: 'send_agents' };
+  if (/^(דלג|דלג\s+היום|skip)$/i.test(t))             return { cmd: 'skip_agents' };
 
   // עברית טבעית — דירה מוכר/מתווך
   // מזהה: [פועל אופציונלי] דיר(ה/ת) מוכר/מתווך [שאר]
@@ -529,6 +663,9 @@ export default async function handler(req, res) {
             '🔛 "הפעל" / "הדלק"',
             '😴 "כבה" / "כיבוי"',
             '❌ "ביטול" / "בטל"', '',
+            '🤖 *אוטומציית מתווכים:*',
+            '✅ "שלח למתווכים" — מאשר שליחה לכל המתווכים',
+            '❌ "דלג" — דילוג על השליחה הנוכחית', '',
             '💡 *איך להוסיף דירה:*',
             '1. שלח "דירה מוכר"',
             '2. שלח טקסט חופשי עם הפרטים + תמונות',
@@ -536,6 +673,50 @@ export default async function handler(req, res) {
             '4. מוטי מכין פרסום ושולח לאישור',
           ].join('\n'));
           break;
+
+        case 'send_agents': {
+          const ctx = await loadAgentAutomationContext();
+          if (ctx.props.length === 0) {
+            await sendTelegram(chatId, '⚠️ אין דירות באוטומציית מתווכים.');
+            break;
+          }
+          if (ctx.targetAgents.length === 0) {
+            await sendTelegram(chatId, '⚠️ לא נבחרו מתווכים. עבור לטאב "אוטומציה" ובחר מתווכים.');
+            break;
+          }
+          const slot = pickCurrentSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
+          await sendTelegram(chatId, `🚀 מתחיל שליחה ל-${ctx.targetAgents.length} מתווכים, ${ctx.props.length} דירות לכל אחד...`);
+          let okCount = 0;
+          for (let i = 0; i < ctx.targetAgents.length; i++) {
+            const a = ctx.targetAgents[i];
+            for (const p of ctx.props) {
+              const m = buildAgentShortMsg(p);
+              const r = await ultraSend(a.phone, m);
+              if (r.sent) okCount++;
+            }
+            if (i < ctx.targetAgents.length - 1) await new Promise(rs => setTimeout(rs, 3000));
+          }
+          // Persist lastSent so the cron / web app see it as handled today.
+          const dayKey  = todayKey();
+          const slotKey = `${dayKey}_${slot}`;
+          const newLastSent = { ...(ctx.config.lastSent || {}), [slotKey]: {
+            agents: ctx.targetAgents.length, props: ctx.props.length, sentAt: new Date().toISOString(),
+          }};
+          await fsSetDoc("data/agentAuto", { items: { ...ctx.config, lastSent: newLastSent } });
+          await sendTelegram(chatId, `✅ נשלח ל-${ctx.targetAgents.length} מתווכים (${okCount} הודעות בהצלחה).`);
+          break;
+        }
+
+        case 'skip_agents': {
+          const ctx = await loadAgentAutomationContext();
+          const slot = pickCurrentSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
+          const dayKey  = todayKey();
+          const slotKey = `${dayKey}_${slot}`;
+          const newSkipped = { ...(ctx.config.skippedToday || {}), [slotKey]: { skippedAt: new Date().toISOString() } };
+          await fsSetDoc("data/agentAuto", { items: { ...ctx.config, skippedToday: newSkipped } });
+          await sendTelegram(chatId, `⏭ דילגתי על השליחה (${slot}). לא נשלחה שום הודעה.`);
+          break;
+        }
 
         case 'דירה': {
           const label = type === 'seller' ? 'מוכר' : 'מתווך';
