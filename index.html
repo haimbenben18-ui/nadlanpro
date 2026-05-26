@@ -2592,6 +2592,51 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
 }
 
 // ━━━ LANDING PAGE EDITOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function LandingVideoSlot({index,video,onChange,onDelete}){
+  const fr=useRef();
+  const[uploading,setUploading]=useState(false);
+  async function handleFile(files){
+    const f=files&&files[0];
+    if(!f)return;
+    if(!f.type.startsWith("video/")){toast("⚠️ אנא בחר קובץ וידאו");return}
+    if(f.size>100*1024*1024){toast("⚠️ הקובץ גדול מדי (מקס 100MB)");return}
+    setUploading(true);
+    toast("⏳ מעלה סרטון...");
+    try{
+      const fd=new FormData();
+      fd.append("file",f);
+      fd.append("upload_preset","nadlanpro");
+      fd.append("folder","nadlanpro/videos");
+      const r=await fetch("https://api.cloudinary.com/v1_1/dopvqfgzw/video/upload",{method:"POST",body:fd});
+      const d=await r.json();
+      if(d.secure_url){
+        onChange({...video,url:d.secure_url});
+        toast("✅ הסרטון הועלה");
+      }else{
+        console.error(d);
+        toast("❌ שגיאה בהעלאה");
+      }
+    }catch(e){console.error(e);toast("❌ "+e.message)}
+    setUploading(false);
+  }
+  return <div style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.15)",borderRadius:12,padding:10,marginBottom:10}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+      <div style={{color:PU,fontSize:12,fontWeight:700}}>סרטון {index+1}</div>
+      {(video.url||video.title)&&<button onClick={()=>{if(confirm("למחוק את הסרטון?"))onDelete()}} title="מחק" style={{background:"transparent",border:"none",color:RE,fontSize:18,cursor:"pointer",padding:"2px 8px"}}>🗑</button>}
+    </div>
+    <input placeholder="כותרת לסרטון" value={video.title||""} onChange={e=>onChange({...video,title:e.target.value})} style={{...S.inp,marginBottom:8}}/>
+    {video.url?<div style={{marginBottom:8}}>
+      <video src={video.url} controls playsinline preload="metadata" style={{width:"100%",borderRadius:10,background:"#000",maxHeight:240,display:"block"}}/>
+      <div style={{color:"#666",fontSize:11,marginTop:6,direction:"ltr",textAlign:"left",wordBreak:"break-all"}}>{video.url}</div>
+    </div>:<div style={{color:"#666",fontSize:12,padding:"14px 10px",textAlign:"center",border:"1px dashed rgba(155,142,196,0.25)",borderRadius:10,marginBottom:8}}>אין סרטון</div>}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <Btn sm ch={uploading?"מעלה...":(video.url?"🔄 החלף סרטון":"⬆️ העלה סרטון")} c={BL} onClick={()=>!uploading&&fr.current.click()} dis={uploading}/>
+      {video.url&&<Btn sm ghost ch="הסר סרטון" c={"#888"} onClick={()=>onChange({...video,url:""})}/>}
+    </div>
+    <input ref={fr} type="file" accept="video/*" style={{display:"none"}} onChange={e=>handleFile(e.target.files)}/>
+  </div>;
+}
+
 function LandingEditor({landingConfig,setLandingConfig}){
   const c=landingConfig||{};
   const[title,setTitle]=useState(c.title||"חיים בן סימון — RE/MAX באר שבע");
@@ -2604,7 +2649,8 @@ function LandingEditor({landingConfig,setLandingConfig}){
     for(let i=0;i<4;i++)arr.push(v[i]||{title:"",url:""});
     return arr;
   });
-  function setVid(i,f,v){const n=[...videos];n[i]={...n[i],[f]:v};setVideos(n)}
+  function setVid(i,patch){const n=[...videos];n[i]={...n[i],...patch};setVideos(n)}
+  function delVid(i){const n=[...videos];n[i]={title:"",url:""};setVideos(n);toast("🗑 הוסר")}
   function save(){
     setLandingConfig({title,subtitle,bio,phone,videos,updatedAt:new Date().toISOString()});
     toast("💾 נשמר ב-Firebase");
@@ -2620,11 +2666,7 @@ function LandingEditor({landingConfig,setLandingConfig}){
     <Lbl t="על עצמי (ביו מקצועי)" icon="✍️"/>
     <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={5} style={{...S.inp,resize:"none",marginBottom:14}}/>
     <Lbl t="סרטונים (עד 4)" icon="🎬"/>
-    {videos.map((v,i)=><div key={i} style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.15)",borderRadius:12,padding:10,marginBottom:10}}>
-      <div style={{color:PU,fontSize:12,marginBottom:6,fontWeight:700}}>סרטון {i+1}</div>
-      <input placeholder="כותרת לסרטון" value={v.title} onChange={e=>setVid(i,"title",e.target.value)} style={{...S.inp,marginBottom:8}}/>
-      <input placeholder="קישור URL (mp4, Drive, וכו')" value={v.url} onChange={e=>setVid(i,"url",e.target.value)} style={{...S.inp,direction:"ltr",textAlign:"left",fontSize:12}}/>
-    </div>)}
+    {videos.map((v,i)=><LandingVideoSlot key={i} index={i} video={v} onChange={patch=>setVid(i,patch)} onDelete={()=>delVid(i)}/>)}
     <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
       <Btn ch="💾 שמור" c={GR} onClick={save}/>
       <Btn ghost ch="👁 תצוגה מקדימה" c={BL} onClick={preview}/>
