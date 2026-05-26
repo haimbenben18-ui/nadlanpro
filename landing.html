@@ -2,138 +2,223 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#003366">
-<title>חיים בן סימון — RE/MAX באר שבע</title>
+<meta name="robots" content="noindex,nofollow">
+<title>חיים בן סימון | RE/MAX באר שבע</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Heebo',sans-serif;background:#f5f3ee;color:#1a1d2e;line-height:1.6;-webkit-font-smoothing:antialiased}
-  .hero{background:linear-gradient(160deg,#003366 0%,#001f3f 100%);color:#fff;padding:32px 22px 38px;text-align:center;position:relative;overflow:hidden}
-  .hero:after{content:"";position:absolute;inset:auto -40% -55% -40%;height:90%;background:radial-gradient(closest-side,rgba(212,175,55,0.35),transparent 70%);pointer-events:none}
-  .brand{display:inline-block;background:#d4af37;color:#003366;padding:6px 14px;border-radius:6px;font-weight:900;letter-spacing:2px;font-size:11px;margin-bottom:14px;font-family:'Heebo',sans-serif}
-  h1{font-family:'Frank Ruhl Libre',serif;font-size:30px;font-weight:900;line-height:1.25;margin-bottom:10px;position:relative;z-index:1}
-  .sub{color:#d4af37;font-size:16px;font-weight:600;position:relative;z-index:1;max-width:340px;margin:0 auto}
-  .name-tag{color:#fff;font-size:13px;font-weight:500;margin-top:18px;opacity:0.85;position:relative;z-index:1}
-  .section{padding:28px 18px;background:#fff}
-  .section.dark{background:#f5f3ee}
-  .section-title{font-family:'Frank Ruhl Libre',serif;font-size:22px;font-weight:900;color:#003366;margin-bottom:16px;text-align:center;position:relative}
-  .section-title:after{content:"";display:block;width:54px;height:3px;background:#d4af37;margin:10px auto 0;border-radius:2px}
-  .video-card{background:#fff;border:1px solid #e2dfd6;border-radius:14px;overflow:hidden;margin-bottom:18px;box-shadow:0 6px 20px rgba(0,31,63,0.06)}
-  .video-card .vtitle{padding:12px 14px;color:#003366;font-weight:800;font-size:15px;background:linear-gradient(90deg,rgba(212,175,55,0.12),transparent)}
-  .video-card video,.video-card iframe{width:100%;height:auto;display:block;background:#000;min-height:200px;border:0}
-  .bio{font-size:15px;line-height:1.85;color:#36394b;white-space:pre-wrap;max-width:560px;margin:0 auto;text-align:right}
-  .cta-wrap{padding:34px 18px;background:linear-gradient(160deg,#003366,#001f3f);text-align:center}
-  .cta-wrap h2{color:#d4af37;font-family:'Frank Ruhl Libre',serif;font-size:24px;margin-bottom:18px;font-weight:900}
-  .cta{display:inline-block;background:#25d366;color:#fff;padding:16px 36px;border-radius:50px;font-weight:900;font-size:17px;text-decoration:none;box-shadow:0 8px 22px rgba(37,211,102,0.45);transition:transform .15s ease}
-  .cta:active{transform:scale(0.97)}
-  .cta .em{font-size:22px;margin-left:8px}
-  .footer{background:#001f3f;color:#9aa3b5;padding:26px 18px;text-align:center;font-size:13px;line-height:1.8}
-  .footer .logo{color:#d4af37;font-weight:900;letter-spacing:2px;margin-bottom:6px}
-  .footer a{color:#d4af37;text-decoration:none}
+  html,body{background:#f5f3ee;color:#003366;font-family:'Heebo',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{padding-bottom:96px}
+
+  /* ─── Header ─── */
+  .topbar{background:#fff;padding:14px 18px;border-bottom:3px solid #ED1C24;box-shadow:0 2px 10px rgba(0,0,0,0.04);position:sticky;top:0;z-index:50}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:780px;margin:0 auto}
+  .remax-logo{font-family:'Heebo',sans-serif;font-weight:900;font-size:24px;letter-spacing:1.5px;color:#003366;line-height:1}
+  .remax-logo .slash{color:#ED1C24}
+  .agent-tag{text-align:left;font-size:12px;line-height:1.35;color:#003366;font-weight:700}
+  .agent-tag .name{font-size:14px;color:#ED1C24}
+
+  /* ─── Hero ─── */
+  .hero{background:linear-gradient(160deg,#003366 0%,#001f3f 100%);color:#fff;padding:34px 22px 40px;position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;inset:auto -30% -55% -30%;height:85%;background:radial-gradient(closest-side,rgba(212,175,55,0.32),transparent 70%);pointer-events:none}
+  .hero-inner{max-width:780px;margin:0 auto;position:relative;z-index:1}
+  .hero h1{font-family:'Frank Ruhl Libre',serif;font-size:24px;font-weight:900;line-height:1.35;margin-bottom:14px}
+  .hero h1 .accent{color:#D4AF37}
+  .hero p{font-size:15px;line-height:1.85;color:#e8edf3;font-weight:400}
+  .hero .pill{display:inline-block;background:rgba(212,175,55,0.18);color:#D4AF37;border:1px solid rgba(212,175,55,0.5);padding:4px 14px;border-radius:30px;font-size:11px;font-weight:800;letter-spacing:1.5px;margin-bottom:14px}
+
+  /* ─── Sections ─── */
+  .section{padding:30px 18px;max-width:780px;margin:0 auto}
+  .section-title{font-family:'Frank Ruhl Libre',serif;font-size:22px;font-weight:900;color:#003366;margin-bottom:18px;text-align:center;line-height:1.35}
+  .section-title:after{content:"";display:block;width:54px;height:3px;background:#D4AF37;margin:10px auto 0;border-radius:2px}
+
+  /* Why */
+  .why-section{background:#fff;border-top:1px solid #eee8d8}
+  .why-grid{display:grid;gap:14px}
+  .why-card{background:#fff;border:1px solid #eee8d8;border-right:4px solid #D4AF37;border-radius:14px;padding:16px 18px;box-shadow:0 4px 14px rgba(0,31,63,0.05);display:flex;gap:12px;align-items:flex-start}
+  .why-card .icon{font-size:30px;line-height:1;flex:0 0 auto;margin-top:2px}
+  .why-card .content{flex:1}
+  .why-card .ctitle{color:#003366;font-weight:800;font-size:15px;margin-bottom:4px}
+  .why-card .cdesc{color:#36394b;font-size:14px;line-height:1.7}
+
+  /* Videos */
+  .videos-section{background:#f5f3ee}
+  .videos-intro{color:#36394b;font-size:15px;text-align:center;margin-bottom:20px;line-height:1.75;max-width:560px;margin-left:auto;margin-right:auto}
+  .video-card{background:#fff;border:1px solid #eee8d8;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,31,63,0.06)}
+  .video-card .vtitle{padding:12px 16px;color:#003366;font-weight:800;font-size:15px;background:linear-gradient(90deg,rgba(212,175,55,0.12),transparent);border-bottom:1px solid #eee8d8}
+  .video-card video{width:100%;height:auto;display:block;background:#000;min-height:200px}
+  .video-card iframe{width:100%;aspect-ratio:16/9;display:block;background:#000;border:0}
+
+  /* Bio */
+  .bio-section{background:#fff}
+  .bio{font-size:15px;line-height:1.95;color:#36394b;white-space:pre-wrap;max-width:600px;margin:0 auto;text-align:right}
+
+  /* Footer */
+  .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
+  .footer .flogo{font-family:'Heebo',sans-serif;font-weight:900;color:#fff;letter-spacing:1.5px;font-size:20px;margin-bottom:6px}
+  .footer .flogo .slash{color:#ED1C24}
+  .footer .fline{color:#d4af37}
+
+  /* Floating CTA */
+  .cta-float{position:fixed;bottom:0;left:0;right:0;background:#25d366;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:15px;text-decoration:none;box-shadow:0 -6px 22px rgba(0,0,0,0.22);z-index:200;text-align:center;line-height:1.35}
+  .cta-float:active{transform:scale(0.98);transition:transform .12s}
+  .cta-float .em{font-size:22px}
+
   .loading{padding:80px 20px;text-align:center;color:#003366;font-weight:700}
+
   @media(min-width:680px){
-    .hero{padding:60px 30px 80px}
-    h1{font-size:42px}
-    .sub{font-size:19px;max-width:520px}
-    .section{padding:46px 28px;max-width:760px;margin:0 auto}
-    .section-title{font-size:30px}
+    .topbar{padding:18px 26px}
+    .remax-logo{font-size:30px}
+    .agent-tag{font-size:14px}
+    .agent-tag .name{font-size:16px}
+    .hero{padding:60px 30px 70px}
+    .hero h1{font-size:32px}
+    .hero p{font-size:17px}
+    .section{padding:50px 28px}
+    .section-title{font-size:28px}
+    .why-grid{grid-template-columns:1fr 1fr;gap:18px}
+    .why-card{padding:20px}
+    .cta-float{font-size:17px;padding:18px}
   }
 </style>
 </head>
 <body>
 <div id="root" class="loading">טוען…</div>
+
 <script>
+  // ─── Firebase config (read-only, public Web SDK key) ───
   const firebaseConfig={apiKey:"AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew",authDomain:"nadlanpro-5b041.firebaseapp.com",projectId:"nadlanpro-5b041",storageBucket:"nadlanpro-5b041.firebasestorage.app",messagingSenderId:"404856613598",appId:"1:404856613598:web:916fdd4cbbf05519eb304f"};
   firebase.initializeApp(firebaseConfig);
   const db=firebase.firestore();
 
-  function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  // ─── Hardcoded — the page's ONLY outbound link ───
+  const WA_BASE="https://wa.me/972544740691";
+  const DEFAULT_CTA_TEXT="חיים, בוא נבנה תוכנית שיווק לדירה שלי";
+  const WA_PREFILL="היי חיים, אשמח לשמוע על תוכנית שיווק לדירה שלי";
 
-  // Hardcoded WhatsApp URL — the ONLY outbound link on this standalone page.
-  const WA_URL="https://wa.me/972544740691";
+  // ─── Default content (matches the spec) ───
+  const DEFAULTS={
+    title:'חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX באר שבע',
+    subtitle:'הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.',
+    bio:'',
+    phone:'054-474-0691',
+    cta_text:DEFAULT_CTA_TEXT,
+    videos:[]
+  };
+
+  const WHY=[
+    {icon:'🏢',title:'הכוח של המותג',desc:'כחלק מ-RE/MAX באר שבע, עומד לרשותך מערך של כ-80 סוכנים האחראים על כמעט שליש מהעסקאות בעיר.'},
+    {icon:'💻',title:'טכנולוגיה בשירות המכירה',desc:'שימוש במערכות אוטומציה ושיווק דיגיטלי מתקדם למציאת קונה במהירות.'},
+    {icon:'📊',title:'שקיפות מלאה',desc:'ניהול "תיק לקוח" אישי עם עדכון שבועי על מצב שיווק הנכס.'},
+    {icon:'🤝',title:'שירות ללא פשרות',desc:'ניהול מו"מ ברמה הגבוהה ביותר ליצירת העסקה הטובה ביותר עבורך.'},
+  ];
+
+  function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
   function videoEmbed(url){
     if(!url)return "";
     const u=url.trim();
-    // YouTube
     let m=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/);
-    if(m)return '<iframe src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-    // Google Drive
+    if(m)return '<iframe src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
     m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
-    if(m)return '<iframe src="https://drive.google.com/file/d/'+m[1]+'/preview" allow="autoplay" allowfullscreen></iframe>';
-    // Vimeo
+    if(m)return '<iframe src="https://drive.google.com/file/d/'+m[1]+'/preview" allowfullscreen></iframe>';
     m=u.match(/vimeo\.com\/(\d+)/);
-    if(m)return '<iframe src="https://player.vimeo.com/video/'+m[1]+'" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
-    // Direct file
-    if(/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u))return '<video src="'+esc(u)+'" controls playsinline preload="metadata"></video>';
-    // Unrecognized format — render nothing (no outbound links allowed besides WhatsApp).
+    if(m)return '<iframe src="https://player.vimeo.com/video/'+m[1]+'" frameborder="0" allow="fullscreen" allowfullscreen></iframe>';
+    // Cloudinary or any direct mp4/webm/mov — native HTML5 player as the spec requires.
+    if(/res\.cloudinary\.com\/.+\/video\//.test(u)||/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)){
+      return '<video controls playsinline preload="metadata"><source src="'+esc(u)+'" type="video/mp4"></video>';
+    }
     return '';
   }
 
-  function render(c){
-    const title=c.title||"חיים בן סימון — RE/MAX באר שבע";
-    const subtitle=c.subtitle||'שיווק נדל"ן מקצועי שמביא תוצאות';
-    const bio=c.bio||"";
-    const phone=c.phone||"0544740691";
-    const videos=(c.videos||[]).filter(v=>v&&v.url);
+  function render(cfg){
+    const title=(cfg.title||DEFAULTS.title);
+    const subtitle=(cfg.subtitle||DEFAULTS.subtitle);
+    const bio=(cfg.bio||DEFAULTS.bio);
+    const phone=(cfg.phone||DEFAULTS.phone);
+    const cta=(cfg.cta_text||DEFAULTS.cta_text);
+    const videos=(cfg.videos||[]).filter(v=>v&&v.url);
+    const ctaUrl=WA_BASE+'?text='+encodeURIComponent(WA_PREFILL);
 
     let html='';
-    html+='<header class="hero">';
-    html+='<div class="brand">RE/MAX</div>';
-    html+='<h1>'+esc(title)+'</h1>';
-    html+='<div class="sub">'+esc(subtitle)+'</div>';
-    html+='</header>';
 
+    // Header
+    html+='<header class="topbar"><div class="topbar-inner">';
+    html+='<div class="remax-logo">RE<span class="slash">/</span>MAX</div>';
+    html+='<div class="agent-tag"><div class="name">חיים בן סימון</div><div>RE/MAX באר שבע</div></div>';
+    html+='</div></header>';
+
+    // Hero
+    html+='<section class="hero"><div class="hero-inner">';
+    html+='<div class="pill">RE/MAX · באר שבע</div>';
+    html+='<h1>'+esc(title)+'</h1>';
+    html+='<p>'+esc(subtitle)+'</p>';
+    html+='</div></section>';
+
+    // Why work with me
+    html+='<section class="section why-section">';
+    html+='<div class="section-title">למה לעבוד איתי?</div>';
+    html+='<div class="why-grid">';
+    WHY.forEach(w=>{
+      html+='<div class="why-card"><div class="icon">'+w.icon+'</div><div class="content"><div class="ctitle">'+esc(w.title)+'</div><div class="cdesc">'+esc(w.desc)+'</div></div></div>';
+    });
+    html+='</div></section>';
+
+    // Videos
     if(videos.length>0){
-      html+='<section class="section">';
-      html+='<div class="section-title">סרטונים מקצועיים</div>';
+      html+='<section class="section videos-section">';
+      html+='<div class="section-title">סרטוני תוכן שיעזרו לך להגיע להחלטה הנכונה</div>';
+      html+='<div class="videos-intro">הכנתי עבורך סדרת סרטוני תוכן מקצועיים — לפני שאתה מקבל החלטה גורלית על הנכס שלך, שווה לראות.</div>';
       videos.forEach(v=>{
+        const embed=videoEmbed(v.url);
+        if(!embed)return;
         html+='<div class="video-card">';
         if(v.title)html+='<div class="vtitle">'+esc(v.title)+'</div>';
-        html+=videoEmbed(v.url);
+        html+=embed;
         html+='</div>';
       });
       html+='</section>';
     }
 
-    if(bio.trim()){
-      html+='<section class="section dark">';
+    // Bio
+    if(bio&&bio.trim()){
+      html+='<section class="section bio-section">';
       html+='<div class="section-title">על עצמי</div>';
       html+='<div class="bio">'+esc(bio)+'</div>';
       html+='</section>';
     }
 
-    html+='<section class="cta-wrap">';
-    html+='<h2>רוצים לדבר?</h2>';
-    html+='<a class="cta" href="'+WA_URL+'" target="_blank" rel="noopener"><span class="em">💬</span>לחצו כאן לוואטסאפ</a>';
-    html+='</section>';
-
+    // Footer
     html+='<footer class="footer">';
-    html+='<div class="logo">RE/MAX</div>';
-    html+='<div>חיים בן סימון · באר שבע</div>';
-    html+='<div style="margin-top:6px;color:#d4af37;font-weight:700" dir="ltr">'+esc(phone)+'</div>';
+    html+='<div class="flogo">RE<span class="slash">/</span>MAX</div>';
+    html+='<div class="fline">חיים בן סימון | RE/MAX באר שבע | '+esc(phone)+'</div>';
     html+='</footer>';
+
+    // Floating CTA — the ONE outbound link.
+    html+='<a class="cta-float" href="'+ctaUrl+'" target="_blank" rel="noopener"><span class="em">💬</span><span>'+esc(cta)+'</span></a>';
 
     const root=document.getElementById("root");
     root.className="";
     root.innerHTML=html;
   }
 
-  // Live config from Firestore
-  db.collection("data").doc("landingConfig").onSnapshot(doc=>{
+  // ─── Live config from Firestore (landing_page/config) ───
+  db.collection("landing_page").doc("config").onSnapshot(doc=>{
     let cfg={};
     if(doc.exists){
-      const raw=doc.data();
-      cfg=raw&&raw.items?raw.items:raw||{};
+      const raw=doc.data()||{};
+      // Support both flat docs and {items:{...}} wrapper for backwards-compat.
+      cfg=(raw.items&&typeof raw.items==="object"&&!Array.isArray(raw.items))?raw.items:raw;
     }
     render(cfg);
   },err=>{
-    console.error("landingConfig sync err",err);
+    console.error("landing config sync err",err);
     render({});
   });
 </script>

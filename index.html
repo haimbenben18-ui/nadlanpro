@@ -712,7 +712,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     if(!prospect.phone){toast("⚠️ אין מספר טלפון");return}
     const name=(prospect.name||"").trim();
     const greet=name?"שלום "+name:"שלום";
-    const m=greet+", כאן חיים בן סימון מ-RE/MAX באר שבע. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
+    const m=greet+", כאן חיים בן סימון מרימקס באר שבע. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
     const ok=await sendDirectMessage(prospect.phone,m);
     if(ok)toast("✅ דף נחיתה נשלח");
   }
@@ -2637,12 +2637,17 @@ function LandingVideoSlot({index,video,onChange,onDelete}){
   </div>;
 }
 
+const LANDING_DEFAULT_TITLE='חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX באר שבע';
+const LANDING_DEFAULT_SUBTITLE='הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.';
+const LANDING_DEFAULT_CTA='חיים, בוא נבנה תוכנית שיווק לדירה שלי';
+
 function LandingEditor({landingConfig,setLandingConfig}){
   const c=landingConfig||{};
-  const[title,setTitle]=useState(c.title||"חיים בן סימון — RE/MAX באר שבע");
-  const[subtitle,setSubtitle]=useState(c.subtitle||'שיווק נדל"ן מקצועי שמביא תוצאות');
+  const[title,setTitle]=useState(c.title||LANDING_DEFAULT_TITLE);
+  const[subtitle,setSubtitle]=useState(c.subtitle||LANDING_DEFAULT_SUBTITLE);
   const[bio,setBio]=useState(c.bio||"");
-  const[phone,setPhone]=useState(c.phone||"0544740691");
+  const[phone,setPhone]=useState(c.phone||"054-474-0691");
+  const[ctaText,setCtaText]=useState(c.cta_text||LANDING_DEFAULT_CTA);
   const[videos,setVideos]=useState(()=>{
     const v=c.videos||[];
     const arr=[];
@@ -2652,24 +2657,34 @@ function LandingEditor({landingConfig,setLandingConfig}){
   function setVid(i,patch){const n=[...videos];n[i]={...n[i],...patch};setVideos(n)}
   function delVid(i){const n=[...videos];n[i]={title:"",url:""};setVideos(n);toast("🗑 הוסר")}
   function save(){
-    setLandingConfig({title,subtitle,bio,phone,videos,updatedAt:new Date().toISOString()});
+    setLandingConfig({title,subtitle,bio,phone,cta_text:ctaText,videos,updatedAt:new Date().toISOString()});
     toast("💾 נשמר ב-Firebase");
   }
   function preview(){window.open(LANDING_URL,"_blank")}
+  function copyLink(){
+    try{navigator.clipboard.writeText(LANDING_URL).then(()=>toast("📋 הקישור הועתק"),()=>toast("⚠️ ההעתקה נכשלה"))}
+    catch(e){toast("⚠️ "+e.message)}
+  }
   return <div style={S.card}>
+    <div style={{background:"rgba(126,184,201,0.08)",border:"1px solid rgba(126,184,201,0.25)",borderRadius:12,padding:12,marginBottom:14,fontSize:12,color:"#bbb",lineHeight:1.6}}>
+      💡 דף הנחיתה הוא עמוד נפרד לחלוטין (<span dir="ltr" style={{color:BL}}>{LANDING_URL}</span>) — בלי שום ניווט לאתר הפנימי. הוא קורא רק את ההגדרות מכאן.
+    </div>
     <Lbl t="כותרת ראשית" icon="🎯"/>
-    <input value={title} onChange={e=>setTitle(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <textarea value={title} onChange={e=>setTitle(e.target.value)} rows={2} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.6}}/>
     <Lbl t="כותרת משנית"/>
-    <input value={subtitle} onChange={e=>setSubtitle(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <textarea value={subtitle} onChange={e=>setSubtitle(e.target.value)} rows={4} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.7}}/>
     <Lbl t="טלפון" icon="📱"/>
     <input value={phone} onChange={e=>setPhone(e.target.value)} style={{...S.inp,marginBottom:12,direction:"ltr",textAlign:"left"}}/>
-    <Lbl t="על עצמי (ביו מקצועי)" icon="✍️"/>
+    <Lbl t="טקסט כפתור CTA (ווטסאפ צף)" icon="💬"/>
+    <input value={ctaText} onChange={e=>setCtaText(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <Lbl t="על עצמי (ביו מקצועי, אופציונלי)" icon="✍️"/>
     <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={5} style={{...S.inp,resize:"none",marginBottom:14}}/>
     <Lbl t="סרטונים (עד 4)" icon="🎬"/>
     {videos.map((v,i)=><LandingVideoSlot key={i} index={i} video={v} onChange={patch=>setVid(i,patch)} onDelete={()=>delVid(i)}/>)}
     <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
       <Btn ch="💾 שמור" c={GR} onClick={save}/>
       <Btn ghost ch="👁 תצוגה מקדימה" c={BL} onClick={preview}/>
+      <Btn ghost ch="📋 העתק קישור" c={G} onClick={copyLink}/>
     </div>
   </div>
 }
@@ -2706,7 +2721,7 @@ function App(){
   function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
   function setAgentsContacts(v){_setAgentsContacts(v);sv("agentsContacts",v);fsWrite("agentsContacts",v)}
   function setAgentAuto(v){_setAgentAuto(v);sv("agentAuto",v);try{db.collection("data").doc("agentAuto").set({items:v})}catch(e){console.error("agentAuto write err",e)}}
-  function setLandingConfig(v){_setLandingConfig(v);sv("landingConfig",v);try{db.collection("data").doc("landingConfig").set({items:v})}catch(e){console.error("landingConfig write err",e)}}
+  function setLandingConfig(v){_setLandingConfig(v);sv("landingConfig",v);try{db.collection("landing_page").doc("config").set(v)}catch(e){console.error("landingConfig write err",e)}}
 
   useEffect(()=>{
     let unsubs=[];
@@ -2734,12 +2749,17 @@ function App(){
           }
         }
       }catch(e){console.error("Firestore init error:",e)}
-      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["landingConfig",d=>_setLandingConfig(d||{})]];
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})]];
+      // Landing-page config lives at landing_page/config (flat doc, no items wrapper).
+      const landingUnsub=db.collection("landing_page").doc("config").onSnapshot(doc=>{
+        if(doc.exists){const data=doc.data()||{};_setLandingConfig(data);sv("landingConfig",data)}
+      },e=>console.error("landing_page sync err",e));
+      unsubs.push(landingUnsub);
       collections.forEach(([name,setter])=>{
         const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
           if(doc.exists){
             const raw=doc.data().items;
-            const isObjDoc=name==="agentAuto"||name==="landingConfig";
+            const isObjDoc=name==="agentAuto";
             const items=raw==null?(isObjDoc?{}:[]):raw;
             setter(items);sv(name,items);
           }
