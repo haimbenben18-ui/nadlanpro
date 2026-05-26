@@ -54,10 +54,8 @@
 
   function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
-  function buildWaUrl(phone){
-    const p=(phone||"0544740691").replace(/^0/,"972").replace(/[-\s+]/g,"");
-    return "https://wa.me/"+p;
-  }
+  // Hardcoded WhatsApp URL — the ONLY outbound link on this standalone page.
+  const WA_URL="https://wa.me/972544740691";
 
   function videoEmbed(url){
     if(!url)return "";
@@ -73,8 +71,8 @@
     if(m)return '<iframe src="https://player.vimeo.com/video/'+m[1]+'" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
     // Direct file
     if(/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u))return '<video src="'+esc(u)+'" controls playsinline preload="metadata"></video>';
-    // Fallback — link
-    return '<a href="'+esc(u)+'" target="_blank" rel="noopener" style="display:block;padding:24px;text-align:center;color:#003366;font-weight:700">▶️ פתח סרטון</a>';
+    // Unrecognized format — render nothing (no outbound links allowed besides WhatsApp).
+    return '';
   }
 
   function render(c){
@@ -83,7 +81,6 @@
     const bio=c.bio||"";
     const phone=c.phone||"0544740691";
     const videos=(c.videos||[]).filter(v=>v&&v.url);
-    const waUrl=buildWaUrl(phone);
 
     let html='';
     html+='<header class="hero">';
@@ -113,13 +110,13 @@
 
     html+='<section class="cta-wrap">';
     html+='<h2>רוצים לדבר?</h2>';
-    html+='<a class="cta" href="'+waUrl+'" target="_blank" rel="noopener"><span class="em">💬</span>לחצו כאן לוואטסאפ</a>';
+    html+='<a class="cta" href="'+WA_URL+'" target="_blank" rel="noopener"><span class="em">💬</span>לחצו כאן לוואטסאפ</a>';
     html+='</section>';
 
     html+='<footer class="footer">';
     html+='<div class="logo">RE/MAX</div>';
     html+='<div>חיים בן סימון · באר שבע</div>';
-    html+='<div style="margin-top:6px"><a href="tel:'+esc(phone)+'" dir="ltr">'+esc(phone)+'</a></div>';
+    html+='<div style="margin-top:6px;color:#d4af37;font-weight:700" dir="ltr">'+esc(phone)+'</div>';
     html+='</footer>';
 
     const root=document.getElementById("root");
