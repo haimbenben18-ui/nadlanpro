@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#003366">
+<title>חיים בן סימון — RE/MAX באר שבע</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Heebo',sans-serif;background:#f5f3ee;color:#1a1d2e;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .hero{background:linear-gradient(160deg,#003366 0%,#001f3f 100%);color:#fff;padding:32px 22px 38px;text-align:center;position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;inset:auto -40% -55% -40%;height:90%;background:radial-gradient(closest-side,rgba(212,175,55,0.35),transparent 70%);pointer-events:none}
+  .brand{display:inline-block;background:#d4af37;color:#003366;padding:6px 14px;border-radius:6px;font-weight:900;letter-spacing:2px;font-size:11px;margin-bottom:14px;font-family:'Heebo',sans-serif}
+  h1{font-family:'Frank Ruhl Libre',serif;font-size:30px;font-weight:900;line-height:1.25;margin-bottom:10px;position:relative;z-index:1}
+  .sub{color:#d4af37;font-size:16px;font-weight:600;position:relative;z-index:1;max-width:340px;margin:0 auto}
+  .name-tag{color:#fff;font-size:13px;font-weight:500;margin-top:18px;opacity:0.85;position:relative;z-index:1}
+  .section{padding:28px 18px;background:#fff}
+  .section.dark{background:#f5f3ee}
+  .section-title{font-family:'Frank Ruhl Libre',serif;font-size:22px;font-weight:900;color:#003366;margin-bottom:16px;text-align:center;position:relative}
+  .section-title:after{content:"";display:block;width:54px;height:3px;background:#d4af37;margin:10px auto 0;border-radius:2px}
+  .video-card{background:#fff;border:1px solid #e2dfd6;border-radius:14px;overflow:hidden;margin-bottom:18px;box-shadow:0 6px 20px rgba(0,31,63,0.06)}
+  .video-card .vtitle{padding:12px 14px;color:#003366;font-weight:800;font-size:15px;background:linear-gradient(90deg,rgba(212,175,55,0.12),transparent)}
+  .video-card video,.video-card iframe{width:100%;height:auto;display:block;background:#000;min-height:200px;border:0}
+  .bio{font-size:15px;line-height:1.85;color:#36394b;white-space:pre-wrap;max-width:560px;margin:0 auto;text-align:right}
+  .cta-wrap{padding:34px 18px;background:linear-gradient(160deg,#003366,#001f3f);text-align:center}
+  .cta-wrap h2{color:#d4af37;font-family:'Frank Ruhl Libre',serif;font-size:24px;margin-bottom:18px;font-weight:900}
+  .cta{display:inline-block;background:#25d366;color:#fff;padding:16px 36px;border-radius:50px;font-weight:900;font-size:17px;text-decoration:none;box-shadow:0 8px 22px rgba(37,211,102,0.45);transition:transform .15s ease}
+  .cta:active{transform:scale(0.97)}
+  .cta .em{font-size:22px;margin-left:8px}
+  .footer{background:#001f3f;color:#9aa3b5;padding:26px 18px;text-align:center;font-size:13px;line-height:1.8}
+  .footer .logo{color:#d4af37;font-weight:900;letter-spacing:2px;margin-bottom:6px}
+  .footer a{color:#d4af37;text-decoration:none}
+  .loading{padding:80px 20px;text-align:center;color:#003366;font-weight:700}
+  @media(min-width:680px){
+    .hero{padding:60px 30px 80px}
+    h1{font-size:42px}
+    .sub{font-size:19px;max-width:520px}
+    .section{padding:46px 28px;max-width:760px;margin:0 auto}
+    .section-title{font-size:30px}
+  }
+</style>
+</head>
+<body>
+<div id="root" class="loading">טוען…</div>
+<script>
+  const firebaseConfig={apiKey:"AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew",authDomain:"nadlanpro-5b041.firebaseapp.com",projectId:"nadlanpro-5b041",storageBucket:"nadlanpro-5b041.firebasestorage.app",messagingSenderId:"404856613598",appId:"1:404856613598:web:916fdd4cbbf05519eb304f"};
+  firebase.initializeApp(firebaseConfig);
+  const db=firebase.firestore();
+
+  function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+  function buildWaUrl(phone){
+    const p=(phone||"0544740691").replace(/^0/,"972").replace(/[-\s+]/g,"");
+    return "https://wa.me/"+p;
+  }
+
+  function videoEmbed(url){
+    if(!url)return "";
+    const u=url.trim();
+    // YouTube
+    let m=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/);
+    if(m)return '<iframe src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    // Google Drive
+    m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+    if(m)return '<iframe src="https://drive.google.com/file/d/'+m[1]+'/preview" allow="autoplay" allowfullscreen></iframe>';
+    // Vimeo
+    m=u.match(/vimeo\.com\/(\d+)/);
+    if(m)return '<iframe src="https://player.vimeo.com/video/'+m[1]+'" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    // Direct file
+    if(/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u))return '<video src="'+esc(u)+'" controls playsinline preload="metadata"></video>';
+    // Fallback — link
+    return '<a href="'+esc(u)+'" target="_blank" rel="noopener" style="display:block;padding:24px;text-align:center;color:#003366;font-weight:700">▶️ פתח סרטון</a>';
+  }
+
+  function render(c){
+    const title=c.title||"חיים בן סימון — RE/MAX באר שבע";
+    const subtitle=c.subtitle||'שיווק נדל"ן מקצועי שמביא תוצאות';
+    const bio=c.bio||"";
+    const phone=c.phone||"0544740691";
+    const videos=(c.videos||[]).filter(v=>v&&v.url);
+    const waUrl=buildWaUrl(phone);
+
+    let html='';
+    html+='<header class="hero">';
+    html+='<div class="brand">RE/MAX</div>';
+    html+='<h1>'+esc(title)+'</h1>';
+    html+='<div class="sub">'+esc(subtitle)+'</div>';
+    html+='</header>';
+
+    if(videos.length>0){
+      html+='<section class="section">';
+      html+='<div class="section-title">סרטונים מקצועיים</div>';
+      videos.forEach(v=>{
+        html+='<div class="video-card">';
+        if(v.title)html+='<div class="vtitle">'+esc(v.title)+'</div>';
+        html+=videoEmbed(v.url);
+        html+='</div>';
+      });
+      html+='</section>';
+    }
+
+    if(bio.trim()){
+      html+='<section class="section dark">';
+      html+='<div class="section-title">על עצמי</div>';
+      html+='<div class="bio">'+esc(bio)+'</div>';
+      html+='</section>';
+    }
+
+    html+='<section class="cta-wrap">';
+    html+='<h2>רוצים לדבר?</h2>';
+    html+='<a class="cta" href="'+waUrl+'" target="_blank" rel="noopener"><span class="em">💬</span>לחצו כאן לוואטסאפ</a>';
+    html+='</section>';
+
+    html+='<footer class="footer">';
+    html+='<div class="logo">RE/MAX</div>';
+    html+='<div>חיים בן סימון · באר שבע</div>';
+    html+='<div style="margin-top:6px"><a href="tel:'+esc(phone)+'" dir="ltr">'+esc(phone)+'</a></div>';
+    html+='</footer>';
+
+    const root=document.getElementById("root");
+    root.className="";
+    root.innerHTML=html;
+  }
+
+  // Live config from Firestore
+  db.collection("data").doc("landingConfig").onSnapshot(doc=>{
+    let cfg={};
+    if(doc.exists){
+      const raw=doc.data();
+      cfg=raw&&raw.items?raw.items:raw||{};
+    }
+    render(cfg);
+  },err=>{
+    console.error("landingConfig sync err",err);
+    render({});
+  });
+</script>
+</body>
+</html>

@@ -702,12 +702,20 @@ function DailyPlan({tasks,setTasks}){
 }
 
 // ━━━ RECRUIT (גיוס נכסים) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function Recruit({prospects,setProspects}){
+function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
   const[phones,setPhones]=useState("");
   const[selMsg,setSelMsg]=useState(0);
   const[msg,setMsg]=useState("");
   const[viewP,setViewP]=useState(null);
-  const[mode,setMode]=useState("send"); // send | list
+  const[mode,setMode]=useState("send"); // send | list | landing
+  async function sendLandingPage(prospect){
+    if(!prospect.phone){toast("⚠️ אין מספר טלפון");return}
+    const name=(prospect.name||"").trim();
+    const greet=name?"שלום "+name:"שלום";
+    const m=greet+", כאן חיים בן סימון מ-RE/MAX באר שבע. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
+    const ok=await sendDirectMessage(prospect.phone,m);
+    if(ok)toast("✅ דף נחיתה נשלח");
+  }
 
   const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX באר שבע 13 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX | באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX | 13 שנות ניסיון"];
 
@@ -741,10 +749,11 @@ function Recruit({prospects,setProspects}){
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
         {[{f:"sentMaterial",l:"נשלח חומר",i:"📤"},{f:"followUp",l:"פולואפ",i:"🔄"},{f:"exclusive",l:"גויסה בלעדיות",i:"🏆"}].map(x=><button key={x.f} onClick={()=>updProspect(viewP.id,x.f,!viewP[x.f])} style={{background:viewP[x.f]?"#7ec97e22":"rgba(255,255,255,0.03)",border:"1px solid "+(viewP[x.f]?"#7ec97e55":"rgba(255,255,255,0.08)"),borderRadius:12,padding:"10px 16px",color:viewP[x.f]?"#7ec97e":"#777",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{x.i} {x.l}</button>)}
       </div>
-      <div style={{display:"flex",gap:10,marginBottom:16}}>
+      <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
         <Btn sm ch="📅 יומן" ghost onClick={()=>addCal("פגישה גיוס — "+viewP.phone)}/>
         <Btn sm ch="💬 ווטסאפ" c={GR} onClick={()=>openWA(viewP.phone)}/>
         {viewP.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(viewP.phone||'')}/>}
+        <Btn sm ch="🌐 שלח דף נחיתה" c={BL} ghost onClick={()=>{if(confirm("לשלוח דף נחיתה ל-"+(viewP.phone||"")+"?"))sendLandingPage(viewP)}}/>
       </div>
       <Lbl t="תיעוד" icon="📝"/>
       {viewP.logs&&viewP.logs.map((l,i)=><div key={i} style={{padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:13}}><span style={{color:"#555"}}>{l.time}</span> — <span style={{color:"#bbb"}}>{l.text}</span></div>)}
@@ -755,7 +764,9 @@ function Recruit({prospects,setProspects}){
   return <div style={{padding:S.pg}} className="fade">
     <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>📤 גיוס נכסים</div>
     <div style={{color:"#777",fontSize:14,marginBottom:18}}>שלח הודעות מפתות לבעלי נכסים מיד2</div>
-    <div style={{display:"flex",gap:10,marginBottom:16}}><Pill ch="✉️ שליחה" active={mode==="send"} onClick={()=>setMode("send")} c={OR}/><Pill ch={"📋 כרטיסיות ("+prospects.length+")"} active={mode==="list"} onClick={()=>setMode("list")} c={G}/></div>
+    <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}><Pill ch="✉️ שליחה" active={mode==="send"} onClick={()=>setMode("send")} c={OR}/><Pill ch={"📋 כרטיסיות ("+prospects.length+")"} active={mode==="list"} onClick={()=>setMode("list")} c={G}/><Pill ch="🌐 דף נחיתה" active={mode==="landing"} onClick={()=>setMode("landing")} c={BL}/></div>
+
+    {mode==="landing"&&<LandingEditor landingConfig={landingConfig} setLandingConfig={setLandingConfig}/>}
 
     {mode==="send"&&<div>
       <div style={S.card}>
@@ -785,10 +796,11 @@ function Recruit({prospects,setProspects}){
           {p.followUp&&<Tag c={BL} ch="🔄 פולואפ"/>}
           {p.exclusive&&<Tag c={G} ch="🏆 בלעדיות"/>}
         </div>
-        <div style={{display:"flex",gap:8}}>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <Btn sm ch="כרטיסייה" c={OR} onClick={()=>setViewP(p)}/>
           <Btn sm ch="💬" c={GR} onClick={()=>openWA(p.phone)}/>
           {p.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(p.phone||'')}/>}
+          {p.phone&&<Btn sm ch="🌐 דף נחיתה" c={BL} ghost onClick={()=>{if(confirm("לשלוח דף נחיתה ל-"+p.phone+"?"))sendLandingPage(p)}}/>}
           <Btn sm ghost c={RE} ch="מחק" onClick={()=>delProspect(p.id)}/>
         </div>
       </div>)}
@@ -1501,9 +1513,11 @@ function Archive({sellers,setSellers,buyers,setBuyers}){
 // ━━━ APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const TABS=[
   {k:"home",l:"בית",i:"🏠"},{k:"recruit",l:"גיוס",i:"📤"},{k:"daily",l:"יומי",i:"📅"},
-  {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"agents",l:"רשת",i:"📒"},{k:"report",l:"דיווח",i:"📊"},
+  {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"agents",l:"רשת",i:"📒"},{k:"autoagents",l:"אוטומציה",i:"🤖"},{k:"report",l:"דיווח",i:"📊"},
   {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"archive",l:"ארכיון",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
+
+const LANDING_URL="https://nadlanpro.vercel.app/landing.html";
 
 const IB=[
 {id:101,name:"רחלה קלוד",phone:"0532746623",grade:"A",budget:"",notes:"יד 2, אלעזר בן יאיר. מגיעה לסיור סגירה, לדבר בשני להגיע שלישי",sentProperties:[],actions:["נשלחו דירות"],archived:false,logs:[{text:"נוספה",time:"22/03/26"}]},
@@ -2375,6 +2389,249 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
   </div>
 }
 
+// ━━━ AGENT AUTOMATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildAgentShortMsg(prop){
+  const city=prop.city||"באר שבע";
+  const addr=prop.address||prop.name||"";
+  const rooms=prop.rooms||"";
+  const size=prop.size?prop.size+' מ"ר':"";
+  const floor=prop.floor||"";
+  const price=(prop.price&&!isNaN(Number(prop.price)))?Number(prop.price).toLocaleString()+" ₪":"";
+  let m="דירה למכירה\n";
+  m+="📍 "+addr+(city?", "+city:"")+"\n";
+  const parts=[];
+  if(rooms)parts.push("🛏️ "+rooms+" חד'");
+  if(floor)parts.push("🏢 ק' "+floor);
+  if(size)parts.push("📐 "+size);
+  if(parts.length)m+=parts.join(" | ")+"\n";
+  if(price)m+="💰 "+price+"\n";
+  m+="📞 חיים 0544740691";
+  return m;
+}
+function buildImagesLinksMsg(prop){
+  const imgs=(prop.images||[]).filter(i=>i.type!=="video"&&i.url);
+  if(imgs.length===0)return null;
+  let m="תמונות הדירה ב"+(prop.address||prop.name||"")+":\n\n";
+  imgs.forEach((img,i)=>{m+=(i+1)+". "+img.url+"\n"});
+  return m;
+}
+
+function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentAuto}){
+  const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
+  const items=agentAuto.items||[];
+  const queue=items.map(it=>{const p=allProps.find(p=>p.id===it.propId&&p._src===it.propSrc);return p?{...p,_qId:it.id}:null}).filter(Boolean);
+  const sendTimes=agentAuto.sendTimes||["09:00","14:00"];
+  const selectedAgents=agentAuto.selectedAgents||[];
+  const lastSent=agentAuto.lastSent||{};
+  const[showPicker,setShowPicker]=useState(false);
+  const[showAgents,setShowAgents]=useState(false);
+  const[preview,setPreview]=useState(null);
+  const[sending,setSending]=useState(false);
+  const[search,setSearch]=useState("");
+  const[imgModal,setImgModal]=useState(null);
+
+  function patch(p){setAgentAuto({...agentAuto,...p})}
+  function addProp(p){
+    if(items.some(it=>it.propId===p.id&&it.propSrc===p._src)){toast("כבר ברשימה");return}
+    patch({items:[...items,{id:Date.now(),propId:p.id,propSrc:p._src}]});
+    toast("✅ נוסף לאוטומציה");
+  }
+  function removeProp(qId){patch({items:items.filter(it=>it.id!==qId)});toast("🗑 הוסר")}
+  function toggleAgent(id){
+    const sel=selectedAgents.includes(id)?selectedAgents.filter(x=>x!==id):[...selectedAgents,id];
+    patch({selectedAgents:sel});
+  }
+  function setTimes(idx,val){
+    const t=[...sendTimes];t[idx]=val;patch({sendTimes:t});
+  }
+  function openPreview(timeStr){
+    if(queue.length===0){toast("⚠️ אין דירות באוטומציה");return}
+    const agents=(agentsContacts||[]).filter(a=>selectedAgents.includes(a.id)&&a.phone);
+    if(agents.length===0){toast("⚠️ לא נבחרו מתווכים");return}
+    setPreview({time:timeStr,agents,props:queue});
+  }
+  async function approveAndSend(){
+    if(!preview||sending)return;
+    setSending(true);
+    const{time,agents,props}=preview;
+    let ok=0;
+    for(let i=0;i<agents.length;i++){
+      const a=agents[i];
+      for(const p of props){
+        const msg=buildAgentShortMsg(p);
+        const sent=await sendDirectMessage(a.phone,msg);
+        if(sent)ok++;
+      }
+      if(i<agents.length-1)await new Promise(r=>setTimeout(r,3000));
+    }
+    const key=new Date().toISOString().slice(0,10)+"_"+time;
+    patch({lastSent:{...lastSent,[key]:{agents:agents.length,props:props.length,sentAt:new Date().toISOString()}}});
+    setPreview(null);setSending(false);
+    toast("✅ נשלח ל-"+agents.length+" מתווכים בשעה "+time);
+  }
+  async function sendImagesLink(prop,agentPhone){
+    const m=buildImagesLinksMsg(prop);
+    if(!m){toast("⚠️ אין תמונות לנכס");return}
+    if(!agentPhone){toast("⚠️ חסר טלפון");return}
+    const ok=await sendDirectMessage(agentPhone,m);
+    if(ok)toast("📸 קישורי תמונות נשלחו");
+  }
+
+  const filteredPicker=allProps.filter(p=>!items.some(it=>it.propId===p.id&&it.propSrc===p._src)).filter(p=>!search||((p.address||"")+(p.name||"")).toLowerCase().includes(search.toLowerCase()));
+  const today=new Date().toISOString().slice(0,10);
+
+  return <div style={{padding:S.pg}} className="fade">
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>🤖 אוטומציית מתווכים</div>
+    <div style={{color:"#777",fontSize:14,marginBottom:18}}>שליחה אוטומטית של דירות לרשת המתווכים — באישור שלך בלבד</div>
+
+    {/* Send times */}
+    <div style={S.card}>
+      <Lbl t="שעות שליחה" icon="⏰"/>
+      <div style={{display:"flex",gap:10,marginBottom:10}}>
+        {sendTimes.map((t,i)=><div key={i} style={{flex:1}}>
+          <input type="time" value={t} onChange={e=>setTimes(i,e.target.value)} style={S.inp}/>
+        </div>)}
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {sendTimes.map((t,i)=>{
+          const k=today+"_"+t;
+          const sent=lastSent[k];
+          return <Btn key={i} sm ch={"📤 שלח עכשיו ("+t+")"+(sent?" ✓":"")} c={sent?GR:OR} onClick={()=>openPreview(t)}/>;
+        })}
+      </div>
+    </div>
+
+    {/* Agents selection */}
+    <div style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <Lbl t={"מתווכים נבחרים ("+selectedAgents.length+"/"+(agentsContacts||[]).length+")"} icon="📒"/>
+        <Btn sm ch={showAgents?"סגור":"בחר מתווכים"} c={BL} ghost onClick={()=>setShowAgents(!showAgents)}/>
+      </div>
+      {showAgents&&<div style={{maxHeight:300,overflowY:"auto",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:8}}>
+        {(agentsContacts||[]).length===0?<div style={{color:"#777",padding:14,textAlign:"center"}}>אין מתווכים ברשת — עבור לטאב "רשת"</div>:(agentsContacts||[]).map(a=>{
+          const checked=selectedAgents.includes(a.id);
+          return <label key={a.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+            <input type="checkbox" checked={checked} onChange={()=>toggleAgent(a.id)} style={{width:18,height:18,accentColor:BL}}/>
+            <div style={{flex:1}}>
+              <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{a.name||"—"}</div>
+              <div style={{color:"#777",fontSize:12}}>{a.phone||""}</div>
+            </div>
+          </label>;
+        })}
+      </div>}
+      {!showAgents&&selectedAgents.length>0&&<div style={{color:"#bbb",fontSize:13,marginTop:4}}>
+        {(agentsContacts||[]).filter(a=>selectedAgents.includes(a.id)).map(a=>a.name||a.phone).join(", ")}
+      </div>}
+    </div>
+
+    {/* Properties queue */}
+    <div style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <Lbl t={"דירות באוטומציה ("+queue.length+")"} icon="🏠"/>
+        <Btn sm ch="➕ הוסף דירה" c={GR} onClick={()=>setShowPicker(!showPicker)}/>
+      </div>
+      {showPicker&&<div style={{background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:12,padding:10,marginBottom:12}}>
+        <input placeholder="חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:8}}/>
+        <div style={{maxHeight:260,overflowY:"auto"}}>
+          {filteredPicker.length===0?<div style={{color:"#777",padding:10,textAlign:"center"}}>אין דירות זמינות</div>:filteredPicker.map(p=><div key={p._src+"_"+p.id} onClick={()=>{addProp(p);setShowPicker(false);setSearch("")}} style={{padding:"10px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+              <div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד' · ":""}{p.price?fmtP(p.price):""}</div>
+            </div>
+            <span style={{color:GR,fontSize:18}}>＋</span>
+          </div>)}
+        </div>
+      </div>}
+      {queue.length===0?<div style={{color:"#777",padding:14,textAlign:"center",fontSize:14}}>אין דירות באוטומציה</div>:queue.map(p=><div key={p._qId} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <div>
+          <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+          <div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד' · ":""}{p.price?fmtP(p.price):""}{(p.images||[]).filter(i=>i.type!=="video").length>0?" · 📷 "+((p.images||[]).filter(i=>i.type!=="video").length):""}</div>
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          <Btn sm ch="📸 קישור" c={BL} ghost onClick={()=>setImgModal(p)}/>
+          <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
+        </div>
+      </div>)}
+    </div>
+
+    {/* Log */}
+    {Object.keys(lastSent).length>0&&<div style={S.card}>
+      <Lbl t="היסטוריית שליחות" icon="📜"/>
+      {Object.entries(lastSent).slice(-10).reverse().map(([k,v])=><div key={k} style={{padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:13}}>
+        <span style={{color:"#555"}}>{k}</span> — <span style={{color:GR}}>נשלח ל-{v.agents} מתווכים ({v.props} דירות)</span>
+      </div>)}
+    </div>}
+
+    {/* Preview / approve modal */}
+    {preview&&<Modal title={"📋 תצוגה מקדימה — "+preview.time} color={OR} onClose={()=>!sending&&setPreview(null)} center>
+      <div style={{background:"rgba(245,176,107,0.08)",border:"1px solid rgba(245,176,107,0.3)",borderRadius:12,padding:10,marginBottom:14,fontSize:13,color:"#f5b06b"}}>
+        ⚠️ עומד להישלח ל-<b>{preview.agents.length}</b> מתווכים, <b>{preview.props.length}</b> דירות לכל מתווך. השהייה 3 שניות בין מתווך.
+      </div>
+      <Lbl t="הודעה לדוגמה (לדירה הראשונה)" icon="💬"/>
+      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:10,padding:12,marginBottom:14,fontSize:13,lineHeight:1.7,color:"#ede8f5",whiteSpace:"pre-wrap"}}>{buildAgentShortMsg(preview.props[0])}</div>
+      <Lbl t="מתווכים" icon="📒"/>
+      <div style={{color:"#bbb",fontSize:13,marginBottom:14,lineHeight:1.6}}>{preview.agents.map(a=>a.name||a.phone).join(", ")}</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn ch={sending?"שולח...":"✅ אשר ושלח"} c={GR} onClick={approveAndSend} dis={sending}/>
+        <Btn ghost ch="ביטול" c={"#888"} onClick={()=>!sending&&setPreview(null)} dis={sending}/>
+      </div>
+    </Modal>}
+
+    {/* Image link modal */}
+    {imgModal&&<Modal title={"📸 שלח קישור תמונות — "+(imgModal.address||imgModal.name||"")} color={BL} onClose={()=>setImgModal(null)} center>
+      <Lbl t="בחר מתווך לשליחה"/>
+      {(agentsContacts||[]).length===0?<div style={{color:"#777",padding:14}}>אין מתווכים ברשת</div>:(agentsContacts||[]).map(a=>a.phone?<div key={a.id} onClick={async()=>{setImgModal(null);await sendImagesLink(imgModal,a.phone)}} style={{padding:"10px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{a.name||"—"}</div>
+          <div style={{color:"#777",fontSize:12}}>{a.phone}</div>
+        </div>
+        <span style={{color:BL,fontSize:18}}>📤</span>
+      </div>:null)}
+    </Modal>}
+  </div>
+}
+
+// ━━━ LANDING PAGE EDITOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function LandingEditor({landingConfig,setLandingConfig}){
+  const c=landingConfig||{};
+  const[title,setTitle]=useState(c.title||"חיים בן סימון — RE/MAX באר שבע");
+  const[subtitle,setSubtitle]=useState(c.subtitle||'שיווק נדל"ן מקצועי שמביא תוצאות');
+  const[bio,setBio]=useState(c.bio||"");
+  const[phone,setPhone]=useState(c.phone||"0544740691");
+  const[videos,setVideos]=useState(()=>{
+    const v=c.videos||[];
+    const arr=[];
+    for(let i=0;i<4;i++)arr.push(v[i]||{title:"",url:""});
+    return arr;
+  });
+  function setVid(i,f,v){const n=[...videos];n[i]={...n[i],[f]:v};setVideos(n)}
+  function save(){
+    setLandingConfig({title,subtitle,bio,phone,videos,updatedAt:new Date().toISOString()});
+    toast("💾 נשמר ב-Firebase");
+  }
+  function preview(){window.open(LANDING_URL,"_blank")}
+  return <div style={S.card}>
+    <Lbl t="כותרת ראשית" icon="🎯"/>
+    <input value={title} onChange={e=>setTitle(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <Lbl t="כותרת משנית"/>
+    <input value={subtitle} onChange={e=>setSubtitle(e.target.value)} style={{...S.inp,marginBottom:12}}/>
+    <Lbl t="טלפון" icon="📱"/>
+    <input value={phone} onChange={e=>setPhone(e.target.value)} style={{...S.inp,marginBottom:12,direction:"ltr",textAlign:"left"}}/>
+    <Lbl t="על עצמי (ביו מקצועי)" icon="✍️"/>
+    <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={5} style={{...S.inp,resize:"none",marginBottom:14}}/>
+    <Lbl t="סרטונים (עד 4)" icon="🎬"/>
+    {videos.map((v,i)=><div key={i} style={{background:"rgba(155,142,196,0.05)",border:"1px solid rgba(155,142,196,0.15)",borderRadius:12,padding:10,marginBottom:10}}>
+      <div style={{color:PU,fontSize:12,marginBottom:6,fontWeight:700}}>סרטון {i+1}</div>
+      <input placeholder="כותרת לסרטון" value={v.title} onChange={e=>setVid(i,"title",e.target.value)} style={{...S.inp,marginBottom:8}}/>
+      <input placeholder="קישור URL (mp4, Drive, וכו')" value={v.url} onChange={e=>setVid(i,"url",e.target.value)} style={{...S.inp,direction:"ltr",textAlign:"left",fontSize:12}}/>
+    </div>)}
+    <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+      <Btn ch="💾 שמור" c={GR} onClick={save}/>
+      <Btn ghost ch="👁 תצוגה מקדימה" c={BL} onClick={preview}/>
+    </div>
+  </div>
+}
+
 function App(){
   const[tab,setTab]=useState("home");const[crmInitTab,setCrmInitTab]=useState("sellers");
   const[loaded,setLoaded]=useState(false);
@@ -2386,6 +2643,9 @@ function App(){
   const[prospects,_setProspects]=useState([]);
   const[agentsContacts,_setAgentsContacts]=useState([]);
   const[fbGroups,setFbGroups]=useState([]);
+  const[agentAuto,_setAgentAuto]=useState({});
+  const[landingConfig,_setLandingConfig]=useState({});
+  const[autoBanner,setAutoBanner]=useState(null); // {time} when due
 
   function addFbGroup(g){
     try{db.collection("fb_groups").add({...g,created:new Date().toISOString()})}
@@ -2403,6 +2663,8 @@ function App(){
   function setBrokerProps(v){_setBrokerProps(v);sv("brokerProps",v);fsWrite("brokerProps",v)}
   function setProspects(v){_setProspects(v);sv("prospects",v);fsWrite("prospects",v)}
   function setAgentsContacts(v){_setAgentsContacts(v);sv("agentsContacts",v);fsWrite("agentsContacts",v)}
+  function setAgentAuto(v){_setAgentAuto(v);sv("agentAuto",v);try{db.collection("data").doc("agentAuto").set({items:v})}catch(e){console.error("agentAuto write err",e)}}
+  function setLandingConfig(v){_setLandingConfig(v);sv("landingConfig",v);try{db.collection("data").doc("landingConfig").set({items:v})}catch(e){console.error("landingConfig write err",e)}}
 
   useEffect(()=>{
     let unsubs=[];
@@ -2430,10 +2692,15 @@ function App(){
           }
         }
       }catch(e){console.error("Firestore init error:",e)}
-      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts]];
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["landingConfig",d=>_setLandingConfig(d||{})]];
       collections.forEach(([name,setter])=>{
         const unsub=db.collection("data").doc(name).onSnapshot(doc=>{
-          if(doc.exists){const items=doc.data().items||[];setter(items);sv(name,items)}
+          if(doc.exists){
+            const raw=doc.data().items;
+            const isObjDoc=name==="agentAuto"||name==="landingConfig";
+            const items=raw==null?(isObjDoc?{}:[]):raw;
+            setter(items);sv(name,items);
+          }
         },e=>console.error("Firestore sync error:",name,e));
         unsubs.push(unsub);
       });
@@ -2446,6 +2713,24 @@ function App(){
     return()=>unsubs.forEach(u=>u());
   },[]);
 
+  // Check if a send-time has passed today and was not yet sent — show banner.
+  useEffect(()=>{
+    if(!loaded)return;
+    const times=(agentAuto&&agentAuto.sendTimes)||["09:00","14:00"];
+    const lastSent=(agentAuto&&agentAuto.lastSent)||{};
+    const now=new Date();
+    const today=now.toISOString().slice(0,10);
+    const nowMin=now.getHours()*60+now.getMinutes();
+    let due=null;
+    for(const t of times){
+      const[h,m]=t.split(":").map(Number);
+      const tMin=h*60+m;
+      const key=today+"_"+t;
+      if(nowMin>=tMin&&!lastSent[key]){due=t}
+    }
+    setAutoBanner(due?{time:due}:null);
+  },[loaded,agentAuto,tab]);
+
   return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:92}}>
     <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 60% 45% at 12% 8%,rgba(100,70,180,0.07) 0%,transparent 55%)",pointerEvents:"none",zIndex:0}}/>
     <div style={{position:"relative",zIndex:1}}>
@@ -2456,12 +2741,20 @@ function App(){
         </div>
       </div>
 
+      {autoBanner&&<div style={{margin:"12px 16px",background:"linear-gradient(135deg,rgba(232,168,76,0.18),rgba(232,168,76,0.08))",border:"1px solid rgba(232,168,76,0.5)",borderRadius:14,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <div style={{color:"#ede8f5",fontSize:14,fontWeight:700}}>⏰ הגיע זמן שליחה למתווכים ({autoBanner.time}) — לשלוח עכשיו?</div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:OR,border:"none",borderRadius:10,padding:"8px 14px",color:"#1a1208",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
+          <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"#888",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
+        </div>
+      </div>}
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
-      {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects}/>}
+      {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects} landingConfig={landingConfig||{}} setLandingConfig={setLandingConfig}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
       {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
       {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
+      {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
       {tab==="uni"&&<University/>}
