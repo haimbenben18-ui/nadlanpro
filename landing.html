@@ -9,8 +9,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:#f5f3ee;color:#003366;font-family:'Heebo',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -28,7 +26,7 @@
   .hero{background:linear-gradient(160deg,#003366 0%,#001f3f 100%);color:#fff;padding:34px 22px 40px;position:relative;overflow:hidden}
   .hero:after{content:"";position:absolute;inset:auto -30% -55% -30%;height:85%;background:radial-gradient(closest-side,rgba(212,175,55,0.32),transparent 70%);pointer-events:none}
   .hero-inner{max-width:780px;margin:0 auto;position:relative;z-index:1}
-  .hero h1{font-family:'Frank Ruhl Libre',serif;font-size:24px;font-weight:900;line-height:1.35;margin-bottom:14px}
+  .hero h1{font-family:'Frank Ruhl Libre',serif;font-size:24px;font-weight:900;line-height:1.35;margin-bottom:14px;color:#fff}
   .hero h1 .accent{color:#D4AF37}
   .hero p{font-size:15px;line-height:1.85;color:#e8edf3;font-weight:400}
   .hero .pill{display:inline-block;background:rgba(212,175,55,0.18);color:#D4AF37;border:1px solid rgba(212,175,55,0.5);padding:4px 14px;border-radius:30px;font-size:11px;font-weight:800;letter-spacing:1.5px;margin-bottom:14px}
@@ -54,10 +52,10 @@
   .video-card .vtitle{padding:12px 16px;color:#003366;font-weight:800;font-size:15px;background:linear-gradient(90deg,rgba(212,175,55,0.12),transparent);border-bottom:1px solid #eee8d8}
   .video-card video{width:100%;height:auto;display:block;background:#000;min-height:200px}
   .video-card iframe{width:100%;aspect-ratio:16/9;display:block;background:#000;border:0}
-
-  /* Bio */
-  .bio-section{background:#fff}
-  .bio{font-size:15px;line-height:1.95;color:#36394b;white-space:pre-wrap;max-width:600px;margin:0 auto;text-align:right}
+  .video-placeholder{background:#fff;border:2px dashed #d4af37;border-radius:14px;padding:36px 20px;text-align:center;color:#003366}
+  .video-placeholder .em{font-size:42px;display:block;margin-bottom:10px;opacity:0.7}
+  .video-placeholder .vp-title{font-weight:800;font-size:16px;margin-bottom:6px}
+  .video-placeholder .vp-sub{color:#36394b;font-size:13px}
 
   /* Footer */
   .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
@@ -69,8 +67,6 @@
   .cta-float{position:fixed;bottom:0;left:0;right:0;background:#25d366;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:15px;text-decoration:none;box-shadow:0 -6px 22px rgba(0,0,0,0.22);z-index:200;text-align:center;line-height:1.35}
   .cta-float:active{transform:scale(0.98);transition:transform .12s}
   .cta-float .em{font-size:22px}
-
-  .loading{padding:80px 20px;text-align:center;color:#003366;font-weight:700}
 
   @media(min-width:680px){
     .topbar{padding:18px 26px}
@@ -89,35 +85,93 @@
 </style>
 </head>
 <body>
-<div id="root" class="loading">טוען…</div>
 
+<!-- ─── Header ─── -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="remax-logo">RE<span class="slash">/</span>MAX</div>
+    <div class="agent-tag">
+      <div class="name">חיים בן סימון</div>
+      <div>RE/MAX באר שבע</div>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Hero ─── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="pill">RE/MAX · באר שבע</div>
+    <h1 id="hero-title">חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX באר שבע</h1>
+    <p id="hero-sub">הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.</p>
+  </div>
+</section>
+
+<!-- ─── Why work with me ─── -->
+<section class="section why-section">
+  <div class="section-title">למה לעבוד איתי?</div>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="icon">🏢</div>
+      <div class="content">
+        <div class="ctitle">הכוח של המותג</div>
+        <div class="cdesc">כחלק מ-RE/MAX באר שבע, עומד לרשותכם מערך של כ-80 סוכנים האחראים על כמעט שליש מהעסקאות בעיר.</div>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="icon">💻</div>
+      <div class="content">
+        <div class="ctitle">טכנולוגיה בשירות המכירה</div>
+        <div class="cdesc">שימוש במערכות אוטומציה ושיווק דיגיטלי מתקדם למציאת קונה במהירות.</div>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="icon">📊</div>
+      <div class="content">
+        <div class="ctitle">שקיפות מלאה</div>
+        <div class="cdesc">ניהול "תיק לקוח" אישי עם עדכון שבועי על מצב שיווק הנכס.</div>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="icon">🤝</div>
+      <div class="content">
+        <div class="ctitle">שירות ללא פשרות</div>
+        <div class="cdesc">ניהול מו"מ ברמה הגבוהה ביותר ליצירת העסקה הטובה ביותר.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Videos ─── -->
+<section class="section videos-section">
+  <div class="section-title">הכנתי עבורכם סדרת סרטוני תוכן שיעזרו להגיע להחלטה הנכונה</div>
+  <div id="videos">
+    <div class="video-placeholder">
+      <span class="em">🎬</span>
+      <div class="vp-title">הסרטונים יעלו בקרוב</div>
+      <div class="vp-sub">תוכן מקצועי על שיווק, תמחור, ומשא ומתן — בדרך אליכם.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <div class="flogo">RE<span class="slash">/</span>MAX</div>
+  <div class="fline">חיים בן סימון | RE/MAX באר שבע | 054-474-0691</div>
+</footer>
+
+<!-- ─── Floating CTA — the ONLY outbound link on the page ─── -->
+<a class="cta-float" href="https://wa.me/972544740691?text=%D7%94%D7%99%D7%99%20%D7%97%D7%99%D7%99%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%AA%20%D7%A9%D7%99%D7%95%D7%95%D7%A7%20%D7%9C%D7%93%D7%99%D7%A8%D7%94%20%D7%A9%D7%9C%D7%99" target="_blank" rel="noopener">
+  <span class="em">💬</span>
+  <span id="cta-text">חיים, בוא נבנה תוכנית שיווק לדירה שלי</span>
+</a>
+
+<!-- ─── Firebase enrichment (optional — videos and overrides). Page works fully without it. ─── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-  // ─── Firebase config (read-only, public Web SDK key) ───
   const firebaseConfig={apiKey:"AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew",authDomain:"nadlanpro-5b041.firebaseapp.com",projectId:"nadlanpro-5b041",storageBucket:"nadlanpro-5b041.firebasestorage.app",messagingSenderId:"404856613598",appId:"1:404856613598:web:916fdd4cbbf05519eb304f"};
-  firebase.initializeApp(firebaseConfig);
-  const db=firebase.firestore();
-
-  // ─── Hardcoded — the page's ONLY outbound link ───
-  const WA_BASE="https://wa.me/972544740691";
-  const DEFAULT_CTA_TEXT="חיים, בוא נבנה תוכנית שיווק לדירה שלי";
-  const WA_PREFILL="היי חיים, אשמח לשמוע על תוכנית שיווק לדירה שלי";
-
-  // ─── Default content (matches the spec) ───
-  const DEFAULTS={
-    title:'חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX באר שבע',
-    subtitle:'הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.',
-    bio:'',
-    phone:'054-474-0691',
-    cta_text:DEFAULT_CTA_TEXT,
-    videos:[]
-  };
-
-  const WHY=[
-    {icon:'🏢',title:'הכוח של המותג',desc:'כחלק מ-RE/MAX באר שבע, עומד לרשותך מערך של כ-80 סוכנים האחראים על כמעט שליש מהעסקאות בעיר.'},
-    {icon:'💻',title:'טכנולוגיה בשירות המכירה',desc:'שימוש במערכות אוטומציה ושיווק דיגיטלי מתקדם למציאת קונה במהירות.'},
-    {icon:'📊',title:'שקיפות מלאה',desc:'ניהול "תיק לקוח" אישי עם עדכון שבועי על מצב שיווק הנכס.'},
-    {icon:'🤝',title:'שירות ללא פשרות',desc:'ניהול מו"מ ברמה הגבוהה ביותר ליצירת העסקה הטובה ביותר עבורך.'},
-  ];
+  try { firebase.initializeApp(firebaseConfig); } catch(e) { console.warn("firebase init",e); }
+  const db = (function(){try{return firebase.firestore()}catch(e){return null}})();
 
   function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
@@ -130,51 +184,21 @@
     if(m)return '<iframe src="https://drive.google.com/file/d/'+m[1]+'/preview" allowfullscreen></iframe>';
     m=u.match(/vimeo\.com\/(\d+)/);
     if(m)return '<iframe src="https://player.vimeo.com/video/'+m[1]+'" frameborder="0" allow="fullscreen" allowfullscreen></iframe>';
-    // Cloudinary or any direct mp4/webm/mov — native HTML5 player as the spec requires.
     if(/res\.cloudinary\.com\/.+\/video\//.test(u)||/\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)){
-      return '<video controls playsinline preload="metadata"><source src="'+esc(u)+'" type="video/mp4"></video>';
+      return '<video controls playsinline preload="metadata" width="100%"><source src="'+esc(u)+'" type="video/mp4"></video>';
     }
     return '';
   }
 
-  function render(cfg){
-    const title=(cfg.title||DEFAULTS.title);
-    const subtitle=(cfg.subtitle||DEFAULTS.subtitle);
-    const bio=(cfg.bio||DEFAULTS.bio);
-    const phone=(cfg.phone||DEFAULTS.phone);
-    const cta=(cfg.cta_text||DEFAULTS.cta_text);
-    const videos=(cfg.videos||[]).filter(v=>v&&v.url);
-    const ctaUrl=WA_BASE+'?text='+encodeURIComponent(WA_PREFILL);
+  function applyConfig(cfg){
+    if(!cfg)return;
+    if(cfg.title)    document.getElementById("hero-title").textContent = cfg.title;
+    if(cfg.subtitle) document.getElementById("hero-sub").textContent   = cfg.subtitle;
+    if(cfg.cta_text) document.getElementById("cta-text").textContent   = cfg.cta_text;
 
-    let html='';
-
-    // Header
-    html+='<header class="topbar"><div class="topbar-inner">';
-    html+='<div class="remax-logo">RE<span class="slash">/</span>MAX</div>';
-    html+='<div class="agent-tag"><div class="name">חיים בן סימון</div><div>RE/MAX באר שבע</div></div>';
-    html+='</div></header>';
-
-    // Hero
-    html+='<section class="hero"><div class="hero-inner">';
-    html+='<div class="pill">RE/MAX · באר שבע</div>';
-    html+='<h1>'+esc(title)+'</h1>';
-    html+='<p>'+esc(subtitle)+'</p>';
-    html+='</div></section>';
-
-    // Why work with me
-    html+='<section class="section why-section">';
-    html+='<div class="section-title">למה לעבוד איתי?</div>';
-    html+='<div class="why-grid">';
-    WHY.forEach(w=>{
-      html+='<div class="why-card"><div class="icon">'+w.icon+'</div><div class="content"><div class="ctitle">'+esc(w.title)+'</div><div class="cdesc">'+esc(w.desc)+'</div></div></div>';
-    });
-    html+='</div></section>';
-
-    // Videos
+    const videos = (cfg.videos||[]).filter(v=>v&&v.url);
     if(videos.length>0){
-      html+='<section class="section videos-section">';
-      html+='<div class="section-title">סרטוני תוכן שיעזרו לך להגיע להחלטה הנכונה</div>';
-      html+='<div class="videos-intro">הכנתי עבורך סדרת סרטוני תוכן מקצועיים — לפני שאתה מקבל החלטה גורלית על הנכס שלך, שווה לראות.</div>';
+      let html='';
       videos.forEach(v=>{
         const embed=videoEmbed(v.url);
         if(!embed)return;
@@ -183,44 +207,18 @@
         html+=embed;
         html+='</div>';
       });
-      html+='</section>';
+      if(html) document.getElementById("videos").innerHTML = html;
     }
-
-    // Bio
-    if(bio&&bio.trim()){
-      html+='<section class="section bio-section">';
-      html+='<div class="section-title">על עצמי</div>';
-      html+='<div class="bio">'+esc(bio)+'</div>';
-      html+='</section>';
-    }
-
-    // Footer
-    html+='<footer class="footer">';
-    html+='<div class="flogo">RE<span class="slash">/</span>MAX</div>';
-    html+='<div class="fline">חיים בן סימון | RE/MAX באר שבע | '+esc(phone)+'</div>';
-    html+='</footer>';
-
-    // Floating CTA — the ONE outbound link.
-    html+='<a class="cta-float" href="'+ctaUrl+'" target="_blank" rel="noopener"><span class="em">💬</span><span>'+esc(cta)+'</span></a>';
-
-    const root=document.getElementById("root");
-    root.className="";
-    root.innerHTML=html;
   }
 
-  // ─── Live config from Firestore (landing_page/config) ───
-  db.collection("landing_page").doc("config").onSnapshot(doc=>{
-    let cfg={};
-    if(doc.exists){
+  if(db){
+    db.collection("landing_page").doc("config").onSnapshot(doc=>{
+      if(!doc.exists)return;
       const raw=doc.data()||{};
-      // Support both flat docs and {items:{...}} wrapper for backwards-compat.
-      cfg=(raw.items&&typeof raw.items==="object"&&!Array.isArray(raw.items))?raw.items:raw;
-    }
-    render(cfg);
-  },err=>{
-    console.error("landing config sync err",err);
-    render({});
-  });
+      const cfg=(raw.items&&typeof raw.items==="object"&&!Array.isArray(raw.items))?raw.items:raw;
+      applyConfig(cfg);
+    },err=>console.warn("landing config sync err",err));
+  }
 </script>
 </body>
 </html>
