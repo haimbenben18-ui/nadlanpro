@@ -18,25 +18,45 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
+:root{
+  --bg-primary:#0a0e1a;
+  --bg-secondary:#111827;
+  --bg-card:rgba(17,24,39,0.7);
+  --border-card:rgba(212,175,55,0.15);
+  --text-primary:#f0f0f0;
+  --text-secondary:#9ca3af;
+  --accent-gold:#D4AF37;
+  --accent-red:#ED1C24;
+  --accent-blue:#003366;
+  --accent-blue-light:#1e4d8c;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#07060d;font-family:'Heebo',sans-serif;direction:rtl;color:#ede8f5;min-height:100vh;font-size:15px;line-height:1.5;overscroll-behavior:none}
+html,body{min-height:100vh}
+body{
+  background:#0a0e1a;
+  background-image:linear-gradient(135deg,#0a0e1a 0%,#111827 50%,#0d1321 100%);
+  background-attachment:fixed;
+  font-family:'Heebo',sans-serif;direction:rtl;color:var(--text-primary);
+  font-size:15px;line-height:1.55;overscroll-behavior:none;font-weight:400;
+}
 input,textarea,select,button{font-family:'Heebo',sans-serif;font-size:15px;-webkit-appearance:none}
 input[type=date]{color-scheme:dark}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:#2a2040;border-radius:4px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.45)}
 .fade{animation:fu .22s cubic-bezier(.4,0,.2,1) both}
 @keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
-.shimmer{background:linear-gradient(90deg,#c9a84c,#f0d888,#c9a84c);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+.shimmer{background:linear-gradient(90deg,#D4AF37,#f5d77a,#D4AF37);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(201,126,126,.4)}50%{box-shadow:0 0 0 12px rgba(201,126,126,0)}}
+@keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(237,28,36,.45)}50%{box-shadow:0 0 0 12px rgba(237,28,36,0)}}
 .rec{animation:pring 1.5s infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:20px;height:20px;border:2px solid #c9a84c;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+.spinner{width:20px;height:20px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
 @keyframes toastin{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes toastout{from{opacity:1}to{opacity:0;transform:translateY(16px)}}
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(22,20,32,0.96);border:1px solid #c9a84c;border-radius:14px;padding:11px 22px;color:#c9a84c;font-weight:700;font-size:14px;backdrop-filter:blur(20px);animation:toastin .25s ease,toastout .25s ease 2s forwards;pointer-events:none;white-space:nowrap}
-::selection{background:rgba(201,168,76,0.3)}
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(17,24,39,0.92);border:1px solid #D4AF37;border-radius:14px;padding:11px 22px;color:#D4AF37;font-weight:700;font-size:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:toastin .25s ease,toastout .25s ease 2s forwards;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+::selection{background:rgba(212,175,55,0.35);color:#0a0e1a}
 </style>
 </head>
 <body>
@@ -483,7 +503,8 @@ async function sendPropertyToMultipleAgents(prop,agents){
 </script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
-const G="#c9a84c",GR="#25d366",BL="#7eb8c9",PU="#9b8ec4",OR="#e8a84c",RE="#c97e7e",TE="#4cc9a8";
+// RE/MAX luxury dark palette — names preserved so semantics elsewhere keep working.
+const G="#D4AF37",GR="#25d366",BL="#1e4d8c",PU="#6b7a99",OR="#e8a317",RE="#ED1C24",TE="#4cc9a8";
 const PX="np7_";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -546,20 +567,20 @@ const IS=[
 ];
 
 const S={
-  card:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:18,marginBottom:12},
-  cg:{background:"rgba(201,168,76,0.05)",border:"1px solid rgba(201,168,76,0.18)",borderRadius:18,padding:18,marginBottom:12},
-  inp:{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:"13px 18px",color:"#ede8f5",fontSize:15,fontFamily:"inherit",outline:"none",boxSizing:"border-box"},
-  pg:"18px 16px 28px",
+  card:{background:"rgba(17,24,39,0.6)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",border:"1px solid rgba(212,175,55,0.15)",borderRadius:16,padding:20,marginBottom:16,boxShadow:"0 4px 24px rgba(0,0,0,0.3)",transition:"border-color .2s ease"},
+  cg:{background:"rgba(212,175,55,0.06)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",border:"1px solid rgba(212,175,55,0.25)",borderRadius:16,padding:20,marginBottom:16,boxShadow:"0 4px 24px rgba(0,0,0,0.2)"},
+  inp:{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:12,padding:"13px 16px",color:"#f0f0f0",fontSize:15,fontFamily:"inherit",outline:"none",boxSizing:"border-box",transition:"border-color .15s ease"},
+  pg:"20px 16px 130px",
 };
 
-function Tag({c,ch}){return <span style={{background:(c||G)+"15",color:c||G,border:"1px solid "+(c||G)+"30",borderRadius:8,padding:"4px 12px",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>{ch}</span>}
-function Btn({ch,onClick,c,ghost,sm,full,dis,icon}){const col=c||G;return <button onClick={onClick} disabled={dis} style={{background:ghost?"transparent":"linear-gradient(135deg,"+col+","+col+"bb)",color:ghost?col:(col===G||col===OR)?"#1a1208":"#fff",border:ghost?"1.5px solid "+col+"44":"none",borderRadius:14,padding:sm?"10px 18px":full?"15px":"12px 22px",fontSize:sm?13:15,fontWeight:700,cursor:dis?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.45:1,boxShadow:ghost?"none":"0 4px 16px "+col+"28",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6}}>{icon&&<span style={{fontSize:sm?15:17}}>{icon}</span>}{ch}</button>}
-function Pill({ch,active,onClick,c,count}){const col=c||G;return <button onClick={onClick} style={{background:active?col+"18":"rgba(255,255,255,0.03)",border:"1px solid "+(active?col+"55":"rgba(255,255,255,0.08)"),borderRadius:24,padding:"9px 20px",color:active?col:"#777",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6}}>{ch}{count!==undefined&&<span style={{background:col+"22",color:col,borderRadius:10,padding:"1px 7px",fontSize:11,fontWeight:800}}>{count}</span>}</button>}
-function Lbl({t,icon}){return <div style={{color:G,fontSize:12,fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:.6,display:"flex",alignItems:"center",gap:6}}>{icon&&<span style={{fontSize:14}}>{icon}</span>}{t}</div>}
+function Tag({c,ch}){return <span style={{background:(c||G)+"18",color:c||G,border:"1px solid "+(c||G)+"40",borderRadius:8,padding:"4px 12px",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{ch}</span>}
+function Btn({ch,onClick,c,ghost,sm,full,dis,icon}){const col=c||G;const isGold=col===G||col===OR;const bg=ghost?"transparent":(isGold?"linear-gradient(135deg,"+col+","+col+"cc)":"linear-gradient(135deg,"+col+","+col+"d0)");const textColor=ghost?col:(isGold?"#0a0e1a":"#fff");return <button onClick={onClick} disabled={dis} style={{background:bg,color:textColor,border:ghost?"1.5px solid "+col+"55":"none",borderRadius:12,padding:sm?"10px 18px":full?"14px 22px":"12px 22px",fontSize:sm?13:15,fontWeight:600,cursor:dis?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.45:1,boxShadow:ghost?"none":"0 4px 14px "+col+"38",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,transition:"transform .12s ease, box-shadow .15s ease"}}>{icon&&<span style={{fontSize:sm?15:17}}>{icon}</span>}{ch}</button>}
+function Pill({ch,active,onClick,c,count}){const col=c||G;return <button onClick={onClick} style={{background:active?col+"22":"rgba(255,255,255,0.03)",border:"1px solid "+(active?col+"66":"rgba(255,255,255,0.08)"),borderRadius:24,padding:"9px 20px",color:active?col:"#9ca3af",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transition:"all .15s ease"}}>{ch}{count!==undefined&&<span style={{background:col+"33",color:col,borderRadius:10,padding:"1px 7px",fontSize:11,fontWeight:800}}>{count}</span>}</button>}
+function Lbl({t,icon}){return <div style={{color:G,fontSize:12,fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:.7,display:"flex",alignItems:"center",gap:6}}>{icon&&<span style={{fontSize:14}}>{icon}</span>}{t}</div>}
 function Inp({label,ph,val,set,type,rows,mb,icon}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label} icon={icon}/>}{rows?<textarea placeholder={ph} value={val} onChange={e=>set(e.target.value)} rows={rows} style={{...S.inp,resize:"none",lineHeight:1.65}}/>:<input type={type||"text"} placeholder={ph} value={val} onChange={e=>set(e.target.value)} style={S.inp}/>}</div>}
-function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label}/>}<select value={val} onChange={e=>set(e.target.value)} style={{...S.inp,background:"#0e0d14"}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>}
-function Empty({icon,text}){return <div style={{...S.card,textAlign:"center",color:"#444",padding:40}}><div style={{fontSize:44,marginBottom:12,opacity:.7}}>{icon}</div><div style={{color:"#555"}}>{text}</div></div>}
-function Modal({children,onClose,title,color}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"#13111c",borderRadius:"22px 22px 18px 18px",padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(255,255,255,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:800,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
+function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label}/>}<select value={val} onChange={e=>set(e.target.value)} style={{...S.inp,background:"#111827"}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>}
+function Empty({icon,text}){return <div style={{...S.card,textAlign:"center",color:"#6b7280",padding:48}}><div style={{fontSize:48,marginBottom:14,opacity:.55}}>{icon}</div><div style={{color:"#9ca3af",fontSize:14}}>{text}</div></div>}
+function Modal({children,onClose,title,color,center}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:500,display:"flex",alignItems:center?"center":"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"rgba(17,24,39,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:20,padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(212,175,55,0.2)",boxShadow:"0 16px 50px rgba(0,0,0,0.55)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:700,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#9ca3af",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
 
 function openWA(phone,msg){
   const p=(phone||"").replace(/^0/,"972").replace(/[-\s]/g,"");
@@ -2891,21 +2912,21 @@ function App(){
     setAutoBanner(due?{time:due}:null);
   },[loaded,agentAuto,tab]);
 
-  return <div style={{background:"#07060d",minHeight:"100vh",paddingBottom:92}}>
-    <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 60% 45% at 12% 8%,rgba(100,70,180,0.07) 0%,transparent 55%)",pointerEvents:"none",zIndex:0}}/>
+  return <div style={{background:"#0a0e1a",backgroundImage:"linear-gradient(135deg,#0a0e1a 0%,#111827 50%,#0d1321 100%)",backgroundAttachment:"fixed",minHeight:"100vh",paddingBottom:120}}>
+    <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 70% 50% at 15% 8%,rgba(212,175,55,0.06) 0%,transparent 60%)",pointerEvents:"none",zIndex:0}}/>
     <div style={{position:"relative",zIndex:1}}>
-      <div style={{background:"rgba(7,6,13,0.96)",backdropFilter:"blur(24px)",borderBottom:"1px solid rgba(201,168,76,0.1)",padding:"15px 18px",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:"rgba(10,14,26,0.82)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(212,175,55,0.15)",padding:"15px 20px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:24,color:G}}>NadlanPro</div><div style={{fontSize:11,color:"#444",marginTop:2}}>RE/MAX · חיים בן סימון · באר שבע</div></div>
-          <div style={{background:"rgba(37,211,102,0.07)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:700,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
+          <div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:24,color:G,letterSpacing:0.4}}>NadlanPro</div><div style={{fontSize:11,color:"#6b7280",marginTop:2,letterSpacing:0.3}}>RE/MAX · חיים בן סימון · באר שבע</div></div>
+          <div style={{background:"rgba(37,211,102,0.10)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:700,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
         </div>
       </div>
 
-      {autoBanner&&<div style={{margin:"12px 16px",background:"linear-gradient(135deg,rgba(232,168,76,0.18),rgba(232,168,76,0.08))",border:"1px solid rgba(232,168,76,0.5)",borderRadius:14,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        <div style={{color:"#ede8f5",fontSize:14,fontWeight:700}}>⏰ הגיע זמן שליחה למתווכים ({autoBanner.time}) — לשלוח עכשיו?</div>
+      {autoBanner&&<div style={{background:"linear-gradient(135deg,#D4AF37,#e8a317)",color:"#0a0e1a",padding:"14px 20px",borderRadius:"0 0 12px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",boxShadow:"0 4px 16px rgba(212,175,55,0.3)",fontWeight:600}}>
+        <div style={{fontSize:14,fontWeight:700}}>⏰ הגיע זמן שליחה למתווכים ({autoBanner.time}) — לשלוח עכשיו?</div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:OR,border:"none",borderRadius:10,padding:"8px 14px",color:"#1a1208",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
-          <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"#888",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
+          <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:"#0a0e1a",border:"none",borderRadius:10,padding:"8px 14px",color:"#D4AF37",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
+          <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(10,14,26,0.4)",borderRadius:10,padding:"8px 12px",color:"#0a0e1a",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
         </div>
       </div>}
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
@@ -2921,11 +2942,10 @@ function App(){
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
-      <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(5,4,10,0.98)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(201,168,76,0.1)",display:"flex",zIndex:200,padding:"6px 0 12px",overflowX:"auto"}}>
-        {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:"0 0 auto",minWidth:54,background:"none",border:"none",cursor:"pointer",padding:"6px 6px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
-          {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:3,background:G,borderRadius:3}}/>}
-          <span style={{fontSize:22}}>{t.i}</span>
-          <span style={{fontSize:9.5,fontWeight:active?800:600,color:active?G:"#2a2a2a",fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
+      <nav style={{position:"fixed",bottom:18,left:18,right:18,background:"rgba(17,24,39,0.85)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid rgba(212,175,55,0.18)",borderRadius:24,display:"flex",gap:4,zIndex:200,padding:"10px 12px",overflowX:"auto",boxShadow:"0 12px 32px rgba(0,0,0,0.45)"}}>
+        {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:"0 0 auto",minWidth:54,background:active?"rgba(212,175,55,0.12)":"transparent",border:"none",cursor:"pointer",padding:"7px 7px 4px",borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .15s ease",boxShadow:active?"0 0 12px rgba(212,175,55,0.28), inset 0 0 0 1px rgba(212,175,55,0.25)":"none"}}>
+          <span style={{fontSize:22,filter:active?"drop-shadow(0 0 6px rgba(212,175,55,0.55))":"none"}}>{t.i}</span>
+          <span style={{fontSize:9.5,fontWeight:active?800:500,color:active?G:"#6b7280",fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
         </button>})}
       </nav>
     </div>
