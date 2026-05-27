@@ -94,14 +94,16 @@ async function fsSetDoc(docPath, obj) {
 // ═══ UltraMsg ═══
 const ULTRAMSG_INSTANCE = process.env.ULTRAMSG_INSTANCE || "instance169955";
 const ULTRAMSG_TOKEN    = process.env.ULTRAMSG_TOKEN    || "slhhpfslyuey11fp";
-async function ultraSend(phone, text) {
-  const p = (phone || "").replace(/^0/, "972").replace(/[-\s+]/g, "");
-  if (!p) return { sent: false, reason: "no_phone" };
+async function ultraSend(recipient, text) {
+  // Groups (e.g. 12345@g.us) pass through unchanged. Phones get normalised.
+  const isGroup = /@g\.us$/i.test(recipient || "");
+  const to = isGroup ? recipient : (recipient || "").replace(/^0/, "972").replace(/[-\s+]/g, "");
+  if (!to) return { sent: false, reason: "no_recipient" };
   try {
     const r = await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ token: ULTRAMSG_TOKEN, to: p, body: text }),
+      body: new URLSearchParams({ token: ULTRAMSG_TOKEN, to, body: text }),
     });
     const d = await r.json();
     return d.sent ? { sent: true } : { sent: false, reason: d.error || "unknown" };
@@ -149,14 +151,16 @@ function buildAgentShortMsg(prop) {
   return m;
 }
 async function loadAgentAutomationContext() {
-  const auto       = (await fsGetDoc("data/agentAuto"))   || {};
-  const sellersDoc = (await fsGetDoc("data/sellers"))     || {};
-  const brokerDoc  = (await fsGetDoc("data/brokerProps")) || {};
+  const auto       = (await fsGetDoc("data/agentAuto"))      || {};
+  const sellersDoc = (await fsGetDoc("data/sellers"))        || {};
+  const brokerDoc  = (await fsGetDoc("data/brokerProps"))    || {};
   const agentsDoc  = (await fsGetDoc("data/agentsContacts")) || {};
+  const groupsDoc  = (await fsGetDoc("data/agentGroups"))    || {};
   const config  = (auto.items && typeof auto.items === "object" && !Array.isArray(auto.items)) ? auto.items : {};
   const sellers = Array.isArray(sellersDoc.items) ? sellersDoc.items : [];
   const broker  = Array.isArray(brokerDoc.items)  ? brokerDoc.items  : [];
   const agents  = Array.isArray(agentsDoc.items)  ? agentsDoc.items  : [];
+  const groups  = Array.isArray(groupsDoc.items)  ? groupsDoc.items  : [];
   const queue   = Array.isArray(config.items) ? config.items : [];
   const selectedAgents = Array.isArray(config.selectedAgents) ? config.selectedAgents : [];
   const all = [
@@ -167,7 +171,8 @@ async function loadAgentAutomationContext() {
     .map(it => all.find(p => p.id === it.propId && p._src === it.propSrc))
     .filter(Boolean);
   const targetAgents = agents.filter(a => selectedAgents.includes(a.id) && a.phone);
-  return { config, props, targetAgents };
+  const targetGroups = groups.filter(g => g.enabled && g.id);
+  return { config, props, targetAgents, targetGroups };
 }
 
 // ═══ שעות פעילות ושבת/חגים ═══
@@ -680,30 +685,34 @@ export default async function handler(req, res) {
             await sendTelegram(chatId, '⚠️ אין דירות באוטומציית מתווכים.');
             break;
           }
-          if (ctx.targetAgents.length === 0) {
-            await sendTelegram(chatId, '⚠️ לא נבחרו מתווכים. עבור לטאב "אוטומציה" ובחר מתווכים.');
+          const recipients = [
+            ...ctx.targetAgents.map(a => ({ to: a.phone, label: a.name || a.phone, kind: "agent" })),
+            ...ctx.targetGroups.map(g => ({ to: g.id,    label: g.name,             kind: "group" })),
+          ];
+          if (recipients.length === 0) {
+            await sendTelegram(chatId, '⚠️ לא נבחרו מתווכים ולא הופעלו קבוצות. עבור לטאב "אוטומציה" באתר.');
             break;
           }
           const slot = pickCurrentSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
-          await sendTelegram(chatId, `🚀 מתחיל שליחה ל-${ctx.targetAgents.length} מתווכים, ${ctx.props.length} דירות לכל אחד...`);
+          await sendTelegram(chatId, `🚀 מתחיל שליחה ל-${ctx.targetAgents.length} מתווכים ו-${ctx.targetGroups.length} קבוצות, ${ctx.props.length} דירות לכל יעד...`);
           let okCount = 0;
-          for (let i = 0; i < ctx.targetAgents.length; i++) {
-            const a = ctx.targetAgents[i];
+          for (let i = 0; i < recipients.length; i++) {
+            const r = recipients[i];
             for (const p of ctx.props) {
               const m = buildAgentShortMsg(p);
-              const r = await ultraSend(a.phone, m);
-              if (r.sent) okCount++;
+              const res = await ultraSend(r.to, m);
+              if (res.sent) okCount++;
             }
-            if (i < ctx.targetAgents.length - 1) await new Promise(rs => setTimeout(rs, 3000));
+            if (i < recipients.length - 1) await new Promise(rs => setTimeout(rs, 3000));
           }
           // Persist lastSent so the cron / web app see it as handled today.
           const dayKey  = todayKey();
           const slotKey = `${dayKey}_${slot}`;
           const newLastSent = { ...(ctx.config.lastSent || {}), [slotKey]: {
-            agents: ctx.targetAgents.length, props: ctx.props.length, sentAt: new Date().toISOString(),
+            agents: ctx.targetAgents.length, groups: ctx.targetGroups.length, props: ctx.props.length, sentAt: new Date().toISOString(),
           }};
           await fsSetDoc("data/agentAuto", { items: { ...ctx.config, lastSent: newLastSent } });
-          await sendTelegram(chatId, `✅ נשלח ל-${ctx.targetAgents.length} מתווכים (${okCount} הודעות בהצלחה).`);
+          await sendTelegram(chatId, `✅ נשלח ל-${ctx.targetAgents.length} מתווכים ו-${ctx.targetGroups.length} קבוצות (${okCount} הודעות בהצלחה).`);
           break;
         }
 

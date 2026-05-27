@@ -89,11 +89,14 @@ export default async function handler(req, res) {
     const auto       = (await fsGetDoc("data/agentAuto"))      || {};
     const sellersDoc = (await fsGetDoc("data/sellers"))        || {};
     const brokerDoc  = (await fsGetDoc("data/brokerProps"))    || {};
+    const groupsDoc  = (await fsGetDoc("data/agentGroups"))    || {};
 
     // The web app wraps payload under .items
     const config  = (auto.items     && typeof auto.items === "object" && !Array.isArray(auto.items)) ? auto.items : {};
     const sellers = Array.isArray(sellersDoc.items) ? sellersDoc.items : [];
     const broker  = Array.isArray(brokerDoc.items)  ? brokerDoc.items  : [];
+    const groups  = Array.isArray(groupsDoc.items)  ? groupsDoc.items  : [];
+    const enabledGroups = groups.filter(g => g.enabled);
     const queue   = Array.isArray(config.items) ? config.items : [];
     const sendTimes = Array.isArray(config.sendTimes) ? config.sendTimes : ["09:00", "14:00"];
     const lastSent  = config.lastSent || {};
@@ -123,9 +126,12 @@ export default async function handler(req, res) {
     }
 
     const lines = props.map(fmtProp).join("\n");
+    const groupsLine = enabledGroups.length > 0
+      ? `\n👥 ${enabledGroups.length} קבוצות ווטסאפ מופעלות`
+      : "";
     const msg =
       `🔔 הגיע זמן שליחה למתווכים! (${slot})\n\n` +
-      `📋 דירות מוכנות לשליחה:\n${lines}\n\n` +
+      `📋 דירות מוכנות לשליחה:\n${lines}${groupsLine}\n\n` +
       `✅ נא לשלוח 'שלח למתווכים' לאישור\n` +
       `❌ או 'דלג' לביטול`;
 
