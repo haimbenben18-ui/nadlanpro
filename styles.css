@@ -1,0 +1,129 @@
+:root{
+  --midnight:#08090d;
+  --midnight-light:#0f1119;
+  --surface:#151720;
+  --surface-hover:#1a1d2e;
+  --border:#222436;
+  --border-gold:rgba(195,166,82,0.18);
+  --border-hover:rgba(195,166,82,0.35);
+  --text-white:#eaeaea;
+  --text-gray:#8b8fa3;
+  --text-dim:#555872;
+  --gold:#c3a652;
+  --gold-soft:rgba(195,166,82,0.12);
+  --blue:#1a56db;
+  --blue-soft:rgba(26,86,219,0.12);
+  --red:#dc2626;
+  --red-soft:rgba(220,38,38,0.1);
+  --green:#16a34a;
+  --green-soft:rgba(22,163,74,0.1);
+  --purple:#7c3aed;
+  --purple-soft:rgba(124,58,237,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100vh}
+body{
+  background:var(--midnight);
+  font-family:'Heebo',sans-serif;direction:rtl;color:var(--text-white);
+  font-size:15px;line-height:1.55;overscroll-behavior:none;font-weight:400;
+  letter-spacing:-0.005em;
+}
+input,textarea,select,button{font-family:'Heebo',sans-serif;font-size:15px;-webkit-appearance:none}
+input[type=date]{color-scheme:dark}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
+.fade{animation:fu .22s cubic-bezier(.4,0,.2,1) both}
+@keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+.shimmer{background:linear-gradient(90deg,#c3a652,#e8c84a,#c3a652);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}
+.rec{animation:pring 1.5s infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:20px;height:20px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes toastin{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toastout{from{opacity:1}to{opacity:0;transform:translateY(16px)}}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--midnight-light);border:1px solid var(--border-gold);border-radius:14px;padding:11px 22px;color:var(--gold);font-weight:600;font-size:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:toastin .25s ease,toastout .25s ease 2s forwards;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+::selection{background:var(--gold-soft);color:var(--text-white)}
+
+/* ───── Section title ───── */
+.section-title{font-size:1.1rem;font-weight:700;color:var(--text-white);padding-bottom:12px;border-bottom:1px solid var(--border-gold);margin-bottom:20px;display:flex;align-items:center;gap:8px;letter-spacing:-0.005em}
+
+/* ───── Status pills (outlined capsules) ───── */
+.status-pill{display:inline-flex;align-items:center;padding:3px 11px;border-radius:20px;font-size:0.72rem;font-weight:500;letter-spacing:0.02em;background:transparent;line-height:1.4;white-space:nowrap}
+.status-new{border:1px solid rgba(26,86,219,0.35);color:#5b8def}
+.status-active{border:1px solid var(--border-gold);color:var(--gold)}
+.status-closed{border:1px solid rgba(22,163,74,0.35);color:#4ade80}
+.status-exclusive{border:1px solid rgba(124,58,237,0.35);color:#a78bfa}
+.status-seller{border:1px solid rgba(249,115,22,0.35);color:#fb923c}
+.status-broker{border:1px solid rgba(14,165,233,0.35);color:#38bdf8}
+.status-warn{border:1px solid rgba(249,115,22,0.35);color:#fb923c}
+.status-danger{border:1px solid rgba(220,38,38,0.35);color:#f87171}
+
+/* ───── Detail tags ───── */
+.detail-pill{background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:5px 12px;border-radius:8px;font-size:0.82rem;color:var(--text-gray);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.detail-pill-price{color:var(--gold);font-weight:600;border-color:var(--border-gold)}
+
+/* ───── Card with hover ───── */
+.app-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s ease, box-shadow .25s ease}
+.app-card:hover{border-color:var(--border-hover);box-shadow:0 0 20px rgba(195,166,82,0.04)}
+
+/* ───── Circular Soft-UI action buttons ───── */
+.icon-btn{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:17px;border:1px solid transparent;background:transparent;cursor:pointer;font-family:inherit;transition:all .2s ease;padding:0;line-height:1;flex-shrink:0}
+.icon-btn:active{transform:scale(0.95)}
+.icon-btn-wa{background:var(--green-soft);border-color:rgba(22,163,74,0.2);color:var(--green)}
+.icon-btn-wa:hover{background:rgba(22,163,74,0.18);box-shadow:0 0 10px rgba(22,163,74,0.1)}
+.icon-btn-tel{background:var(--blue-soft);border-color:rgba(26,86,219,0.2);color:var(--blue)}
+.icon-btn-tel:hover{background:rgba(26,86,219,0.18);box-shadow:0 0 10px rgba(26,86,219,0.1)}
+.icon-btn-edit{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.icon-btn-edit:hover{background:rgba(195,166,82,0.18);box-shadow:0 0 10px rgba(195,166,82,0.1)}
+.icon-btn-del{background:var(--red-soft);border-color:rgba(220,38,38,0.15);color:var(--red)}
+.icon-btn-del:hover{background:rgba(220,38,38,0.15);box-shadow:0 0 10px rgba(220,38,38,0.1)}
+.icon-btn-purple{background:var(--purple-soft);border-color:rgba(124,58,237,0.2);color:var(--purple)}
+.icon-btn-purple:hover{background:rgba(124,58,237,0.18);box-shadow:0 0 10px rgba(124,58,237,0.1)}
+.icon-btn-info{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.icon-btn-info:hover{background:rgba(195,166,82,0.18)}
+
+/* ───── Input focus ───── */
+input,textarea,select{transition:border-color .2s ease, box-shadow .2s ease}
+input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(195,166,82,0.08);outline:none}
+::placeholder{color:var(--text-dim);opacity:1}
+:-ms-input-placeholder{color:var(--text-dim)}
+::-ms-input-placeholder{color:var(--text-dim)}
+
+/* ───── Floating dock nav button feedback ───── */
+.dock-btn{transition:transform .15s ease, background .2s ease, color .2s ease}
+.dock-btn:active{transform:scale(0.93)}
+
+/* ───── VIP pulse for inbound image requests ───── */
+@keyframes subtle-pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.vip-pulse{animation:subtle-pulse 2s infinite}
+
+/* ───── Floating Action Button (FAB) ───── */
+.fab-add{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a8882e);color:var(--midnight);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(195,166,82,0.3);border:none;cursor:pointer;z-index:48;transition:transform .2s ease, box-shadow .2s ease;font-family:inherit}
+.fab-add:hover{transform:translateX(-50%) scale(1.08);box-shadow:0 8px 30px rgba(195,166,82,0.4)}
+.fab-add:active{transform:translateX(-50%) scale(0.95)}
+
+/* ───── Stat cards (exclusivity highlight) ───── */
+.stat-card-gold{border-color:var(--border-gold) !important;background:linear-gradient(135deg,var(--surface),rgba(195,166,82,0.03)) !important}
+
+/* ───── VIP Cards ───── */
+.vip-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.vip-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s ease;min-width:140px}
+.vip-card:hover{border-color:var(--border-hover)}
+.vip-card-header{display:flex;align-items:center;gap:8px}
+.vip-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold-soft);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:600;color:var(--gold)}
+.vip-info{display:flex;flex-direction:column}
+.vip-name{font-size:0.82rem;font-weight:600;color:var(--text-white)}
+.vip-badge{font-size:0.6rem;color:var(--gold)}
+.vip-last-sent{font-size:0.7rem;color:var(--text-gray);padding:0 4px}
+.vip-actions{display:flex;gap:6px;justify-content:center}
+.vip-action{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.2s ease;border:1px solid;text-decoration:none}
+.vip-action.photos{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.15);color:#a78bfa}
+.vip-action.photos:hover{background:rgba(168,85,247,0.18)}
+.vip-action.details{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.vip-action.details:hover{background:rgba(195,166,82,0.18)}
+.vip-action.mobile{background:rgba(22,163,74,0.08);border-color:rgba(22,163,74,0.15);color:#22c55e}
+.vip-action.mobile:hover{background:rgba(22,163,74,0.18)}
