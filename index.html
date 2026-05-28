@@ -2538,18 +2538,36 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
 }
 
 // ━━━ AGENT AUTOMATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Best-effort neighbourhood extraction from a property's address; falls back
-// to city. Used by the group-message templates below.
+// Pull a usable location string from a property — prefers an explicit
+// 'שכונה X' from the address, then the street name (without unit/digits).
+// Never returns 'באר שבע' (which is implicit for the agent network); only
+// returns a city if it's somewhere else (e.g. עומר).
 function getNeighborhood(prop){
-  if(!prop)return "באר שבע";
+  if(!prop)return "";
   const addr=(prop.address||"").trim();
-  const sm=addr.match(/שכונה\s+([^\s,]+)/);
-  if(sm)return "שכונה "+sm[1];
-  return prop.city||"באר שבע";
+  if(addr){
+    const sm=addr.match(/שכונה\s+([^\s,]+)/);
+    if(sm)return "שכונה "+sm[1];
+    const street=addr.replace(/\s+\d+.*$/,"").trim();
+    if(street)return street;
+  }
+  const city=(prop.city||"").trim();
+  if(city&&city!=="באר שבע")return city;
+  return "";
 }
 function fmtPriceShort(price){
-  if(price==null||price===""||isNaN(Number(price)))return "—";
+  if(price==null||price===""||isNaN(Number(price)))return "";
   return Number(price).toLocaleString()+" ₪";
+}
+// One-line property details ('X חדרים, קומה Y, מחיר: Z'), built only from
+// fields that actually exist on the property — returns "" if nothing usable.
+function buildDetailsLine(p){
+  const parts=[];
+  if(p&&p.rooms)parts.push(p.rooms+" חדרים");
+  if(p&&p.floor)parts.push("קומה "+p.floor);
+  const price=fmtPriceShort(p&&p.price);
+  if(price)parts.push("מחיר: "+price);
+  return parts.join(", ");
 }
 
 // Group-send templates. No phone, no wa.me, no landing page link — agents
@@ -2558,17 +2576,38 @@ const AGENT_GROUP_TEMPLATES=[
   {
     key:"morning",
     label:"☕ בוקר טוב",
-    build:(p)=>"בוקר טוב שותפים ☕\nחדשה בבלעדיות במחיר שלא רואים כל יום ב-"+getNeighborhood(p)+".\n"+(p.rooms||"?")+" חדרים, קומה "+(p.floor||"?")+", מחיר: "+fmtPriceShort(p.price)+"\nעסקה מעולה למשקיעים שמחפשים מספרים.\nפרטים נוספים, תמונות וסרטון אצלי בפרטי.\nהמפתחות אצלי."
+    build:(p)=>{
+      const neigh=getNeighborhood(p);
+      const where=neigh?(" ב-"+neigh):"";
+      const details=buildDetailsLine(p);
+      return "בוקר טוב שותפים ☕\nחדשה בבלעדיות במחיר שלא רואים כל יום"+where+"."+
+        (details?"\n"+details:"")+
+        "\nעסקה מעולה למשקיעים שמחפשים מספרים.\nפרטים נוספים, תמונות וסרטון אצלי בפרטי.\nהמפתחות אצלי.";
+    }
   },
   {
     key:"hot",
     label:"🚀 דיל חם",
-    build:(p)=>"שותפים, תראו את הדיל הזה ב-"+getNeighborhood(p)+":\nדירה בבלעדיות, שמורה מאוד ובמחיר קטלני לסגירה מהירה! 🚀\nנדיר למצוא נכסים במצב כזה ובמחיר הזה באזור.\nתמונות וסרטון זמינים בפרטי למי שרוצה להתקדם."
+    build:(p)=>{
+      const neigh=getNeighborhood(p);
+      const where=neigh?(" ב-"+neigh):"";
+      const details=buildDetailsLine(p);
+      return "שותפים, תראו את הדיל הזה"+where+":\nדירה בבלעדיות, שמורה מאוד ובמחיר קטלני לסגירה מהירה! 🚀"+
+        (details?"\n"+details:"")+
+        "\nנדיר למצוא נכסים במצב כזה ובמחיר הזה באזור.\nתמונות וסרטון זמינים בפרטי למי שרוצה להתקדם.";
+    }
   },
   {
     key:"opp",
     label:"📉 הזדמנות",
-    build:(p)=>"חדשה בבלעדיות – אין מחירים כאלה היום ב-"+getNeighborhood(p)+".\nהזדמנות אמיתית להשקעה במחיר של פעם. 📉\nתמונות וסרטון מחכים לכם אצלי בפרטי."
+    build:(p)=>{
+      const neigh=getNeighborhood(p);
+      const where=neigh?(" ב-"+neigh):"";
+      const details=buildDetailsLine(p);
+      return "חדשה בבלעדיות – אין מחירים כאלה היום"+where+"."+
+        (details?"\n"+details:"")+
+        "\nהזדמנות אמיתית להשקעה במחיר של פעם. 📉\nתמונות וסרטון מחכים לכם אצלי בפרטי.";
+    }
   }
 ];
 function propKeyOf(p){return (p&&p._src?p._src:"s")+"_"+(p&&p.id)}
