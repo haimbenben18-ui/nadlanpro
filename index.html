@@ -19,88 +19,111 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
-  --bg-primary:#0a0e1a;
-  --bg-secondary:#111827;
-  --bg-card:rgba(17,24,39,0.7);
-  --border-card:rgba(212,175,55,0.15);
-  --text-primary:#f0f0f0;
-  --text-secondary:#9ca3af;
-  --accent-gold:#D4AF37;
-  --accent-red:#ED1C24;
-  --accent-blue:#003366;
-  --accent-blue-light:#1e4d8c;
+  --midnight:#08090d;
+  --midnight-light:#0f1119;
+  --surface:#151720;
+  --surface-hover:#1a1d2e;
+  --border:#222436;
+  --border-gold:rgba(195,166,82,0.18);
+  --border-hover:rgba(195,166,82,0.35);
+  --text-white:#eaeaea;
+  --text-gray:#8b8fa3;
+  --text-dim:#555872;
+  --gold:#c3a652;
+  --gold-soft:rgba(195,166,82,0.12);
+  --blue:#1a56db;
+  --blue-soft:rgba(26,86,219,0.12);
+  --red:#dc2626;
+  --red-soft:rgba(220,38,38,0.1);
+  --green:#16a34a;
+  --green-soft:rgba(22,163,74,0.1);
+  --purple:#7c3aed;
+  --purple-soft:rgba(124,58,237,0.1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{min-height:100vh}
 body{
-  background:#0a0e1a;
-  background-image:linear-gradient(135deg,#0a0e1a 0%,#111827 50%,#0d1321 100%);
-  background-attachment:fixed;
-  font-family:'Heebo',sans-serif;direction:rtl;color:var(--text-primary);
+  background:var(--midnight);
+  font-family:'Heebo',sans-serif;direction:rtl;color:var(--text-white);
   font-size:15px;line-height:1.55;overscroll-behavior:none;font-weight:400;
+  letter-spacing:-0.005em;
 }
 input,textarea,select,button{font-family:'Heebo',sans-serif;font-size:15px;-webkit-appearance:none}
 input[type=date]{color-scheme:dark}
 ::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.45)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
 .fade{animation:fu .22s cubic-bezier(.4,0,.2,1) both}
 @keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
-.shimmer{background:linear-gradient(90deg,#D4AF37,#f5d77a,#D4AF37);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+.shimmer{background:linear-gradient(90deg,#c3a652,#e8c84a,#c3a652);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(237,28,36,.45)}50%{box-shadow:0 0 0 12px rgba(237,28,36,0)}}
+@keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}
 .rec{animation:pring 1.5s infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:20px;height:20px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+.spinner{width:20px;height:20px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
 @keyframes toastin{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes toastout{from{opacity:1}to{opacity:0;transform:translateY(16px)}}
-.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(17,24,39,0.92);border:1px solid #D4AF37;border-radius:14px;padding:11px 22px;color:#D4AF37;font-weight:700;font-size:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:toastin .25s ease,toastout .25s ease 2s forwards;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
-::selection{background:rgba(212,175,55,0.35);color:#0a0e1a}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--midnight-light);border:1px solid var(--border-gold);border-radius:14px;padding:11px 22px;color:var(--gold);font-weight:600;font-size:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:toastin .25s ease,toastout .25s ease 2s forwards;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+::selection{background:var(--gold-soft);color:var(--text-white)}
 
 /* ───── Section title ───── */
-.section-title{font-size:1.1rem;font-weight:700;color:#f0f0f0;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:1.1rem;font-weight:700;color:var(--text-white);padding-bottom:12px;border-bottom:1px solid var(--border-gold);margin-bottom:20px;display:flex;align-items:center;gap:8px;letter-spacing:-0.005em}
 
-/* ───── Status pills (outlined) ───── */
-.status-pill{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:500;background:transparent;line-height:1.3;white-space:nowrap}
-.status-new{border:1px solid rgba(59,130,246,0.4);color:#60a5fa}
-.status-active{border:1px solid rgba(212,175,55,0.4);color:#D4AF37}
-.status-closed{border:1px solid rgba(34,197,94,0.4);color:#22c55e}
-.status-exclusive{border:1px solid rgba(168,85,247,0.4);color:#a855f7}
-.status-warn{border:1px solid rgba(245,158,11,0.4);color:#fbbf24}
-.status-danger{border:1px solid rgba(239,68,68,0.4);color:#ef4444}
+/* ───── Status pills (outlined capsules) ───── */
+.status-pill{display:inline-flex;align-items:center;padding:3px 11px;border-radius:20px;font-size:0.72rem;font-weight:500;letter-spacing:0.02em;background:transparent;line-height:1.4;white-space:nowrap}
+.status-new{border:1px solid rgba(26,86,219,0.35);color:#5b8def}
+.status-active{border:1px solid var(--border-gold);color:var(--gold)}
+.status-closed{border:1px solid rgba(22,163,74,0.35);color:#4ade80}
+.status-exclusive{border:1px solid rgba(124,58,237,0.35);color:#a78bfa}
+.status-seller{border:1px solid rgba(249,115,22,0.35);color:#fb923c}
+.status-broker{border:1px solid rgba(14,165,233,0.35);color:#38bdf8}
+.status-warn{border:1px solid rgba(249,115,22,0.35);color:#fb923c}
+.status-danger{border:1px solid rgba(220,38,38,0.35);color:#f87171}
 
 /* ───── Detail tags ───── */
-.detail-pill{background:rgba(255,255,255,0.05);padding:4px 10px;border-radius:8px;font-size:0.8rem;color:#d1d5db;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.detail-pill{background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:5px 12px;border-radius:8px;font-size:0.82rem;color:var(--text-gray);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.detail-pill-price{color:var(--gold);font-weight:600;border-color:var(--border-gold)}
 
 /* ───── Card with hover ───── */
-.app-card{background:#1a1a2e;border:1px solid #2d2d44;border-radius:16px;padding:20px;margin-bottom:12px;transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease}
-.app-card:hover{border-color:rgba(212,175,55,0.25);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.35)}
+.app-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s ease, box-shadow .25s ease}
+.app-card:hover{border-color:var(--border-hover);box-shadow:0 0 20px rgba(195,166,82,0.04)}
 
-/* ───── Circular icon action buttons ───── */
-.icon-btn{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:18px;border:1px solid transparent;background:transparent;cursor:pointer;font-family:inherit;transition:all .2s ease;padding:0;line-height:1;flex-shrink:0}
+/* ───── Circular Soft-UI action buttons ───── */
+.icon-btn{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:17px;border:1px solid transparent;background:transparent;cursor:pointer;font-family:inherit;transition:all .2s ease;padding:0;line-height:1;flex-shrink:0}
 .icon-btn:active{transform:scale(0.95)}
-.icon-btn-wa{background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.25);color:#25d366}
-.icon-btn-wa:hover{background:rgba(37,211,102,0.2);box-shadow:0 0 12px rgba(37,211,102,0.15)}
-.icon-btn-tel{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:#3b82f6}
-.icon-btn-tel:hover{background:rgba(59,130,246,0.2);box-shadow:0 0 12px rgba(59,130,246,0.15)}
-.icon-btn-edit{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.25);color:#D4AF37}
-.icon-btn-edit:hover{background:rgba(212,175,55,0.2);box-shadow:0 0 12px rgba(212,175,55,0.15)}
-.icon-btn-del{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:#ef4444}
-.icon-btn-del:hover{background:rgba(239,68,68,0.2);box-shadow:0 0 12px rgba(239,68,68,0.15)}
-.icon-btn-info{background:rgba(212,175,55,0.06);border-color:rgba(212,175,55,0.18);color:#D4AF37}
-.icon-btn-info:hover{background:rgba(212,175,55,0.14)}
+.icon-btn-wa{background:var(--green-soft);border-color:rgba(22,163,74,0.2);color:var(--green)}
+.icon-btn-wa:hover{background:rgba(22,163,74,0.18);box-shadow:0 0 10px rgba(22,163,74,0.1)}
+.icon-btn-tel{background:var(--blue-soft);border-color:rgba(26,86,219,0.2);color:var(--blue)}
+.icon-btn-tel:hover{background:rgba(26,86,219,0.18);box-shadow:0 0 10px rgba(26,86,219,0.1)}
+.icon-btn-edit{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.icon-btn-edit:hover{background:rgba(195,166,82,0.18);box-shadow:0 0 10px rgba(195,166,82,0.1)}
+.icon-btn-del{background:var(--red-soft);border-color:rgba(220,38,38,0.15);color:var(--red)}
+.icon-btn-del:hover{background:rgba(220,38,38,0.15);box-shadow:0 0 10px rgba(220,38,38,0.1)}
+.icon-btn-purple{background:var(--purple-soft);border-color:rgba(124,58,237,0.2);color:var(--purple)}
+.icon-btn-purple:hover{background:rgba(124,58,237,0.18);box-shadow:0 0 10px rgba(124,58,237,0.1)}
+.icon-btn-info{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.icon-btn-info:hover{background:rgba(195,166,82,0.18)}
 
 /* ───── Input focus ───── */
 input,textarea,select{transition:border-color .2s ease, box-shadow .2s ease}
-input:focus,textarea:focus,select:focus{border-color:rgba(212,175,55,0.5) !important;box-shadow:0 0 0 3px rgba(212,175,55,0.10)}
-::placeholder{color:#4b5563;opacity:1}
-:-ms-input-placeholder{color:#4b5563}
-::-ms-input-placeholder{color:#4b5563}
+input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(195,166,82,0.08);outline:none}
+::placeholder{color:var(--text-dim);opacity:1}
+:-ms-input-placeholder{color:var(--text-dim)}
+::-ms-input-placeholder{color:var(--text-dim)}
 
 /* ───── Floating dock nav button feedback ───── */
-.dock-btn{transition:transform .15s ease, background .2s ease, box-shadow .2s ease}
+.dock-btn{transition:transform .15s ease, background .2s ease, color .2s ease}
 .dock-btn:active{transform:scale(0.93)}
+
+/* ───── Floating Action Button (FAB) ───── */
+.fab-add{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a8882e);color:var(--midnight);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(195,166,82,0.3);border:none;cursor:pointer;z-index:48;transition:transform .2s ease, box-shadow .2s ease;font-family:inherit}
+.fab-add:hover{transform:translateX(-50%) scale(1.08);box-shadow:0 8px 30px rgba(195,166,82,0.4)}
+.fab-add:active{transform:translateX(-50%) scale(0.95)}
+
+/* ───── Stat cards (exclusivity highlight) ───── */
+.stat-card-gold{border-color:var(--border-gold) !important;background:linear-gradient(135deg,var(--surface),rgba(195,166,82,0.03)) !important}
 </style>
 </head>
 <body>
@@ -547,8 +570,9 @@ async function sendPropertyToMultipleAgents(prop,agents){
 </script>
 <script type="text/babel">
 const {useState,useRef,useEffect,useCallback,useMemo}=React;
-// RE/MAX luxury dark palette — names preserved so semantics elsewhere keep working.
-const G="#D4AF37",GR="#25d366",BL="#1e4d8c",PU="#6b7a99",OR="#e8a317",RE="#ED1C24",TE="#4cc9a8";
+// Midnight + Gold + Blue luxury palette. Constant names preserved so semantics
+// throughout the codebase keep working.
+const G="#c3a652",GR="#16a34a",BL="#1a56db",PU="#7c3aed",OR="#fb923c",RE="#dc2626",TE="#38bdf8";
 const PX="np7_";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -611,20 +635,20 @@ const IS=[
 ];
 
 const S={
-  card:{background:"#1a1a2e",border:"1px solid #2d2d44",borderRadius:16,padding:20,marginBottom:12,boxShadow:"0 4px 20px rgba(0,0,0,0.25)",transition:"border-color .2s ease, transform .2s ease, box-shadow .2s ease"},
-  cg:{background:"#1a1a2e",border:"1px solid rgba(212,175,55,0.28)",borderRadius:16,padding:20,marginBottom:12,boxShadow:"0 4px 20px rgba(0,0,0,0.25)"},
-  inp:{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid #2d2d44",borderRadius:12,padding:"12px 16px",color:"#f0f0f0",fontSize:15,fontFamily:"inherit",outline:"none",boxSizing:"border-box"},
+  card:{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:14,padding:22,marginBottom:14,transition:"border-color .25s ease, box-shadow .25s ease"},
+  cg:{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:22,marginBottom:14},
+  inp:{width:"100%",background:"rgba(255,255,255,0.025)",border:"1px solid var(--border)",borderRadius:12,padding:"13px 16px",color:"var(--text-white)",fontSize:"0.92rem",fontFamily:"inherit",outline:"none",boxSizing:"border-box"},
   pg:"20px 16px 110px",
 };
 
 function Tag({c,ch}){return <span style={{background:(c||G)+"18",color:c||G,border:"1px solid "+(c||G)+"40",borderRadius:8,padding:"4px 12px",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{ch}</span>}
-function Btn({ch,onClick,c,ghost,sm,full,dis,icon}){const col=c||G;const isGold=col===G||col===OR;const bg=ghost?"transparent":(isGold?"linear-gradient(135deg,"+col+","+col+"cc)":"linear-gradient(135deg,"+col+","+col+"d0)");const textColor=ghost?col:(isGold?"#0a0e1a":"#fff");return <button onClick={onClick} disabled={dis} style={{background:bg,color:textColor,border:ghost?"1.5px solid "+col+"55":"none",borderRadius:12,padding:sm?"10px 18px":full?"14px 22px":"12px 22px",fontSize:sm?13:15,fontWeight:600,cursor:dis?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.45:1,boxShadow:ghost?"none":"0 4px 14px "+col+"38",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,transition:"transform .12s ease, box-shadow .15s ease"}}>{icon&&<span style={{fontSize:sm?15:17}}>{icon}</span>}{ch}</button>}
+function Btn({ch,onClick,c,ghost,sm,full,dis,icon}){const col=c||G;const isGold=col===G;const bg=ghost?"transparent":"linear-gradient(135deg,"+col+","+col+"cc)";const textColor=ghost?col:(isGold?"#08090d":"#fff");return <button onClick={onClick} disabled={dis} style={{background:bg,color:textColor,border:ghost?"1px solid "+col+"55":"none",borderRadius:12,padding:sm?"10px 18px":full?"14px 22px":"12px 22px",fontSize:sm?13:15,fontWeight:600,cursor:dis?"not-allowed":"pointer",fontFamily:"inherit",width:full?"100%":"auto",opacity:dis?.45:1,boxShadow:ghost?"none":"0 4px 14px "+col+"28",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,transition:"transform .12s ease, box-shadow .15s ease",letterSpacing:"-0.005em"}}>{icon&&<span style={{fontSize:sm?15:17}}>{icon}</span>}{ch}</button>}
 function Pill({ch,active,onClick,c,count}){const col=c||G;return <button onClick={onClick} style={{background:active?col+"22":"rgba(255,255,255,0.03)",border:"1px solid "+(active?col+"66":"rgba(255,255,255,0.08)"),borderRadius:24,padding:"9px 20px",color:active?col:"#9ca3af",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transition:"all .15s ease"}}>{ch}{count!==undefined&&<span style={{background:col+"33",color:col,borderRadius:10,padding:"1px 7px",fontSize:11,fontWeight:800}}>{count}</span>}</button>}
 function Lbl({t,icon}){return <div style={{color:G,fontSize:12,fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:.7,display:"flex",alignItems:"center",gap:6}}>{icon&&<span style={{fontSize:14}}>{icon}</span>}{t}</div>}
 function Inp({label,ph,val,set,type,rows,mb,icon}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label} icon={icon}/>}{rows?<textarea placeholder={ph} value={val} onChange={e=>set(e.target.value)} rows={rows} style={{...S.inp,resize:"none",lineHeight:1.65}}/>:<input type={type||"text"} placeholder={ph} value={val} onChange={e=>set(e.target.value)} style={S.inp}/>}</div>}
 function Sel({label,val,set,opts,mb}){return <div style={{marginBottom:mb!==undefined?mb:14}}>{label&&<Lbl t={label}/>}<select value={val} onChange={e=>set(e.target.value)} style={{...S.inp,background:"#111827"}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>}
 function Empty({icon,text}){return <div style={{...S.card,textAlign:"center",color:"#6b7280",padding:48}}><div style={{fontSize:48,marginBottom:14,opacity:.55}}>{icon}</div><div style={{color:"#9ca3af",fontSize:14}}>{text}</div></div>}
-function Modal({children,onClose,title,color,center}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:500,display:"flex",alignItems:center?"center":"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"}}><div className="fade" style={{width:"100%",maxWidth:500,background:"rgba(17,24,39,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:20,padding:22,maxHeight:"85vh",overflowY:"auto",border:"1px solid rgba(212,175,55,0.2)",boxShadow:"0 16px 50px rgba(0,0,0,0.55)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:700,color:color||G,fontSize:18}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#9ca3af",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
+function Modal({children,onClose,title,color,center}){return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:500,display:"flex",alignItems:center?"center":"flex-end",justifyContent:"center",padding:16,backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)"}}><div className="fade" style={{width:"100%",maxWidth:420,background:"var(--surface)",borderRadius:20,padding:28,maxHeight:"85vh",overflowY:"auto",border:"1px solid var(--border)",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}><div style={{fontWeight:700,color:color||G,fontSize:18,letterSpacing:"-0.01em"}}>{title}</div><button onClick={onClose} style={{background:"rgba(255,255,255,0.04)",border:"1px solid var(--border)",color:"var(--text-gray)",width:34,height:34,borderRadius:10,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>{children}</div></div>}
 
 function openWA(phone,msg){
   const p=(phone||"").replace(/^0/,"972").replace(/[-\s]/g,"");
@@ -2956,21 +2980,23 @@ function App(){
     setAutoBanner(due?{time:due}:null);
   },[loaded,agentAuto,tab]);
 
-  return <div style={{background:"#0a0e1a",backgroundImage:"linear-gradient(135deg,#0a0e1a 0%,#111827 50%,#0d1321 100%)",backgroundAttachment:"fixed",minHeight:"100vh",paddingBottom:120}}>
-    <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 70% 50% at 15% 8%,rgba(212,175,55,0.06) 0%,transparent 60%)",pointerEvents:"none",zIndex:0}}/>
+  return <div style={{background:"var(--midnight)",minHeight:"100vh",paddingBottom:90}}>
     <div style={{position:"relative",zIndex:1}}>
-      <div style={{background:"rgba(10,14,26,0.82)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(212,175,55,0.15)",padding:"15px 20px",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:24,color:G,letterSpacing:0.4}}>NadlanPro</div><div style={{fontSize:11,color:"#6b7280",marginTop:2,letterSpacing:0.3}}>RE/MAX · חיים בן סימון · באר שבע</div></div>
-          <div style={{background:"rgba(37,211,102,0.10)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:700,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
+          <div>
+            <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
+            <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX · חיים בן סימון · באר שבע</div>
+          </div>
+          <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
         </div>
       </div>
 
-      {autoBanner&&<div style={{background:"linear-gradient(135deg,#D4AF37,#e8a317)",color:"#0a0e1a",padding:"14px 20px",borderRadius:"0 0 12px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",boxShadow:"0 4px 16px rgba(212,175,55,0.3)",fontWeight:600}}>
+      {autoBanner&&<div style={{background:"linear-gradient(135deg,#c3a652,#a8882e)",color:"#08090d",padding:"14px 20px",borderRadius:"0 0 12px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",boxShadow:"0 4px 16px rgba(195,166,82,0.3)",fontWeight:600}}>
         <div style={{fontSize:14,fontWeight:700}}>⏰ הגיע זמן שליחה למתווכים ({autoBanner.time}) — לשלוח עכשיו?</div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:"#0a0e1a",border:"none",borderRadius:10,padding:"8px 14px",color:"#D4AF37",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
-          <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(10,14,26,0.4)",borderRadius:10,padding:"8px 12px",color:"#0a0e1a",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
+          <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:"#08090d",border:"none",borderRadius:10,padding:"8px 14px",color:"#c3a652",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
+          <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(8,9,13,0.35)",borderRadius:10,padding:"8px 12px",color:"#08090d",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
         </div>
       </div>}
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
@@ -2986,10 +3012,10 @@ function App(){
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
-      <nav style={{position:"fixed",bottom:12,left:16,right:16,height:56,background:"rgba(10,14,26,0.75)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:28,display:"flex",gap:2,zIndex:200,padding:"0 12px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",alignItems:"center"}}>
-        {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} className="dock-btn" style={{flex:"0 0 auto",minWidth:48,height:48,background:"transparent",border:"none",cursor:"pointer",padding:"6px 6px 4px",borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
-          <span style={{fontSize:20,color:active?G:"#6b7280",lineHeight:1,filter:active?"drop-shadow(0 0 6px rgba(212,175,55,0.5))":"none",transition:"all .2s ease"}}>{t.i}</span>
-          <span style={{fontSize:"0.65rem",marginTop:2,fontWeight:active?700:500,color:active?G:"#6b7280",fontFamily:"inherit",whiteSpace:"nowrap",transition:"color .2s ease"}}>{t.l}</span>
+      <nav style={{position:"fixed",bottom:14,left:18,right:18,height:54,background:"rgba(15,17,25,0.82)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:27,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:50,padding:"0 8px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+        {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} className="dock-btn" style={{flex:"0 0 auto",minWidth:46,background:active?"var(--gold-soft)":"transparent",border:"none",cursor:"pointer",padding:"6px 14px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",color:active?G:"var(--text-dim)"}}>
+          <span style={{fontSize:20,lineHeight:1}}>{t.i}</span>
+          <span style={{fontSize:"0.6rem",marginTop:2,fontWeight:500,fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
         </button>})}
       </nav>
     </div>
