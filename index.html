@@ -2583,35 +2583,43 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
   function setTimes(idx,val){
     const t=[...sendTimes];t[idx]=val;patch({sendTimes:t});
   }
-  function openPreview(timeStr){
-    if(queue.length===0){toast("⚠️ אין דירות באוטומציה");return}
-    const agents=(agentsContacts||[]).filter(a=>selectedAgents.includes(a.id)&&a.phone);
-    const groups=enabledGroups;
-    if(agents.length===0&&groups.length===0){toast("⚠️ לא נבחרו מתווכים ולא הופעלו קבוצות");return}
-    setPreview({time:timeStr,agents,groups,props:queue});
+  function openPreview(timeStr,singleProp){
+    const propsToUse=singleProp?[singleProp]:queue;
+    if(propsToUse.length===0){toast("⚠️ אין דירות באוטומציה — הוסף דירה קודם");return}
+    const initText=buildAgentShortMsg(propsToUse[0]);
+    const agentsList=(agentsContacts||[]).filter(a=>a.phone).map(a=>({...a,_selected:selectedAgents.includes(a.id)}));
+    const gList=groupsList.map(g=>({...g,_selected:!!g.enabled}));
+    if(agentsList.length===0&&gList.length===0){toast("⚠️ אין מתווכים או קבוצות זמינים");return}
+    setPreview({time:timeStr||null,text:initText,agents:agentsList,groups:gList,progress:null,sourceProp:propsToUse[0]});
   }
   async function approveAndSend(){
     if(!preview||sending)return;
-    setSending(true);
-    const{time,agents,groups,props}=preview;
+    const{text,agents,groups,time}=preview;
+    const finalText=(text||"").trim();
+    if(!finalText){toast("⚠️ ההודעה ריקה");return}
     const recipients=[
-      ...agents.map(a=>({label:a.name||a.phone,to:a.phone,kind:"agent"})),
-      ...(groups||[]).map(g=>({label:g.name,to:g.id,kind:"group"})),
+      ...agents.filter(a=>a._selected).map(a=>({to:a.phone,kind:"agent",label:a.name||a.phone})),
+      ...groups.filter(g=>g._selected).map(g=>({to:g.id,kind:"group",label:g.name})),
     ];
-    let ok=0;
+    if(recipients.length===0){toast("⚠️ לא נבחרו יעדים לשליחה");return}
+    setSending(true);
+    setPreview(p=>p?{...p,progress:{sent:0,total:recipients.length,failed:[]}}:p);
+    let ok=0;const failed=[];
     for(let i=0;i<recipients.length;i++){
       const r=recipients[i];
-      for(const p of props){
-        const msg=buildAgentShortMsg(p);
-        const sent=r.kind==="group"?await sendWhatsAppGroup(r.to,msg):await sendDirectMessage(r.to,msg);
-        if(sent)ok++;
-      }
-      if(i<recipients.length-1)await new Promise(r=>setTimeout(r,3000));
+      const sent=r.kind==="group"?await sendWhatsAppGroup(r.to,finalText):await sendDirectMessage(r.to,finalText);
+      if(sent)ok++;else failed.push(r.label);
+      setPreview(p=>p?{...p,progress:{sent:i+1,total:recipients.length,failed:[...failed]}}:p);
+      if(i<recipients.length-1)await new Promise(rs=>setTimeout(rs,3000));
     }
-    const key=new Date().toISOString().slice(0,10)+"_"+time;
-    patch({lastSent:{...lastSent,[key]:{agents:agents.length,groups:(groups||[]).length,props:props.length,sentAt:new Date().toISOString()}}});
-    setPreview(null);setSending(false);
-    toast("✅ נשלח ל-"+recipients.length+" יעדים בשעה "+time);
+    if(time){
+      const key=new Date().toISOString().slice(0,10)+"_"+time;
+      const agentsCount=recipients.filter(r=>r.kind==="agent").length;
+      const groupsCount=recipients.filter(r=>r.kind==="group").length;
+      patch({lastSent:{...lastSent,[key]:{agents:agentsCount,groups:groupsCount,props:1,sentAt:new Date().toISOString()}}});
+    }
+    toast(failed.length===0?"✅ נשלח בהצלחה ל-"+ok+" יעדים":"⚠️ "+ok+" הצלחות, "+failed.length+" כישלונות",3000);
+    setTimeout(()=>{setPreview(null);setSending(false)},1500);
   }
   async function sendImagesLink(prop,agentPhone){
     const m=buildImagesLinksMsg(prop);
@@ -2725,7 +2733,8 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
           <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
           <div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד' · ":""}{p.price?fmtP(p.price):""}{(p.images||[]).filter(i=>i.type!=="video").length>0?" · 📷 "+((p.images||[]).filter(i=>i.type!=="video").length):""}</div>
         </div>
-        <div style={{display:"flex",gap:6}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <Btn sm ch="📤 שלח לקבוצות" c={G} onClick={()=>openPreview(null,p)}/>
           <Btn sm ch="📸 קישור" c={BL} ghost onClick={()=>setImgModal(p)}/>
           <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
         </div>
@@ -2740,21 +2749,65 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
       </div>)}
     </div>}
 
-    {/* Preview / approve modal */}
-    {preview&&<Modal title={"📋 תצוגה מקדימה — "+preview.time} color={OR} onClose={()=>!sending&&setPreview(null)} center>
-      <div style={{background:"rgba(245,176,107,0.08)",border:"1px solid rgba(245,176,107,0.3)",borderRadius:12,padding:10,marginBottom:14,fontSize:13,color:"#f5b06b"}}>
-        ⚠️ עומד להישלח ל-<b>{preview.agents.length}</b> מתווכים ו-<b>{(preview.groups||[]).length}</b> קבוצות, <b>{preview.props.length}</b> דירות לכל יעד. השהייה 3 שניות בין יעד.
+    {/* Preview / approve modal — editable text + phone mockup + group selection */}
+    {preview&&<Modal title={preview.time?("תצוגה מקדימה — שליחה לקבוצות ("+preview.time+")"):"תצוגה מקדימה — שליחה לקבוצות"} color={G} onClose={()=>!sending&&setPreview(null)} center>
+      <Lbl t="הודעה לשליחה (ניתן לעריכה)" icon="✏️"/>
+      <textarea value={preview.text||""} onChange={e=>setPreview(p=>p?{...p,text:e.target.value}:p)} disabled={sending} style={{...S.inp,resize:"none",minHeight:160,fontSize:"0.9rem",lineHeight:1.65,direction:"rtl",marginBottom:14}}/>
+
+      <div style={{color:"var(--text-gray)",fontSize:"0.8rem",marginBottom:8,textAlign:"center"}}>תצוגה מקדימה</div>
+      <div style={{width:"100%",maxWidth:280,margin:"0 auto 18px",background:"#0b141a",borderRadius:20,border:"2px solid #2d2d44",padding:16,minHeight:120,position:"relative"}}>
+        <div style={{background:"#1f2c33",borderRadius:"8px 0 8px 8px",padding:"10px 12px",color:"#e9edef",fontSize:"0.82rem",lineHeight:1.5,whiteSpace:"pre-wrap",maxWidth:"90%",marginInlineStart:"auto",direction:"rtl"}}>
+          {(preview.text||"").trim()||"—"}
+        </div>
       </div>
-      <Lbl t="הודעה לדוגמה (לדירה הראשונה)" icon="💬"/>
-      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:10,padding:12,marginBottom:14,fontSize:13,lineHeight:1.7,color:"#ede8f5",whiteSpace:"pre-wrap"}}>{buildAgentShortMsg(preview.props[0])}</div>
-      {preview.agents.length>0&&<><Lbl t="מתווכים" icon="📒"/>
-      <div style={{color:"#bbb",fontSize:13,marginBottom:14,lineHeight:1.6}}>{preview.agents.map(a=>a.name||a.phone).join(", ")}</div></>}
-      {(preview.groups||[]).length>0&&<><Lbl t="קבוצות ווטסאפ" icon="👥"/>
-      <div style={{color:"#bbb",fontSize:13,marginBottom:14,lineHeight:1.6}}>{(preview.groups||[]).map(g=>g.name).join(", ")}</div></>}
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        <Btn ch={sending?"שולח...":"✅ אשר ושלח"} c={GR} onClick={approveAndSend} dis={sending}/>
-        <Btn ghost ch="ביטול" c={"#888"} onClick={()=>!sending&&setPreview(null)} dis={sending}/>
-      </div>
+
+      {preview.groups.length>0&&<>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontSize:"1rem",fontWeight:600,color:"var(--text-white)"}}>👥 קבוצות לשליחה ({preview.groups.filter(g=>g._selected).length}/{preview.groups.length})</div>
+          <div style={{display:"flex",gap:12}}>
+            <button onClick={()=>setPreview(p=>p?{...p,groups:p.groups.map(g=>({...g,_selected:true}))}:p)} disabled={sending} style={{background:"none",border:"none",color:G,fontSize:"0.75rem",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:600}}>סמן הכל</button>
+            <button onClick={()=>setPreview(p=>p?{...p,groups:p.groups.map(g=>({...g,_selected:false}))}:p)} disabled={sending} style={{background:"none",border:"none",color:G,fontSize:"0.75rem",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:600}}>נקה הכל</button>
+          </div>
+        </div>
+        <div style={{marginBottom:14,maxHeight:240,overflowY:"auto",border:"1px solid var(--border)",borderRadius:12}}>
+          {preview.groups.map(g=><label key={g.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.88rem",color:"var(--text-gray)",cursor:sending?"not-allowed":"pointer"}}>
+            <input type="checkbox" checked={!!g._selected} onChange={e=>{const v=e.target.checked;setPreview(p=>p?{...p,groups:p.groups.map(x=>x.id===g.id?{...x,_selected:v}:x)}:p)}} disabled={sending} style={{width:20,height:20,accentColor:"var(--gold)",borderRadius:4,cursor:sending?"not-allowed":"pointer",flexShrink:0}}/>
+            <span style={{flex:1,color:"var(--text-white)"}}>{g.name}</span>
+          </label>)}
+        </div>
+      </>}
+
+      {preview.agents.length>0&&<>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontSize:"1rem",fontWeight:600,color:"var(--text-white)"}}>📒 מתווכים אישיים ({preview.agents.filter(a=>a._selected).length}/{preview.agents.length})</div>
+          <div style={{display:"flex",gap:12}}>
+            <button onClick={()=>setPreview(p=>p?{...p,agents:p.agents.map(a=>({...a,_selected:true}))}:p)} disabled={sending} style={{background:"none",border:"none",color:G,fontSize:"0.75rem",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:600}}>סמן הכל</button>
+            <button onClick={()=>setPreview(p=>p?{...p,agents:p.agents.map(a=>({...a,_selected:false}))}:p)} disabled={sending} style={{background:"none",border:"none",color:G,fontSize:"0.75rem",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:600}}>נקה הכל</button>
+          </div>
+        </div>
+        <div style={{marginBottom:14,maxHeight:200,overflowY:"auto",border:"1px solid var(--border)",borderRadius:12}}>
+          {preview.agents.map(a=><label key={a.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.88rem",color:"var(--text-gray)",cursor:sending?"not-allowed":"pointer"}}>
+            <input type="checkbox" checked={!!a._selected} onChange={e=>{const v=e.target.checked;setPreview(p=>p?{...p,agents:p.agents.map(x=>x.id===a.id?{...x,_selected:v}:x)}:p)}} disabled={sending} style={{width:20,height:20,accentColor:"var(--gold)",cursor:sending?"not-allowed":"pointer",flexShrink:0}}/>
+            <span style={{flex:1,color:"var(--text-white)"}}>{a.name||a.phone}</span>
+          </label>)}
+        </div>
+      </>}
+
+      {preview.progress&&<div style={{background:"rgba(195,166,82,0.06)",border:"1px solid var(--border-gold)",borderRadius:12,padding:"12px 14px",marginBottom:14,textAlign:"center"}}>
+        <div style={{color:G,fontSize:13,fontWeight:700,marginBottom:6}}>
+          {preview.progress.sent===preview.progress.total?("✅ הסתיים — "+preview.progress.sent+"/"+preview.progress.total):("נשלח ל-"+preview.progress.sent+"/"+preview.progress.total+" יעדים")}
+        </div>
+        <div style={{height:6,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}>
+          <div style={{height:"100%",width:(100*preview.progress.sent/Math.max(1,preview.progress.total))+"%",background:"linear-gradient(90deg, var(--gold), #e8c84a)",transition:"width .3s ease"}}/>
+        </div>
+        {preview.progress.failed&&preview.progress.failed.length>0&&<div style={{color:"#f87171",fontSize:11,marginTop:8}}>נכשלו: {preview.progress.failed.join(", ")}</div>}
+      </div>}
+
+      <button onClick={approveAndSend} disabled={sending} style={{background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"1rem",padding:"14px 0",width:"100%",borderRadius:14,border:"none",cursor:sending?"not-allowed":"pointer",boxShadow:"0 4px 16px rgba(195,166,82,0.25)",transition:"all .2s ease",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:8,opacity:sending?0.7:1}}>
+        {sending&&<span className="spinner" style={{width:16,height:16,borderWidth:2,borderTopColor:"transparent",borderColor:"var(--midnight)"}}/>}
+        {sending?"שולח...":"שלח עכשיו"}
+      </button>
+      <button onClick={()=>!sending&&setPreview(null)} disabled={sending} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",fontSize:"0.9rem",padding:"12px 0",width:"100%",borderRadius:14,marginTop:8,cursor:sending?"not-allowed":"pointer",fontFamily:"inherit"}}>ביטול</button>
     </Modal>}
 
     {/* Image link modal */}
