@@ -117,6 +117,10 @@ input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-
 .dock-btn{transition:transform .15s ease, background .2s ease, color .2s ease}
 .dock-btn:active{transform:scale(0.93)}
 
+/* ───── VIP pulse for inbound image requests ───── */
+@keyframes subtle-pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.vip-pulse{animation:subtle-pulse 2s infinite}
+
 /* ───── Floating Action Button (FAB) ───── */
 .fab-add{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a8882e);color:var(--midnight);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(195,166,82,0.3);border:none;cursor:pointer;z-index:48;transition:transform .2s ease, box-shadow .2s ease;font-family:inherit}
 .fab-add:hover{transform:translateX(-50%) scale(1.08);box-shadow:0 8px 30px rgba(195,166,82,0.4)}
@@ -1222,6 +1226,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
+      <VipQuickSend prop={sel}/>
 
       {/* Send choose modal */}
       {sendModal==="choose"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
@@ -1466,6 +1471,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
+      <VipQuickSend prop={sel}/>
 
       {/* Send choose modal */}
       {pubOpen==="chooseMethod"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
@@ -2642,6 +2648,69 @@ function buildImagesLinksMsg(prop){
   return m;
 }
 
+// VIP agents — fixed quick-send roster. Phone numbers are stored in
+// international 972XXXXXXXXX form (no leading +, no @c.us suffix).
+const VIP_AGENTS=[
+  {name:"עמנואל",fullName:"עמנואל רימקס",phone:"972542516859"},
+  {name:"שאול ט",fullName:"שאול טובלי",phone:"972543376993"},
+  {name:"שאול ש",fullName:"שאול שאול",phone:"972507657575"},
+  {name:"דביר",fullName:"דביר רימקס",phone:"972509184200"},
+  {name:"ריקרדו",fullName:"ריקרדו רימקס",phone:"972523252255"},
+  {name:"ניר",fullName:"ניר וקנין",phone:"972525498367"},
+  {name:"ישראל",fullName:"ישראל רימקס",phone:"972549303598"}
+];
+function isVipPhone(phoneOrId){
+  if(!phoneOrId)return null;
+  let raw=String(phoneOrId).replace(/@c\.us$/i,"").replace(/[-\s+]/g,"");
+  if(raw.startsWith("0"))raw="972"+raw.slice(1);
+  return VIP_AGENTS.find(v=>v.phone===raw)||null;
+}
+function wantsImagesText(s){
+  if(!s)return false;
+  const t=String(s);
+  return /אפשר תמונות|יש תמונות|תמונות\?|תמונות /.test(t);
+}
+
+function VipQuickSend({prop}){
+  const[sent,setSent]=useState({});    // {phone: true} after success
+  const[sending,setSending]=useState({}); // {phone: true} while in-flight
+  async function sendToVip(v){
+    if(sending[v.phone]||sent[v.phone])return;
+    const urls=(prop&&prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
+    if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}
+    setSending(s=>({...s,[v.phone]:true}));
+    const ok=await sendWhatsAppImagesOnly(v.phone+"@c.us",urls);
+    setSending(s=>{const n={...s};delete n[v.phone];return n});
+    if(ok){
+      setSent(s=>({...s,[v.phone]:true}));
+      toast("📷 "+urls.length+" תמונות נשלחו ל-"+v.fullName);
+    }
+  }
+  return <div style={{marginTop:12}}>
+    <div style={{fontSize:"0.8rem",color:"var(--text-dim)",marginBottom:8,fontWeight:500}}>שליחה מהירה למתווכי VIP</div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+      {VIP_AGENTS.map(v=>{
+        const isSent=!!sent[v.phone];
+        const isSending=!!sending[v.phone];
+        const dis=isSent||isSending;
+        const label=isSent?("✓ נשלח — "+v.name):(isSending?("⏳ "+v.name):("📷 "+v.name));
+        return <button key={v.phone} onClick={()=>sendToVip(v)} disabled={dis} title={v.fullName} style={{
+          display:"inline-flex",alignItems:"center",gap:6,
+          padding:"6px 12px",borderRadius:20,
+          fontSize:"0.75rem",fontWeight:500,
+          cursor:dis?"default":"pointer",
+          transition:"all .2s ease",
+          background:isSent?"rgba(22,163,74,0.10)":"rgba(168,85,247,0.08)",
+          border:"1px solid "+(isSent?"rgba(22,163,74,0.30)":"rgba(168,85,247,0.20)"),
+          color:isSent?"#4ade80":"#a78bfa",
+          fontFamily:"inherit",
+          opacity:isSending?0.65:1
+        }}>{label}</button>;
+      })}
+    </div>
+  </div>;
+}
+
 function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentAuto,agentGroups,setAgentGroups,customAgentTexts,setCustomAgentTexts}){
   const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
   const items=agentAuto.items||[];
@@ -2865,16 +2934,19 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
           </div>)}
         </div>
       </div>}
-      {queue.length===0?<div style={{color:"#777",padding:14,textAlign:"center",fontSize:14}}>אין דירות באוטומציה</div>:queue.map(p=><div key={p._qId} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-        <div>
-          <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
-          <div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד' · ":""}{p.price?fmtP(p.price):""}{(p.images||[]).filter(i=>i.type!=="video").length>0?" · 📷 "+((p.images||[]).filter(i=>i.type!=="video").length):""}</div>
+      {queue.length===0?<div style={{color:"#777",padding:14,textAlign:"center",fontSize:14}}>אין דירות באוטומציה</div>:queue.map(p=><div key={p._qId} style={{padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <div>
+            <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+            <div style={{color:"#777",fontSize:12}}>{p.rooms?p.rooms+" חד' · ":""}{p.price?fmtP(p.price):""}{(p.images||[]).filter(i=>i.type!=="video").length>0?" · 📷 "+((p.images||[]).filter(i=>i.type!=="video").length):""}</div>
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            <Btn sm ch="📤 שלח לקבוצות" c={G} onClick={()=>openPreview(null,p)}/>
+            <Btn sm ch="📷 שליחה פרטנית" c={PU} ghost onClick={()=>setImgModal(p)}/>
+            <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
+          </div>
         </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          <Btn sm ch="📤 שלח לקבוצות" c={G} onClick={()=>openPreview(null,p)}/>
-          <Btn sm ch="📷 שליחה פרטנית" c={PU} ghost onClick={()=>setImgModal(p)}/>
-          <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
-        </div>
+        <VipQuickSend prop={p}/>
       </div>)}
     </div>
 
@@ -3069,13 +3141,19 @@ function RecentChats({sellers,brokerProps}){
         {visible.length===0?<div style={{color:"var(--text-gray)",padding:14,textAlign:"center",fontSize:13}}>לא נמצאו צ'אטים</div>:visible.map(c=>{
           const phone=fmtIsraeliPhone(c.id);
           const isSel=picker&&picker.phone===c.id;
+          const vip=isVipPhone(c.id);
+          const lastMsg=c.last_message||c.lastMessage||c.body||"";
+          const askingForPhotos=vip&&wantsImagesText(lastMsg);
           return <div key={c.id} onClick={()=>setPicker({phone:c.id,name:c.name||phone})} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",borderRadius:10,marginBottom:2,background:isSel?"var(--gold-soft)":"transparent",border:isSel?"1px solid var(--border-gold)":"1px solid transparent",transition:"background .2s ease"}}>
             <div style={{width:42,height:42,borderRadius:"50%",background:"var(--blue-soft)",border:"1px solid rgba(26,86,219,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:600,color:"var(--blue)",flexShrink:0}}>{avatarLetter(c.name,phone)}</div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:"0.95rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name||"ללא שם"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,overflow:"hidden"}}>
+                <span style={{fontSize:"0.95rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{vip?vip.fullName:(c.name||"ללא שם")}</span>
+                {vip&&<span style={{fontSize:"0.65rem",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",color:"var(--gold)",padding:"2px 8px",borderRadius:10,fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>⭐ VIP</span>}
+              </div>
               <div style={{fontSize:"0.78rem",color:"var(--text-gray)",direction:"ltr",textAlign:"right"}}>{phone}</div>
             </div>
-            <button onClick={e=>{e.stopPropagation();setPicker({phone:c.id,name:c.name||phone})}} title="שלח תמונות בלבד" className="icon-btn icon-btn-purple" style={{width:38,height:38,fontSize:15}}>📷</button>
+            <button onClick={e=>{e.stopPropagation();setPicker({phone:c.id,name:vip?vip.fullName:(c.name||phone)})}} title={askingForPhotos?"מתווך VIP מבקש תמונות":"שלח תמונות בלבד"} className={"icon-btn icon-btn-purple"+(askingForPhotos?" vip-pulse":"")} style={{width:38,height:38,fontSize:15}}>📷</button>
           </div>;
         })}
       </div>
