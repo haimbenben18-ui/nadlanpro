@@ -128,6 +128,25 @@ input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-
 
 /* ───── Stat cards (exclusivity highlight) ───── */
 .stat-card-gold{border-color:var(--border-gold) !important;background:linear-gradient(135deg,var(--surface),rgba(195,166,82,0.03)) !important}
+
+/* ───── VIP Cards ───── */
+.vip-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.vip-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s ease;min-width:140px}
+.vip-card:hover{border-color:var(--border-hover)}
+.vip-card-header{display:flex;align-items:center;gap:8px}
+.vip-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold-soft);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:600;color:var(--gold)}
+.vip-info{display:flex;flex-direction:column}
+.vip-name{font-size:0.82rem;font-weight:600;color:var(--text-white)}
+.vip-badge{font-size:0.6rem;color:var(--gold)}
+.vip-last-sent{font-size:0.7rem;color:var(--text-gray);padding:0 4px}
+.vip-actions{display:flex;gap:6px;justify-content:center}
+.vip-action{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.2s ease;border:1px solid;text-decoration:none}
+.vip-action.photos{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.15);color:#a78bfa}
+.vip-action.photos:hover{background:rgba(168,85,247,0.18)}
+.vip-action.details{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
+.vip-action.details:hover{background:rgba(195,166,82,0.18)}
+.vip-action.mobile{background:rgba(22,163,74,0.08);border-color:rgba(22,163,74,0.15);color:#22c55e}
+.vip-action.mobile:hover{background:rgba(22,163,74,0.18)}
 </style>
 </head>
 <body>
@@ -192,7 +211,7 @@ async function sendWhatsAppMedia(phone,caption,mediaItems){
 
 function buildCaption(prop,buyerName){
   const streetOnly=(prop.address||"").replace(/\s*\d+.*/,"").trim();
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const rooms=prop.rooms?prop.rooms+" חדרים":"";
   const size=prop.size?prop.size+' מ"ר':"";
   const floor=prop.floor?"קומה "+prop.floor:"";
@@ -209,14 +228,14 @@ function buildCaption(prop,buyerName){
   if(notes)msg+="\n"+notes+"\n";
   msg+="\n━━━━━━━━━━\n";
   msg+="📞 *חיים בן סימון*\n";
-  msg+="🏆 RE/MAX באר שבע\n";
+  msg+="🏆 RE/MAX\n";
   msg+="📱 054-4740691";
   return msg;
 }
 
 function buildMultiCaption(prop,buyerName,isFirst,totalCount,currentIndex){
   const streetOnly=(prop.address||"").replace(/\s*\d+.*/,"").trim();
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const rooms=prop.rooms?prop.rooms+" חדרים":"";
   const size=prop.size?prop.size+' מ"ר':"";
   const floor=prop.floor?"קומה "+prop.floor:"";
@@ -239,7 +258,7 @@ function buildMultiCaption(prop,buyerName,isFirst,totalCount,currentIndex){
   if(currentIndex===totalCount-1){
     msg+="\n━━━━━━━━━━\n";
     msg+="📞 *חיים בן סימון*\n";
-    msg+="🏆 RE/MAX באר שבע\n";
+    msg+="🏆 RE/MAX\n";
     msg+="📱 054-4740691\n\n";
     if(totalCount>1){
       msg+="איזו מהדירות הכי מעניינת אותך? 😊";
@@ -355,7 +374,7 @@ async function sendDirectMessage(phone,text){
 }
 
 function buildAgentCaption(prop){
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const rooms=prop.rooms||"";
   const size=prop.size?prop.size+' מ"ר':"";
   const floor=prop.floor||"";
@@ -499,7 +518,7 @@ const FB_GROUPS_BUILTIN=(()=>{
 })();
 
 function buildInvestorCaption(prop){
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const addr=prop.address||prop.name||"";
   const rooms=prop.rooms||"";
   const size=prop.size?prop.size+' מ"ר':"";
@@ -523,7 +542,7 @@ function buildInvestorCaption(prop){
   }
   msg+="📞 חיים בן סימון 054-474-0691\n";
   msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
-  msg+="🏠 RE/MAX באר שבע\n\n";
+  msg+="🏠 RE/MAX\n\n";
   msg+="⚠️ אני זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
   return msg;
 }
@@ -531,7 +550,7 @@ function buildInvestorCaption(prop){
 const FB_SIGNATURE="---\n"+
   "📞 חיים בן סימון 054-474-0691\n"+
   "💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n"+
-  "🏠 RE/MAX באר שבע\n\n"+
+  "🏠 RE/MAX\n\n"+
   "⚠️ זמין בווטסאפ או בשיחת טלפון בלבד, לא בהודעות פייסבוק";
 
 function ensureFbSignature(text){
@@ -543,7 +562,7 @@ function ensureFbSignature(text){
 }
 
 function buildFacebookCaption(prop){
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const addr=prop.address||prop.name||"";
   const rooms=prop.rooms||"";
   const size=prop.size?prop.size+' מ"ר':"";
@@ -561,7 +580,7 @@ function buildFacebookCaption(prop){
 }
 
 function buildLocalCaption(prop){
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const addr=prop.address||prop.name||"";
   const rooms=prop.rooms||"";
   const size=prop.size?prop.size+' מ"ר':"";
@@ -578,7 +597,7 @@ function buildLocalCaption(prop){
   if(prop.notes)msg+="📝 "+prop.notes+"\n";
   msg+="📞 חיים בן סימון 054-474-0691\n";
   msg+="💬 לפרטים נוספים בווטסאפ: https://wa.me/972544740691\n";
-  msg+="🏠 RE/MAX באר שבע\n\n";
+  msg+="🏠 RE/MAX\n\n";
   msg+="⚠️ אני זמין בווטסאפ בלבד, לא בהודעות פייסבוק";
   return msg;
 }
@@ -868,12 +887,12 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     if(!prospect.phone){toast("⚠️ אין מספר טלפון");return}
     const name=(prospect.name||"").trim();
     const greet=name?"שלום "+name:"שלום";
-    const m=greet+", כאן חיים בן סימון מרימקס באר שבע. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
+    const m=greet+", כאן חיים בן סימון מרימקס. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
     const ok=await sendDirectMessage(prospect.phone,m);
     if(ok)toast("✅ דף נחיתה נשלח");
   }
 
-  const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX באר שבע 13 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX | באר שבע","שלום 👋\nחיים בן סימון מרימקס באר שבע.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX | 13 שנות ניסיון"];
+  const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX 13 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX","שלום 👋\nחיים בן סימון מרימקס.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX","שלום 👋\nחיים בן סימון מרימקס.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX | 13 שנות ניסיון"];
 
   useEffect(()=>{setMsg(templates[selMsg])},[selMsg]);
 
@@ -1096,8 +1115,8 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
-      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
-      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
       "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
     ];
     return tpls[(variant||0)%tpls.length];
@@ -1143,9 +1162,9 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     setPubLoading(true);setPubResult(null);
     const streetOnly=(s.address||"").replace(/\s*\d+.*/,"").trim();
     const notes=s.notes||"";
-    const basePrompt="נכס למכירה בבאר שבע:\n"+
+    const basePrompt="נכס למכירה:\n"+
       "רחוב: "+streetOnly+"\n"+
-      "עיר: "+(s.city||"באר שבע")+"\n"+
+      "עיר: "+(s.city||"")+"\n"+
       (s.rooms?"חדרים: "+s.rooms+"\n":"")+
       (s.size?"גודל: "+s.size+" מ\"ר\n":"")+
       (s.floor?"קומה: "+s.floor+"\n":"")+
@@ -1156,7 +1175,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
       "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
       "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
-      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+      "- חיים בן סימון | RE/MAX | 054-4740691\n";
     const prompts={
       whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
       yad2:basePrompt+"\nכתוב מודעת יד2 מקצועית עם כותרת קצרה בשורה ראשונה, תיאור מפתה, פרטים טכניים, ו-CTA. עד 150 מילה.",
@@ -1226,7 +1245,6 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
-      <VipQuickSend prop={sel} customAgentTexts={customAgentTexts}/>
 
       {/* Send choose modal */}
       {sendModal==="choose"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
@@ -1378,7 +1396,6 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
-      <VipQuickSend prop={s} customAgentTexts={customAgentTexts}/>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
@@ -1404,8 +1421,8 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
   function buildSendMsg(buyerName,prop,variant){
     const addr=prop.address||"—";const rooms=prop.rooms||"—";const size=prop.size?prop.size+"מ״ר":"—";const floor=prop.floor||"—";const price=prop.price?fmtP(prop.price):"—";
     const tpls=[
-      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס באר שבע.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
-      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס באר שבע.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nחשבתי עליך! יש לי דירה מושלמת בשבילך:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים\n📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 מעוניין? אשלח לך תמונות ופרטים נוספים\n\n📞 חיים | RE/MAX | 054-4740691",
+      "שלום "+(buyerName||"")+" 👋\n\nחיים מרימקס.\n\nנתקלתי בדירה שיכולה להתאים לך מצוין:\n\n🏠 "+addr+"\n🛏 "+rooms+" חדרים | 📐 "+size+"\n🏢 קומה "+floor+"\n💰 "+price+"\n\n😊 רוצה לשמוע עוד פרטים?\n\n📞 חיים | RE/MAX | 054-4740691",
       "היי "+(buyerName||"")+" 😊\n\nחיים בן סימון מרימקס.\n\nיש לי משהו מעניין בשבילך!\n\n🏠 דירה ב"+addr+"\n🛏 "+rooms+" חד | 📐 "+size+" | 🏢 קומה "+floor+"\n💰 "+price+"\n\n📸 אשמח לשלוח תמונות ולתאם סיור\n\n📞 חיים | RE/MAX | 054-4740691"
     ];
     return tpls[(variant||0)%tpls.length];
@@ -1420,9 +1437,9 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
     setPubLoading(true);setPubResult(null);
     const streetOnly=(s.address||"").replace(/\s*\d+.*/,"").trim();
     const notes=s.notes||"";
-    const basePrompt="נכס למכירה בבאר שבע:\n"+
+    const basePrompt="נכס למכירה:\n"+
       "רחוב: "+streetOnly+"\n"+
-      "עיר: "+(s.city||"באר שבע")+"\n"+
+      "עיר: "+(s.city||"")+"\n"+
       (s.rooms?"חדרים: "+s.rooms+"\n":"")+
       (s.size?"גודל: "+s.size+" מ\"ר\n":"")+
       (s.floor?"קומה: "+s.floor+"\n":"")+
@@ -1433,7 +1450,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       "- אם בהערות מופיע שהדירה מושכרת, ציין זאת כהשקעה עם תשואה\n"+
       "- אם מופיע סכום שכירות, ציין אותו כיתרון (תשואה חודשית)\n"+
       "- אם מופיע שהדירה מושכרת לסטודנטים או קרובה לאוניברסיטה, הדגש זאת כהשקעה מעולה לסטודנטים\n"+
-      "- חיים בן סימון | RE/MAX באר שבע | 054-4740691\n";
+      "- חיים בן סימון | RE/MAX | 054-4740691\n";
     const prompts={
       whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
       facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
@@ -1472,7 +1489,6 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
-      <VipQuickSend prop={sel} customAgentTexts={customAgentTexts}/>
 
       {/* Send choose modal */}
       {pubOpen==="chooseMethod"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
@@ -1549,14 +1565,13 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       {p.images&&p.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{p.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:14}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div><div style={{color:TE,fontSize:12}}>מתווך: {p.agentName||"—"}</div></div><Tag c={TE} ch={fmtP(p.price)}/></div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
-      <VipQuickSend prop={p} customAgentTexts={customAgentTexts}/>
     </div>)}
   </div>
 }
 
 // ━━━ WEEKLY REPORT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function WeeklyReport({sellers}){
-  const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX | באר שבע";
+  const DEF="דיווח שבועי — נכס {כתובת}\nשלום {שם} 😊\n\nחיים בן סימון מרימקס — דיווח שבועי לנכסך:\n\n📊 מצב שיווקי:\n• פורסם ב: פייסבוק, טיקטוק, אינסטגרם, יד2\n• {צפיות} צפיות\n• {מספר} פניות השבוע\n• {מספר} סיורים בוצעו\n\n💰 מחיר: {מחיר}₪\n\n🔑 המלצה:\n{המלצה}\n\nלכל שאלה — זמין עבורך!\nחיים | RE/MAX";
   const[template,setTemplate]=useState(lv("report_tpl",DEF));
   const[sel,setSel]=useState(null);const[preview,setPreview]=useState("");const[loading,setLoading]=useState(false);const[views,setViews]=useState("");const[sending,setSending]=useState(false);
   async function sendDirect(){
@@ -1590,7 +1605,7 @@ function WeeklyReport({sellers}){
 function Tiktok(){
   const[script,setScript]=useState("");const[loading,setLoading]=useState(false);const[custom,setCustom]=useState("");const[selDay,setSelDay]=useState(null);const[selT,setSelT]=useState(null);
   const plan=[{day:"ראשון",time:"10:00 + 19:00",type:"השוואה",dur:"45שנ",icon:"📊",color:BL,why:"3X שיתופים — 2 סרטונים ביום",topics:["כמה עולה 3 חד בכל שכונה?","שכונה ד vs ה","מה מקבלים ב700K?"]},{day:"שני",time:"10:00 + 20:00",type:"סיפור אישי",dur:"60שנ",icon:"🎭",color:PU,why:"סיפורים אישיים = 300K צפיות",topics:["לקוח שסירב — 3 חודשים אחר כך","הדירה שנמכרה ב+200K","סיור שלא תאמינו"]},{day:"שלישי",time:"10:00 + 19:00",type:"חינוך",dur:"45שנ",icon:"🎓",color:G,why:"תוכן חינוכי = 40% עוקבים",topics:["3 טעויות של קונה","מה לשאול מוכר","מה זה בלעדיות"]},{day:"רביעי",time:"10:00 + 20:00",type:"בהד\"ים/צבא",dur:"45שנ",icon:"🎖",color:OR,why:"נישה חמה — מעבר עיר הבהד\"ים",topics:["למה אנשי צבא קונים בבאר שבע","5 שכונות מומלצות ליד הבסיס","איך לקנות דירה עם תקציב צבאי"]},{day:"חמישי",time:"10:00 + 19:00",type:"Quick tip",dur:"30שנ",icon:"⚡",color:RE,why:"X2 engagement",topics:["שאלה שחוסכת 50K","סוד על תמחור","לפני/אחרי שיפוץ"]},{day:"שישי",time:"10:00",type:"סיכום שבועי",dur:"60שנ",icon:"📋",color:TE,why:"סיכום שבוע = שמירות",topics:["מה קרה השבוע בנדל\"ן באר שבע","3 דירות שנמכרו — מה למדנו","טיפ אחד ליום שישי"]},{day:"שבת",time:"20:00",type:"מוטיבציה",dur:"30שנ",icon:"💪",color:G,why:"שבת ערב = גלילה ארוכה",topics:["למה באר שבע ב-2026","סיפור הצלחה של לקוח","מה שמתווכים לא מספרים"]}];
-  async function gen(topic,type,dur){setLoading(true);setScript("");try{const txt=await aiCall("סקריפט טיקטוק מלא לחיים בן סימון רימקס באר שבע 13 שנה.\nנושא: \""+topic+"\" | סוג: "+type+" | אורך: "+dur+"\n\n🎬 HOOK\n---\n📢 גוף\n---\n🎯 CTA\n---\n🎥 B-ROLL\n---\n#האשטגים",1400);setScript(txt)}catch(e){}setLoading(false)}
+  async function gen(topic,type,dur){setLoading(true);setScript("");try{const txt=await aiCall("סקריפט טיקטוק מלא לחיים בן סימון רימקס 13 שנה.\nנושא: \""+topic+"\" | סוג: "+type+" | אורך: "+dur+"\n\n🎬 HOOK\n---\n📢 גוף\n---\n🎯 CTA\n---\n🎥 B-ROLL\n---\n#האשטגים",1400);setScript(txt)}catch(e){}setLoading(false)}
   return <div style={{padding:S.pg}} className="fade">
     <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>🎬 טיקטוק</div>
     {plan.map(d=>{const open=selDay&&selDay.day===d.day;return <div key={d.day} style={{marginBottom:12}}>
@@ -2635,7 +2650,7 @@ function loadPropertyText(prop,customAgentTexts){
 }
 
 function buildAgentShortMsg(prop){
-  const city=prop.city||"באר שבע";
+  const city=prop.city||"";
   const addr=prop.address||prop.name||"";
   const rooms=prop.rooms||"";
   const size=prop.size?prop.size+' מ"ר':"";
@@ -2663,13 +2678,18 @@ function buildImagesLinksMsg(prop){
 // VIP agents — fixed quick-send roster. Phone numbers are stored in
 // international 972XXXXXXXXX form (no leading +, no @c.us suffix).
 const VIP_AGENTS=[
-  {name:"עמנואל",fullName:"עמנואל רימקס",phone:"972542516859"},
-  {name:"שאול ט",fullName:"שאול טובלי",phone:"972543376993"},
-  {name:"שאול ש",fullName:"שאול שאול",phone:"972507657575"},
-  {name:"דביר",fullName:"דביר רימקס",phone:"972509184200"},
-  {name:"ריקרדו",fullName:"ריקרדו רימקס",phone:"972523252255"},
-  {name:"ניר",fullName:"ניר וקנין",phone:"972525498367"},
-  {name:"ישראל",fullName:"ישראל רימקס",phone:"972549303598"}
+  {name:'יעקב מתווך השקעה',phone:'972546833120',gender:'male'},
+  {name:'עומר חזן',phone:'972504999925',gender:'male'},
+  {name:'יניב רוט',phone:'972532244444',gender:'male'},
+  {name:'אביב חזן',phone:'972542000853',gender:'male'},
+  {name:'עמנואל רימקס',phone:'972542516859',gender:'male'},
+  {name:'שאול טובלי',phone:'972543376993',gender:'male'},
+  {name:'שאול שאול',phone:'972507657575',gender:'male'},
+  {name:'דביר רימקס',phone:'972509184200',gender:'male'},
+  {name:'ריקרדו רימקס',phone:'972523252255',gender:'male'},
+  {name:'ניר וקנין',phone:'972525498367',gender:'male'},
+  {name:'ישראל רימקס',phone:'972549303598',gender:'male'},
+  {name:'טלי חדד',phone:'972502080999',gender:'female'},
 ];
 function isVipPhone(phoneOrId){
   if(!phoneOrId)return null;
@@ -2683,63 +2703,175 @@ function wantsImagesText(s){
   return /אפשר תמונות|יש תמונות|תמונות\?|תמונות /.test(t);
 }
 
-function VipQuickSend({prop,customAgentTexts}){
-  const[status,setStatus]=useState({}); // {`${phone}_${action}`: 'sending'|'sent'}
+function getVipGreeting(v){
+  if(v.gender==='female')return v.name+', בואי נמכור!';
+  return v.name+', בוא נמכור!';
+}
+async function getPropertyText(propertyId,property){
+  try{
+    const response=await fetch('https://nadlanpro-5b041-default-rtdb.firebaseio.com/properties/'+propertyId+'/customAgentText.json');
+    const savedText=await response.json();
+    if(savedText&&typeof savedText==='string'&&savedText.trim()!=='')return{text:savedText,isCustom:true};
+  }catch(e){console.log('No custom text found')}
+  const defaultText=AGENT_GROUP_TEMPLATES[0].build(property);
+  return{text:defaultText,isCustom:false};
+}
+async function saveCustomText(propertyId,text){
+  await fetch('https://nadlanpro-5b041-default-rtdb.firebaseio.com/properties/'+propertyId+'/customAgentText.json',
+    {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(text)});
+}
+
+function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
+  const[open,setOpen]=useState(true);
+  const[status,setStatus]=useState({});
+  const[lastSentTimes,setLastSentTimes]=useState({});
+  const[detailsModal,setDetailsModal]=useState(null);
+  const[sendAllModal,setSendAllModal]=useState(false);
+  const[sendAllSending,setSendAllSending]=useState(false);
+  const[selectedPropIdx,setSelectedPropIdx]=useState(0);
+
+  const prop=queue&&queue.length>0?queue[Math.min(selectedPropIdx,queue.length-1)]:null;
+
   function key(p,a){return p+"_"+a}
   function setBtn(p,a,v){setStatus(s=>{const n={...s};const k=key(p,a);if(v==null)delete n[k];else n[k]=v;return n})}
   function autoReset(p,a){setTimeout(()=>setBtn(p,a,null),3000)}
+  function markSent(phone){setLastSentTimes(s=>({...s,[phone]:new Date().toLocaleString('he-IL')}))}
 
   async function sendPhotos(v){
+    if(!prop){toast("⚠️ בחר נכס קודם");return}
     if(status[key(v.phone,"photos")])return;
-    const urls=(prop&&prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
+    const urls=(prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
     if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}
     setBtn(v.phone,"photos","sending");
     const ok=await sendWhatsAppImagesOnly(v.phone+"@c.us",urls);
-    if(ok){setBtn(v.phone,"photos","sent");toast("🖼️ "+urls.length+" תמונות נשלחו ל-"+v.fullName);autoReset(v.phone,"photos")}
+    if(ok){setBtn(v.phone,"photos","sent");markSent(v.phone);toast("🖼️ "+urls.length+" תמונות נשלחו ל-"+v.name);autoReset(v.phone,"photos")}
     else{setBtn(v.phone,"photos",null)}
   }
-  async function sendDetails(v){
-    if(status[key(v.phone,"details")])return;
-    const text=loadPropertyText(prop,customAgentTexts);
-    if(!text||!text.trim()){toast("⚠️ אין טקסט לנכס זה");return}
-    setBtn(v.phone,"details","sending");
-    const ok=await sendDirectMessage(v.phone+"@c.us",text);
-    if(ok){setBtn(v.phone,"details","sent");toast("📝 פרטים נשלחו ל-"+v.fullName);autoReset(v.phone,"details")}
-    else{setBtn(v.phone,"details",null)}
+
+  async function openDetailsModal(v){
+    if(!prop){toast("⚠️ בחר נכס קודם");return}
+    const pk=propKeyOf(prop);
+    const result=await getPropertyText(pk,prop);
+    const greeting=getVipGreeting(v);
+    setDetailsModal({vip:v,text:result.text,isCustom:result.isCustom,greeting});
   }
 
-  function btnContent(p,a,defaultIcon){
-    const s=status[key(p,a)];
-    if(s==="sending")return "⏳";
-    if(s==="sent")return "✓";
-    return defaultIcon;
-  }
-  function btnStyle(p,a,defaultClass){
-    const s=status[key(p,a)];
-    const sent=s==="sent";
-    return {width:34,height:34,fontSize:14,color:sent?"#22c55e":undefined,opacity:s==="sending"?0.7:1};
+  async function sendDetailsFromModal(){
+    if(!detailsModal||!prop)return;
+    const v=detailsModal.vip;
+    const greeting=detailsModal.greeting;
+    const body=greeting+'\n'+(detailsModal.text||'').trim();
+    if(!body.trim()){toast("⚠️ הטקסט ריק");return}
+    setDetailsModal(m=>({...m,sending:true}));
+    const ok=await sendDirectMessage(v.phone+"@c.us",body);
+    if(ok){
+      markSent(v.phone);
+      toast("📝 פרטים נשלחו ל-"+v.name);
+      if(detailsModal.saveCustom){
+        const pk=propKeyOf(prop);
+        await saveCustomText(pk,detailsModal.text);
+        if(setCustomAgentTexts)setCustomAgentTexts(prev=>({...(prev||{}),[pk]:detailsModal.text}));
+        toast("💾 טקסט נשמר");
+      }
+    }
+    setDetailsModal(null);
   }
 
-  return <div style={{marginTop:12}}>
-    <div style={{fontSize:"0.8rem",color:"var(--text-dim)",marginBottom:8,fontWeight:500}}>שליחה מהירה למתווכי VIP</div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-      {VIP_AGENTS.map(v=>{
-        return <div key={v.phone} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:12,display:"flex",flexDirection:"column",gap:10,transition:"border-color .2s ease",minWidth:140,flex:"0 1 auto"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{width:32,height:32,borderRadius:"50%",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.85rem",fontWeight:600,color:"var(--gold)",flexShrink:0}}>{v.fullName.charAt(0)}</div>
-            <div style={{display:"flex",flexDirection:"column",minWidth:0}}>
-              <span style={{fontSize:"0.82rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.fullName}</span>
-              <span style={{fontSize:"0.6rem",color:"var(--gold)",letterSpacing:"0.02em"}}>⭐ VIP</span>
-            </div>
-          </div>
-          <div style={{display:"flex",gap:6,justifyContent:"center"}}>
-            <button onClick={()=>sendPhotos(v)} disabled={!!status[key(v.phone,"photos")]} title="תמונות בלבד" className="icon-btn icon-btn-purple" style={btnStyle(v.phone,"photos")}>{btnContent(v.phone,"photos","🖼️")}</button>
-            <button onClick={()=>sendDetails(v)} disabled={!!status[key(v.phone,"details")]} title="פרטים שמורים" className="icon-btn icon-btn-edit" style={btnStyle(v.phone,"details")}>{btnContent(v.phone,"details","📝")}</button>
-            <a href={"https://wa.me/"+v.phone} target="_blank" rel="noopener" title="פתח בווטסאפ" className="icon-btn icon-btn-wa" style={{width:34,height:34,fontSize:14,textDecoration:"none"}}>📱</a>
-          </div>
-        </div>;
-      })}
+  async function sendToAllVip(){
+    if(!prop||sendAllSending)return;
+    setSendAllSending(true);
+    const pk=propKeyOf(prop);
+    const result=await getPropertyText(pk,prop);
+    const text=result.text;
+    let okCount=0;
+    for(let i=0;i<VIP_AGENTS.length;i++){
+      const v=VIP_AGENTS[i];
+      const greeting=getVipGreeting(v);
+      const body=greeting+'\n'+text;
+      toast("📤 שולח ל-"+(i+1)+" מתוך "+VIP_AGENTS.length+" — "+v.name);
+      const ok=await sendDirectMessage(v.phone+"@c.us",body);
+      if(ok){okCount++;markSent(v.phone)}
+      if(i<VIP_AGENTS.length-1)await new Promise(rs=>setTimeout(rs,3000));
+    }
+    toast("✅ נשלח ל-"+okCount+" מתוך "+VIP_AGENTS.length+" מתווכי VIP");
+    setSendAllSending(false);
+    setSendAllModal(false);
+  }
+
+  function btnContent(p,a,def){const s=status[key(p,a)];if(s==="sending")return "⏳";if(s==="sent")return "✓";return def}
+
+  return <div style={S.card}>
+    <div onClick={()=>setOpen(!open)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",userSelect:"none"}}>
+      <div style={{fontSize:"1rem",fontWeight:700,color:"var(--text-white)"}}>⭐ מתווכים VIP ({VIP_AGENTS.length})</div>
+      <span style={{color:"var(--gold)",fontSize:18}}>{open?"▾":"▸"}</span>
     </div>
+
+    {open&&<div style={{marginTop:14}}>
+      {queue.length>1&&<div style={{marginBottom:12}}>
+        <div style={{fontSize:"0.78rem",color:"var(--text-gray)",marginBottom:6}}>נכס נבחר:</div>
+        <select value={selectedPropIdx} onChange={e=>setSelectedPropIdx(Number(e.target.value))} style={{...S.inp,fontSize:"0.85rem"}}>
+          {queue.map((p,i)=><option key={p._qId} value={i}>{p.address||p.name||"נכס "+(i+1)} — {p.rooms?p.rooms+" חד' ":""}{p.price?fmtP(p.price):""}</option>)}
+        </select>
+      </div>}
+      {queue.length===1&&<div style={{fontSize:"0.78rem",color:"var(--text-gray)",marginBottom:10}}>נכס: {prop.address||prop.name||"—"} — {prop.price?fmtP(prop.price):""}</div>}
+      {queue.length===0&&<div style={{color:"var(--text-gray)",fontSize:"0.85rem",padding:"10px 0",textAlign:"center"}}>הוסף נכס לאוטומציה כדי לשלוח ל-VIP</div>}
+
+      {prop&&<button onClick={()=>setSendAllModal(true)} disabled={sendAllSending} style={{width:"100%",background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"0.9rem",padding:"10px 0",borderRadius:12,border:"none",cursor:sendAllSending?"not-allowed":"pointer",fontFamily:"inherit",marginBottom:14,boxShadow:"0 4px 16px rgba(195,166,82,0.25)",opacity:sendAllSending?0.7:1}}>📤 שלח לכל ה-VIP ({VIP_AGENTS.length})</button>}
+
+      <div className="vip-grid">
+        {VIP_AGENTS.map(v=>{
+          const st=status[key(v.phone,"photos")];
+          const stD=status[key(v.phone,"details")];
+          return <div key={v.phone} className="vip-card" data-phone={v.phone} data-name={v.name}>
+            <div className="vip-card-header">
+              <div className="vip-avatar">{v.name.charAt(0)}</div>
+              <div className="vip-info">
+                <span className="vip-name">{v.name}</span>
+                <span className="vip-badge">⭐ VIP</span>
+              </div>
+            </div>
+            <div className="vip-last-sent">שליחה אחרונה: {lastSentTimes[v.phone]||"---"}</div>
+            <div className="vip-actions">
+              <button onClick={()=>sendPhotos(v)} disabled={!!st} className="vip-action photos" title="תמונות בלבד" style={{opacity:st?0.7:1}}>{btnContent(v.phone,"photos","🖼️")}</button>
+              <button onClick={()=>openDetailsModal(v)} disabled={!!stD} className="vip-action details" title="הודעה מותאמת" style={{opacity:stD?0.7:1}}>{btnContent(v.phone,"details","📝")}</button>
+              <a href={"https://wa.me/"+v.phone} target="_blank" rel="noopener" className="vip-action mobile" title="פתח בווטסאפ">📱</a>
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>}
+
+    {detailsModal&&<Modal title={"📝 שליחת פרטים — "+detailsModal.vip.name} color={G} onClose={()=>!detailsModal.sending&&setDetailsModal(null)} center>
+      <div style={{background:"rgba(195,166,82,0.08)",border:"1px solid var(--border-gold)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:"0.85rem",color:"var(--gold)",fontWeight:600}}>{detailsModal.greeting}</div>
+      <Lbl t="הודעה (ניתן לעריכה)" icon="✏️"/>
+      <textarea value={detailsModal.text||""} onChange={e=>setDetailsModal(m=>m?{...m,text:e.target.value}:m)} disabled={!!detailsModal.sending} style={{...S.inp,resize:"none",minHeight:140,fontSize:"0.9rem",lineHeight:1.65,direction:"rtl",marginBottom:10}}/>
+      <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:"0.85rem",color:"var(--text-gray)",marginBottom:14}}>
+        <input type="checkbox" checked={!!detailsModal.saveCustom} onChange={e=>setDetailsModal(m=>m?{...m,saveCustom:e.target.checked}:m)} disabled={!!detailsModal.sending} style={{width:18,height:18,accentColor:"var(--gold)"}}/>
+        <span>💾 שמור כטקסט קבוע לנכס הזה</span>
+      </label>
+      <div style={{width:"100%",maxWidth:280,margin:"0 auto 18px",background:"#0b141a",borderRadius:20,border:"2px solid #2d2d44",padding:16,minHeight:80}}>
+        <div style={{background:"#1f2c33",borderRadius:"8px 0 8px 8px",padding:"10px 12px",color:"#e9edef",fontSize:"0.82rem",lineHeight:1.5,whiteSpace:"pre-wrap",maxWidth:"90%",marginInlineStart:"auto",direction:"rtl"}}>{detailsModal.greeting+"\n"+(detailsModal.text||"").trim()||"—"}</div>
+      </div>
+      <button onClick={sendDetailsFromModal} disabled={!!detailsModal.sending} style={{background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"1rem",padding:"12px 0",width:"100%",borderRadius:14,border:"none",cursor:detailsModal.sending?"not-allowed":"pointer",boxShadow:"0 4px 16px rgba(195,166,82,0.25)",fontFamily:"inherit",opacity:detailsModal.sending?0.7:1}}>{detailsModal.sending?"⏳ שולח...":"📝 שלח עכשיו"}</button>
+      <button onClick={()=>setDetailsModal(null)} disabled={!!detailsModal.sending} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",fontSize:"0.9rem",padding:"10px 0",width:"100%",borderRadius:14,marginTop:8,cursor:"pointer",fontFamily:"inherit"}}>ביטול</button>
+    </Modal>}
+
+    {sendAllModal&&<Modal title="📤 שלח לכל ה-VIP" color={G} onClose={()=>!sendAllSending&&setSendAllModal(false)} center>
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:"0.9rem",fontWeight:600,color:"var(--text-white)",marginBottom:6}}>נכס נבחר:</div>
+        <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 14px",fontSize:"0.85rem",color:"var(--text-white)"}}>{prop?((prop.address||prop.name||"—")+" — "+(prop.price?fmtP(prop.price):"")):"—"}</div>
+      </div>
+      <div style={{fontSize:"0.9rem",fontWeight:600,color:"var(--text-white)",marginBottom:8}}>מתווכי VIP ({VIP_AGENTS.length}):</div>
+      <div style={{maxHeight:240,overflowY:"auto",border:"1px solid var(--border)",borderRadius:12,marginBottom:14}}>
+        {VIP_AGENTS.map(v=><div key={v.phone} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.85rem"}}>
+          <span style={{color:"var(--gold)"}}>⭐</span>
+          <span style={{color:"var(--text-white)",flex:1}}>{v.name}</span>
+          <span style={{color:"var(--text-gray)",fontSize:"0.75rem"}}>{v.gender==="female"?"בואי נמכור!":"בוא נמכור!"}</span>
+        </div>)}
+      </div>
+      <button onClick={sendToAllVip} disabled={sendAllSending} style={{background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"1rem",padding:"12px 0",width:"100%",borderRadius:14,border:"none",cursor:sendAllSending?"not-allowed":"pointer",boxShadow:"0 4px 16px rgba(195,166,82,0.25)",fontFamily:"inherit",opacity:sendAllSending?0.7:1}}>{sendAllSending?"⏳ שולח...":"✅ אישור ושליחה"}</button>
+      <button onClick={()=>setSendAllModal(false)} disabled={sendAllSending} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",fontSize:"0.9rem",padding:"10px 0",width:"100%",borderRadius:14,marginTop:8,cursor:"pointer",fontFamily:"inherit"}}>ביטול</button>
+    </Modal>}
   </div>;
 }
 
@@ -2978,9 +3110,11 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
             <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
           </div>
         </div>
-        <VipQuickSend prop={p} customAgentTexts={customAgentTexts}/>
       </div>)}
     </div>
+
+    {/* VIP Realtors — collapsible section */}
+    <VipSection queue={queue} customAgentTexts={customAgentTexts} setCustomAgentTexts={setCustomAgentTexts}/>
 
     {/* Recent chats — quick send-images to anyone not in the agent network */}
     <RecentChats sellers={sellers} brokerProps={brokerProps} customAgentTexts={customAgentTexts}/>
@@ -3198,7 +3332,7 @@ function RecentChats({sellers,brokerProps,customAgentTexts}){
           const vip=isVipPhone(c.id);
           const lastMsg=c.last_message||c.lastMessage||c.body||"";
           const askingForPhotos=vip&&wantsImagesText(lastMsg);
-          const displayName=vip?vip.fullName:(c.name||phone);
+          const displayName=vip?vip.name:(c.name||phone);
           const waIntl=String(c.id).replace(/@c\.us$/i,"");
           return <div key={c.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",borderRadius:10,marginBottom:2,background:isSel?"var(--gold-soft)":"transparent",border:isSel?"1px solid var(--border-gold)":"1px solid transparent",transition:"background .2s ease"}}>
             <div style={{width:42,height:42,borderRadius:"50%",background:"var(--blue-soft)",border:"1px solid rgba(26,86,219,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:600,color:"var(--blue)",flexShrink:0}}>{avatarLetter(c.name,phone)}</div>
@@ -3316,7 +3450,7 @@ function LandingVideoSlot({index,video,onChange,onDelete}){
   </div>;
 }
 
-const LANDING_DEFAULT_TITLE='חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX באר שבע';
+const LANDING_DEFAULT_TITLE='חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX';
 const LANDING_DEFAULT_SUBTITLE='הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.';
 const LANDING_DEFAULT_CTA='חיים, בוא נבנה תוכנית שיווק לדירה שלי';
 
