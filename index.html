@@ -3062,7 +3062,8 @@ function RecentChats({sellers,brokerProps}){
   const[loading,setLoading]=useState(false);
   const[loadedOnce,setLoadedOnce]=useState(false);
   const[search,setSearch]=useState("");
-  const[picker,setPicker]=useState(null); // {phone, name} or null
+  const[picker,setPicker]=useState(null); // {phone, name, mode:'images'|'details'} or null
+  const[tplPicker,setTplPicker]=useState(null); // {phone, name, prop, template, text} or null
   const[manualPhone,setManualPhone]=useState("");
 
   function fmtIsraeliPhone(intl){
@@ -3114,14 +3115,31 @@ function RecentChats({sellers,brokerProps}){
 
   const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
 
-  async function sendImagesFromPicker(prop){
+  async function handlePropertyPick(prop){
     if(!picker)return;
     const target=picker;
+    const mode=target.mode||"images";
     setPicker(null);
+    if(mode==="details"){
+      // Open the template picker with the first template applied to this prop.
+      const tpl=AGENT_GROUP_TEMPLATES[0];
+      setTplPicker({phone:target.phone,name:target.name,prop,template:tpl.key,text:tpl.build(prop)});
+      return;
+    }
+    // Default: images-only send.
     const urls=(prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
     if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}
     const ok=await sendWhatsAppImagesOnly(target.phone,urls);
-    if(ok)toast("📷 "+urls.length+" תמונות נשלחו ל-"+(target.name||fmtIsraeliPhone(target.phone)));
+    if(ok)toast("🖼️ "+urls.length+" תמונות נשלחו ל-"+(target.name||fmtIsraeliPhone(target.phone)));
+  }
+  async function sendTextFromTplPicker(){
+    if(!tplPicker)return;
+    const t=tplPicker;
+    const finalText=(t.text||"").trim();
+    if(!finalText){toast("⚠️ הטקסט ריק");return}
+    setTplPicker(null);
+    const ok=await sendDirectMessage(t.phone,finalText);
+    if(ok)toast("📝 פרטים נשלחו ל-"+(t.name||fmtIsraeliPhone(t.phone)));
   }
 
   return <div style={S.card}>
@@ -3137,7 +3155,7 @@ function RecentChats({sellers,brokerProps}){
     {loadedOnce&&<>
       <input type="text" placeholder="חיפוש לפי שם או מספר..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:12,fontSize:"0.88rem"}}/>
 
-      {phoneNotInList&&<button onClick={()=>setPicker({phone:manualToChatId(searchClean),name:searchClean})} style={{width:"100%",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",color:G,padding:"10px",borderRadius:10,fontSize:"0.85rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>📤 שלח ל-{searchClean}</button>}
+      {phoneNotInList&&<button onClick={()=>setPicker({phone:manualToChatId(searchClean),name:searchClean,mode:"images"})} style={{width:"100%",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",color:G,padding:"10px",borderRadius:10,fontSize:"0.85rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>📤 שלח ל-{searchClean}</button>}
 
       <div style={{maxHeight:400,overflowY:"auto"}}>
         {visible.length===0?<div style={{color:"var(--text-gray)",padding:14,textAlign:"center",fontSize:13}}>לא נמצאו צ'אטים</div>:visible.map(c=>{
@@ -3146,16 +3164,22 @@ function RecentChats({sellers,brokerProps}){
           const vip=isVipPhone(c.id);
           const lastMsg=c.last_message||c.lastMessage||c.body||"";
           const askingForPhotos=vip&&wantsImagesText(lastMsg);
-          return <div key={c.id} onClick={()=>setPicker({phone:c.id,name:c.name||phone})} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",borderRadius:10,marginBottom:2,background:isSel?"var(--gold-soft)":"transparent",border:isSel?"1px solid var(--border-gold)":"1px solid transparent",transition:"background .2s ease"}}>
+          const displayName=vip?vip.fullName:(c.name||phone);
+          const waIntl=String(c.id).replace(/@c\.us$/i,"");
+          return <div key={c.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",borderRadius:10,marginBottom:2,background:isSel?"var(--gold-soft)":"transparent",border:isSel?"1px solid var(--border-gold)":"1px solid transparent",transition:"background .2s ease"}}>
             <div style={{width:42,height:42,borderRadius:"50%",background:"var(--blue-soft)",border:"1px solid rgba(26,86,219,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:600,color:"var(--blue)",flexShrink:0}}>{avatarLetter(c.name,phone)}</div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:"flex",alignItems:"center",gap:6,overflow:"hidden"}}>
-                <span style={{fontSize:"0.95rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{vip?vip.fullName:(c.name||"ללא שם")}</span>
+                <span style={{fontSize:"0.95rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{displayName}</span>
                 {vip&&<span style={{fontSize:"0.65rem",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",color:"var(--gold)",padding:"2px 8px",borderRadius:10,fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>⭐ VIP</span>}
               </div>
               <div style={{fontSize:"0.78rem",color:"var(--text-gray)",direction:"ltr",textAlign:"right"}}>{phone}</div>
             </div>
-            <button onClick={e=>{e.stopPropagation();setPicker({phone:c.id,name:vip?vip.fullName:(c.name||phone)})}} title={askingForPhotos?"מתווך VIP מבקש תמונות":"שלח תמונות בלבד"} className={"icon-btn icon-btn-purple"+(askingForPhotos?" vip-pulse":"")} style={{width:38,height:38,fontSize:15}}>📷</button>
+            <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+              <button onClick={()=>setPicker({phone:c.id,name:displayName,mode:"images"})} title="תמונות בלבד" className={"icon-btn icon-btn-purple"+(askingForPhotos?" vip-pulse":"")} style={{width:36,height:36,fontSize:15}}>🖼️</button>
+              <button onClick={()=>setPicker({phone:c.id,name:displayName,mode:"details"})} title="פרטים בלבד" className="icon-btn icon-btn-edit" style={{width:36,height:36,fontSize:15}}>📝</button>
+              <a href={"https://wa.me/"+waIntl} target="_blank" rel="noopener" title="פתיחה בוואטסאפ בטלפון" className="icon-btn icon-btn-wa" style={{width:36,height:36,fontSize:15,textDecoration:"none"}}>📱</a>
+            </div>
           </div>;
         })}
       </div>
@@ -3165,26 +3189,49 @@ function RecentChats({sellers,brokerProps}){
       <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:8}}>או הזינו מספר טלפון:</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         <input type="tel" placeholder="05X-XXX-XXXX" value={manualPhone} onChange={e=>setManualPhone(e.target.value)} style={{...S.inp,flex:"1 1 180px",direction:"ltr",textAlign:"left"}}/>
-        <Btn sm ch="📷 שלח תמונות" c={PU} ghost onClick={()=>{
+        <Btn sm ch="🖼️ תמונות" c={PU} ghost onClick={()=>{
           const clean=(manualPhone||"").replace(/[-\s+]/g,"");
           if(!/^0\d{9}$/.test(clean)&&!/^972\d{9}$/.test(clean)){toast("⚠️ מספר לא תקין");return}
-          setPicker({phone:manualToChatId(clean),name:manualPhone});
+          setPicker({phone:manualToChatId(clean),name:manualPhone,mode:"images"});
+        }}/>
+        <Btn sm ch="📝 פרטים" c={G} ghost onClick={()=>{
+          const clean=(manualPhone||"").replace(/[-\s+]/g,"");
+          if(!/^0\d{9}$/.test(clean)&&!/^972\d{9}$/.test(clean)){toast("⚠️ מספר לא תקין");return}
+          setPicker({phone:manualToChatId(clean),name:manualPhone,mode:"details"});
         }}/>
       </div>
     </div>
 
     {/* Property picker modal */}
-    {picker&&<Modal title={"בחר נכס לשליחה — "+(picker.name||fmtIsraeliPhone(picker.phone))} color={PU} onClose={()=>setPicker(null)} center>
-      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:12,lineHeight:1.6}}>נשלחות רק התמונות, ללא טקסט מלווה. השהייה 2 שניות בין תמונה.</div>
+    {picker&&<Modal title={(picker.mode==="details"?"בחר נכס — פרטים בלבד — ":"בחר נכס — תמונות בלבד — ")+(picker.name||fmtIsraeliPhone(picker.phone))} color={picker.mode==="details"?G:PU} onClose={()=>setPicker(null)} center>
+      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:12,lineHeight:1.6}}>
+        {picker.mode==="details"?"לאחר בחירת נכס תופיע תבנית עריכה — נשלח טקסט בלבד, ללא תמונות.":"נשלחות רק התמונות, ללא טקסט מלווה. השהייה 2 שניות בין תמונה."}
+      </div>
       {allProps.length===0?<div style={{color:"var(--text-gray)",padding:20,textAlign:"center"}}>אין נכסים זמינים</div>:<div style={{maxHeight:300,overflowY:"auto"}}>
-        {allProps.map(p=>{const imgCount=(p.images||[]).filter(i=>i&&i.type!=="video").length;return <div key={p._src+"_"+p.id} onClick={()=>sendImagesFromPicker(p)} style={{padding:"12px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:imgCount>0?"pointer":"not-allowed",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,opacity:imgCount>0?1:0.5}}>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{color:"var(--text-white)",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
-            <div style={{color:"var(--text-gray)",fontSize:12}}>{p.rooms?p.rooms+" חד'":""}{p.price?" · "+fmtP(p.price):""}{imgCount>0?" · 📷 "+imgCount:" · ללא תמונות"}</div>
-          </div>
-          <span style={{color:PU,fontSize:18}}>📤</span>
-        </div>})}
+        {allProps.map(p=>{
+          const imgCount=(p.images||[]).filter(i=>i&&i.type!=="video").length;
+          const dis=picker.mode!=="details"&&imgCount===0;
+          return <div key={p._src+"_"+p.id} onClick={()=>{if(!dis)handlePropertyPick(p)}} style={{padding:"12px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:dis?"not-allowed":"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,opacity:dis?0.5:1}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{color:"var(--text-white)",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+              <div style={{color:"var(--text-gray)",fontSize:12}}>{p.rooms?p.rooms+" חד'":""}{p.price?" · "+fmtP(p.price):""}{imgCount>0?" · 📷 "+imgCount:(picker.mode==="details"?"":" · ללא תמונות")}</div>
+            </div>
+            <span style={{color:picker.mode==="details"?G:PU,fontSize:18}}>📤</span>
+          </div>;
+        })}
       </div>}
+    </Modal>}
+
+    {/* Template picker modal (details mode) */}
+    {tplPicker&&<Modal title={"שליחת פרטים — "+(tplPicker.name||fmtIsraeliPhone(tplPicker.phone))} color={G} onClose={()=>setTplPicker(null)} center>
+      <Lbl t="בחר תבנית" icon="📝"/>
+      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+        {AGENT_GROUP_TEMPLATES.map(t=>{const active=tplPicker.template===t.key;return <button key={t.key} onClick={()=>setTplPicker(p=>p?{...p,template:t.key,text:t.build(p.prop)}:p)} style={{padding:"8px 14px",borderRadius:10,fontSize:"0.78rem",fontWeight:500,border:"1px solid "+(active?"var(--gold)":"var(--border)"),background:active?"var(--gold-soft)":"transparent",color:active?G:"var(--text-gray)",cursor:"pointer",fontFamily:"inherit",transition:"all .2s ease"}}>{t.label}</button>})}
+      </div>
+      <Lbl t="הודעה (ניתן לעריכה)" icon="✏️"/>
+      <textarea value={tplPicker.text||""} onChange={e=>setTplPicker(p=>p?{...p,text:e.target.value,template:"custom"}:p)} style={{...S.inp,resize:"none",minHeight:140,fontSize:"0.9rem",lineHeight:1.65,direction:"rtl",marginBottom:14}}/>
+      <button onClick={sendTextFromTplPicker} style={{background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"1rem",padding:"12px 0",width:"100%",borderRadius:14,border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(195,166,82,0.25)",fontFamily:"inherit"}}>📝 שלח עכשיו</button>
+      <button onClick={()=>setTplPicker(null)} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",fontSize:"0.9rem",padding:"10px 0",width:"100%",borderRadius:14,marginTop:8,cursor:"pointer",fontFamily:"inherit"}}>ביטול</button>
     </Modal>}
   </div>;
 }
