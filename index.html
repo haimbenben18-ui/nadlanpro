@@ -296,6 +296,35 @@ async function sendWhatsAppGroup(groupId,text){
   }catch(e){console.error("group send err",e);return false}
 }
 
+// Sends images ONLY (no caption, no text) to a phone or group. One image per
+// request via /messages/image, with a 2-second delay between requests.
+async function sendWhatsAppImagesOnly(recipient,imageUrls){
+  const ULTRAMSG_INSTANCE="instance169955";
+  const ULTRAMSG_TOKEN="slhhpfslyuey11fp";
+  const isGroup=/@g\.us$/i.test(recipient||"");
+  const to=isGroup?recipient:(recipient||"").replace(/^0/,"972").replace(/[-\s+]/g,"");
+  if(!to){toast("⚠️ אין יעד");return false}
+  const urls=(imageUrls||[]).map(u=>typeof u==="string"?u:(u&&u.url)).filter(Boolean);
+  if(urls.length===0){toast("⚠️ אין תמונות לשליחה");return false}
+  toast("📸 שולח "+urls.length+" תמונות...");
+  let ok=0;
+  for(let i=0;i<urls.length;i++){
+    try{
+      const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/image`,{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:new URLSearchParams({token:ULTRAMSG_TOKEN,to,image:urls[i]})
+      });
+      const d=await r.json();
+      if(d.sent)ok++;else console.warn("image send failed",urls[i],d);
+    }catch(e){console.error("image send err",e)}
+    if(i<urls.length-1)await new Promise(rs=>setTimeout(rs,2000));
+  }
+  if(ok===urls.length)toast("✅ כל "+ok+" התמונות נשלחו");
+  else toast("⚠️ "+ok+"/"+urls.length+" תמונות נשלחו");
+  return ok===urls.length;
+}
+
 async function sendDirectMessage(phone,text){
   const ULTRAMSG_INSTANCE="instance169955";
   const ULTRAMSG_TOKEN="slhhpfslyuey11fp";
@@ -2509,6 +2538,41 @@ function AgentsList({agentsContacts,setAgentsContacts,sellers,brokerProps}){
 }
 
 // ━━━ AGENT AUTOMATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Best-effort neighbourhood extraction from a property's address; falls back
+// to city. Used by the group-message templates below.
+function getNeighborhood(prop){
+  if(!prop)return "באר שבע";
+  const addr=(prop.address||"").trim();
+  const sm=addr.match(/שכונה\s+([^\s,]+)/);
+  if(sm)return "שכונה "+sm[1];
+  return prop.city||"באר שבע";
+}
+function fmtPriceShort(price){
+  if(price==null||price===""||isNaN(Number(price)))return "—";
+  return Number(price).toLocaleString()+" ₪";
+}
+
+// Group-send templates. No phone, no wa.me, no landing page link — agents
+// should reach Haim privately on his existing WhatsApp number.
+const AGENT_GROUP_TEMPLATES=[
+  {
+    key:"morning",
+    label:"☕ בוקר טוב",
+    build:(p)=>"בוקר טוב שותפים ☕\nחדשה בבלעדיות במחיר שלא רואים כל יום ב-"+getNeighborhood(p)+".\n"+(p.rooms||"?")+" חדרים, קומה "+(p.floor||"?")+", מחיר: "+fmtPriceShort(p.price)+"\nעסקה מעולה למשקיעים שמחפשים מספרים.\nפרטים נוספים, תמונות וסרטון אצלי בפרטי.\nהמפתחות אצלי."
+  },
+  {
+    key:"hot",
+    label:"🚀 דיל חם",
+    build:(p)=>"שותפים, תראו את הדיל הזה ב-"+getNeighborhood(p)+":\nדירה בבלעדיות, שמורה מאוד ובמחיר קטלני לסגירה מהירה! 🚀\nנדיר למצוא נכסים במצב כזה ובמחיר הזה באזור.\nתמונות וסרטון זמינים בפרטי למי שרוצה להתקדם."
+  },
+  {
+    key:"opp",
+    label:"📉 הזדמנות",
+    build:(p)=>"חדשה בבלעדיות – אין מחירים כאלה היום ב-"+getNeighborhood(p)+".\nהזדמנות אמיתית להשקעה במחיר של פעם. 📉\nתמונות וסרטון מחכים לכם אצלי בפרטי."
+  }
+];
+function propKeyOf(p){return (p&&p._src?p._src:"s")+"_"+(p&&p.id)}
+
 function buildAgentShortMsg(prop){
   const city=prop.city||"באר שבע";
   const addr=prop.address||prop.name||"";
@@ -2535,7 +2599,7 @@ function buildImagesLinksMsg(prop){
   return m;
 }
 
-function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentAuto,agentGroups,setAgentGroups}){
+function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentAuto,agentGroups,setAgentGroups,customAgentTexts,setCustomAgentTexts}){
   const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
   const items=agentAuto.items||[];
   const queue=items.map(it=>{const p=allProps.find(p=>p.id===it.propId&&p._src===it.propSrc);return p?{...p,_qId:it.id}:null}).filter(Boolean);
@@ -2586,11 +2650,31 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
   function openPreview(timeStr,singleProp){
     const propsToUse=singleProp?[singleProp]:queue;
     if(propsToUse.length===0){toast("⚠️ אין דירות באוטומציה — הוסף דירה קודם");return}
-    const initText=buildAgentShortMsg(propsToUse[0]);
+    const sourceProp=propsToUse[0];
+    const saved=(customAgentTexts||{})[propKeyOf(sourceProp)];
+    const initText=saved||AGENT_GROUP_TEMPLATES[0].build(sourceProp);
+    const initTemplate=saved?"custom":AGENT_GROUP_TEMPLATES[0].key;
     const agentsList=(agentsContacts||[]).filter(a=>a.phone).map(a=>({...a,_selected:selectedAgents.includes(a.id)}));
     const gList=groupsList.map(g=>({...g,_selected:!!g.enabled}));
     if(agentsList.length===0&&gList.length===0){toast("⚠️ אין מתווכים או קבוצות זמינים");return}
-    setPreview({time:timeStr||null,text:initText,agents:agentsList,groups:gList,progress:null,sourceProp:propsToUse[0]});
+    setPreview({time:timeStr||null,text:initText,template:initTemplate,saveCustom:false,agents:agentsList,groups:gList,progress:null,sourceProp});
+  }
+  function applyTemplate(key){
+    if(!preview||!preview.sourceProp)return;
+    const tpl=AGENT_GROUP_TEMPLATES.find(t=>t.key===key);
+    if(!tpl)return;
+    setPreview(p=>p?{...p,text:tpl.build(p.sourceProp),template:key}:p);
+  }
+  function loadCustomForPreview(){
+    if(!preview||!preview.sourceProp)return;
+    const saved=(customAgentTexts||{})[propKeyOf(preview.sourceProp)];
+    if(!saved){toast("⚠️ אין טקסט מותאם שמור");return}
+    setPreview(p=>p?{...p,text:saved,template:"custom"}:p);
+  }
+  function resetToTemplate(){
+    if(!preview||!preview.sourceProp)return;
+    const tpl=AGENT_GROUP_TEMPLATES[0];
+    setPreview(p=>p?{...p,text:tpl.build(p.sourceProp),template:tpl.key,saveCustom:false}:p);
   }
   async function approveAndSend(){
     if(!preview||sending)return;
@@ -2618,15 +2702,25 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
       const groupsCount=recipients.filter(r=>r.kind==="group").length;
       patch({lastSent:{...lastSent,[key]:{agents:agentsCount,groups:groupsCount,props:1,sentAt:new Date().toISOString()}}});
     }
+    // Persist custom text for this property if the user opted in.
+    if(preview.saveCustom&&preview.sourceProp&&setCustomAgentTexts){
+      const pk=propKeyOf(preview.sourceProp);
+      setCustomAgentTexts({...(customAgentTexts||{}),[pk]:finalText});
+    }
     toast(failed.length===0?"✅ נשלח בהצלחה ל-"+ok+" יעדים":"⚠️ "+ok+" הצלחות, "+failed.length+" כישלונות",3000);
     setTimeout(()=>{setPreview(null);setSending(false)},1500);
   }
-  async function sendImagesLink(prop,agentPhone){
-    const m=buildImagesLinksMsg(prop);
-    if(!m){toast("⚠️ אין תמונות לנכס");return}
+  async function sendImagesOnlyToAgent(prop,agentPhone){
     if(!agentPhone){toast("⚠️ חסר טלפון");return}
-    const ok=await sendDirectMessage(agentPhone,m);
-    if(ok)toast("📸 קישורי תמונות נשלחו");
+    const urls=(prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
+    if(urls.length===0){toast("⚠️ אין תמונות לנכס");return}
+    await sendWhatsAppImagesOnly(agentPhone,urls);
+  }
+  async function sendDetailsOnlyToAgent(prop,agentPhone){
+    if(!agentPhone){toast("⚠️ חסר טלפון");return}
+    const msg=buildAgentShortMsg(prop);
+    const ok=await sendDirectMessage(agentPhone,msg);
+    if(ok)toast("📋 פרטי הדירה נשלחו");
   }
 
   const filteredPicker=allProps.filter(p=>!items.some(it=>it.propId===p.id&&it.propSrc===p._src)).filter(p=>!search||((p.address||"")+(p.name||"")).toLowerCase().includes(search.toLowerCase()));
@@ -2751,8 +2845,23 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
 
     {/* Preview / approve modal — editable text + phone mockup + group selection */}
     {preview&&<Modal title={preview.time?("תצוגה מקדימה — שליחה לקבוצות ("+preview.time+")"):"תצוגה מקדימה — שליחה לקבוצות"} color={G} onClose={()=>!sending&&setPreview(null)} center>
+      {/* Template selector */}
+      <Lbl t="בחר תבנית" icon="📝"/>
+      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+        {AGENT_GROUP_TEMPLATES.map(t=>{const active=preview.template===t.key;return <button key={t.key} onClick={()=>applyTemplate(t.key)} disabled={sending} style={{padding:"8px 14px",borderRadius:10,fontSize:"0.78rem",fontWeight:500,border:"1px solid "+(active?"var(--gold)":"var(--border)"),background:active?"var(--gold-soft)":"transparent",color:active?G:"var(--text-gray)",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",transition:"all .2s ease"}}>{t.label}</button>})}
+        {preview.sourceProp&&(customAgentTexts||{})[propKeyOf(preview.sourceProp)]&&<button onClick={loadCustomForPreview} disabled={sending} style={{padding:"8px 14px",borderRadius:10,fontSize:"0.78rem",fontWeight:500,border:"1px solid "+(preview.template==="custom"?"var(--gold)":"var(--border)"),background:preview.template==="custom"?"var(--gold-soft)":"transparent",color:preview.template==="custom"?G:"var(--text-gray)",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit"}}>✨ מותאם אישית</button>}
+      </div>
+
       <Lbl t="הודעה לשליחה (ניתן לעריכה)" icon="✏️"/>
-      <textarea value={preview.text||""} onChange={e=>setPreview(p=>p?{...p,text:e.target.value}:p)} disabled={sending} style={{...S.inp,resize:"none",minHeight:160,fontSize:"0.9rem",lineHeight:1.65,direction:"rtl",marginBottom:14}}/>
+      <textarea value={preview.text||""} onChange={e=>setPreview(p=>p?{...p,text:e.target.value,template:"custom"}:p)} disabled={sending} style={{...S.inp,resize:"none",minHeight:160,fontSize:"0.9rem",lineHeight:1.65,direction:"rtl",marginBottom:10}}/>
+
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:10,flexWrap:"wrap"}}>
+        <label style={{display:"flex",alignItems:"center",gap:8,cursor:sending?"not-allowed":"pointer",fontSize:"0.85rem",color:"var(--text-gray)"}}>
+          <input type="checkbox" checked={!!preview.saveCustom} onChange={e=>{const v=e.target.checked;setPreview(p=>p?{...p,saveCustom:v}:p)}} disabled={sending} style={{width:18,height:18,accentColor:"var(--gold)",cursor:sending?"not-allowed":"pointer"}}/>
+          <span>💾 שמור כטקסט קבוע לנכס הזה</span>
+        </label>
+        {preview.template==="custom"&&<button onClick={resetToTemplate} disabled={sending} style={{background:"none",border:"none",color:G,fontSize:"0.75rem",cursor:sending?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:600}}>↻ חזור לתבנית</button>}
+      </div>
 
       <div style={{color:"var(--text-gray)",fontSize:"0.8rem",marginBottom:8,textAlign:"center"}}>תצוגה מקדימה</div>
       <div style={{width:"100%",maxWidth:280,margin:"0 auto 18px",background:"#0b141a",borderRadius:20,border:"2px solid #2d2d44",padding:16,minHeight:120,position:"relative"}}>
@@ -2805,21 +2914,24 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
 
       <button onClick={approveAndSend} disabled={sending} style={{background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"1rem",padding:"14px 0",width:"100%",borderRadius:14,border:"none",cursor:sending?"not-allowed":"pointer",boxShadow:"0 4px 16px rgba(195,166,82,0.25)",transition:"all .2s ease",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:8,opacity:sending?0.7:1}}>
         {sending&&<span className="spinner" style={{width:16,height:16,borderWidth:2,borderTopColor:"transparent",borderColor:"var(--midnight)"}}/>}
-        {sending?"שולח...":"שלח עכשיו"}
+        {sending?"שולח...":(preview.saveCustom?"💾 שמור ושלח":"שלח עכשיו")}
       </button>
       <button onClick={()=>!sending&&setPreview(null)} disabled={sending} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",fontSize:"0.9rem",padding:"12px 0",width:"100%",borderRadius:14,marginTop:8,cursor:sending?"not-allowed":"pointer",fontFamily:"inherit"}}>ביטול</button>
     </Modal>}
 
-    {/* Image link modal */}
-    {imgModal&&<Modal title={"📸 שלח קישור תמונות — "+(imgModal.address||imgModal.name||"")} color={BL} onClose={()=>setImgModal(null)} center>
-      <Lbl t="בחר מתווך לשליחה"/>
-      {(agentsContacts||[]).length===0?<div style={{color:"#777",padding:14}}>אין מתווכים ברשת</div>:(agentsContacts||[]).map(a=>a.phone?<div key={a.id} onClick={async()=>{setImgModal(null);await sendImagesLink(imgModal,a.phone)}} style={{padding:"10px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{color:"#ede8f5",fontSize:14,fontWeight:600}}>{a.name||"—"}</div>
-          <div style={{color:"#777",fontSize:12}}>{a.phone}</div>
+    {/* Private send-to-agent modal — two separate actions per agent */}
+    {imgModal&&<Modal title={"📤 שליחה פרטנית — "+(imgModal.address||imgModal.name||"")} color={BL} onClose={()=>setImgModal(null)} center>
+      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:12,lineHeight:1.6}}>בחר מתווך ובחר אם לשלוח רק תמונות, רק פרטים, או שניהם. השליחה היא בלחיצה ידנית בלבד.</div>
+      {(agentsContacts||[]).length===0?<div style={{color:"var(--text-gray)",padding:14,textAlign:"center"}}>אין מתווכים ברשת</div>:(agentsContacts||[]).filter(a=>a.phone).map(a=><div key={a.id} style={{padding:"12px 10px",borderBottom:"1px solid rgba(255,255,255,0.04)",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <div style={{flex:"1 1 140px",minWidth:0}}>
+          <div style={{color:"var(--text-white)",fontSize:14,fontWeight:600}}>{a.name||"—"}</div>
+          <div style={{color:"var(--text-dim)",fontSize:12,direction:"ltr",textAlign:"left"}}>{a.phone}</div>
         </div>
-        <span style={{color:BL,fontSize:18}}>📤</span>
-      </div>:null)}
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={async()=>{await sendImagesOnlyToAgent(imgModal,a.phone)}} title="שלח רק תמונות (בלי טקסט)" className="icon-btn icon-btn-tel">📷</button>
+          <button onClick={async()=>{await sendDetailsOnlyToAgent(imgModal,a.phone)}} title="שלח רק פרטי הדירה (טקסט)" className="icon-btn icon-btn-edit">📋</button>
+        </div>
+      </div>)}
     </Modal>}
   </div>
 }
@@ -2935,6 +3047,7 @@ function App(){
   const[fbGroups,setFbGroups]=useState([]);
   const[agentAuto,_setAgentAuto]=useState({});
   const[agentGroups,_setAgentGroups]=useState([]);
+  const[customAgentTexts,_setCustomAgentTexts]=useState({});
   const[landingConfig,_setLandingConfig]=useState({});
   const[autoBanner,setAutoBanner]=useState(null); // {time} when due
 
@@ -2956,6 +3069,7 @@ function App(){
   function setAgentsContacts(v){_setAgentsContacts(v);sv("agentsContacts",v);fsWrite("agentsContacts",v)}
   function setAgentAuto(v){_setAgentAuto(v);sv("agentAuto",v);try{db.collection("data").doc("agentAuto").set({items:v})}catch(e){console.error("agentAuto write err",e)}}
   function setAgentGroups(v){_setAgentGroups(v);sv("agentGroups",v);try{db.collection("data").doc("agentGroups").set({items:v})}catch(e){console.error("agentGroups write err",e)}}
+  function setCustomAgentTexts(v){_setCustomAgentTexts(v);sv("customAgentTexts",v);try{db.collection("data").doc("customAgentTexts").set({items:v})}catch(e){console.error("customAgentTexts write err",e)}}
   function setLandingConfig(v){_setLandingConfig(v);sv("landingConfig",v);try{db.collection("landing_page").doc("config").set(v)}catch(e){console.error("landingConfig write err",e)}}
 
   useEffect(()=>{
@@ -2989,7 +3103,7 @@ function App(){
           }
         }
       }catch(e){console.error("Firestore init error:",e)}
-      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["agentGroups",d=>_setAgentGroups(Array.isArray(d)?d:[])]];
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["agentGroups",d=>_setAgentGroups(Array.isArray(d)?d:[])],["customAgentTexts",d=>_setCustomAgentTexts(d&&typeof d==="object"&&!Array.isArray(d)?d:{})]];
       // Landing-page config lives at landing_page/config (flat doc, no items wrapper).
       const landingUnsub=db.collection("landing_page").doc("config").onSnapshot(doc=>{
         if(doc.exists){const data=doc.data()||{};_setLandingConfig(data);sv("landingConfig",data)}
@@ -3058,7 +3172,7 @@ function App(){
       {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
       {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
-      {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups}/>}
+      {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups} customAgentTexts={customAgentTexts||{}} setCustomAgentTexts={setCustomAgentTexts}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
       {tab==="tiktok"&&<Tiktok/>}
       {tab==="uni"&&<University/>}
