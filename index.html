@@ -296,8 +296,10 @@ async function sendWhatsAppGroup(groupId,text){
   }catch(e){console.error("group send err",e);return false}
 }
 
-// Sends images ONLY (no caption, no text) to a phone or group. One image per
-// request via /messages/image, with a 2-second delay between requests.
+// Sends images ONLY to a phone or group — no caption, no body, no companion
+// text message. One image per request via /messages/image with a 2-second
+// delay between requests. caption is always the empty string '' (never
+// undefined/null) so the receiving WhatsApp client treats it as media-only.
 async function sendWhatsAppImagesOnly(recipient,imageUrls){
   const ULTRAMSG_INSTANCE="instance169955";
   const ULTRAMSG_TOKEN="slhhpfslyuey11fp";
@@ -305,22 +307,24 @@ async function sendWhatsAppImagesOnly(recipient,imageUrls){
   const to=isGroup?recipient:(recipient||"").replace(/^0/,"972").replace(/[-\s+]/g,"");
   if(!to){toast("⚠️ אין יעד");return false}
   const urls=(imageUrls||[]).map(u=>typeof u==="string"?u:(u&&u.url)).filter(Boolean);
-  if(urls.length===0){toast("⚠️ אין תמונות לשליחה");return false}
+  if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return false}
   toast("📸 שולח "+urls.length+" תמונות...");
   let ok=0;
   for(let i=0;i<urls.length;i++){
+    const caption='';
+    console.log('Sending image:',{to,image:urls[i],caption,hasCaption:caption!==''});
     try{
       const r=await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/image`,{
         method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:new URLSearchParams({token:ULTRAMSG_TOKEN,to,image:urls[i]})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:ULTRAMSG_TOKEN,to,image:urls[i],caption})
       });
       const d=await r.json();
       if(d.sent)ok++;else console.warn("image send failed",urls[i],d);
     }catch(e){console.error("image send err",e)}
     if(i<urls.length-1)await new Promise(rs=>setTimeout(rs,2000));
   }
-  if(ok===urls.length)toast("✅ כל "+ok+" התמונות נשלחו");
+  if(ok===urls.length)toast("📷 "+ok+" תמונות נשלחו");
   else toast("⚠️ "+ok+"/"+urls.length+" תמונות נשלחו");
   return ok===urls.length;
 }
@@ -1368,7 +1372,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=><div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
@@ -1537,7 +1541,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
     {fP.map(p=><div key={p.id} style={S.card}>
       {p.images&&p.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{p.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:14}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div><div style={{color:TE,fontSize:12}}>מתווך: {p.agentName||"—"}</div></div><Tag c={TE} ch={fmtP(p.price)}/></div>
-      <div style={{display:"flex",gap:8}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
     </div>)}
   </div>
 }
@@ -2868,7 +2872,7 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <Btn sm ch="📤 שלח לקבוצות" c={G} onClick={()=>openPreview(null,p)}/>
-          <Btn sm ch="📸 קישור" c={BL} ghost onClick={()=>setImgModal(p)}/>
+          <Btn sm ch="📷 שליחה פרטנית" c={PU} ghost onClick={()=>setImgModal(p)}/>
           <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
         </div>
       </div>)}
