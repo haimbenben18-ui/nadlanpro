@@ -2878,6 +2878,9 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
       </div>)}
     </div>
 
+    {/* Recent chats — quick send-images to anyone not in the agent network */}
+    <RecentChats sellers={sellers} brokerProps={brokerProps}/>
+
     {/* Log */}
     {Object.keys(lastSent).length>0&&<div style={S.card}>
       <Lbl t="היסטוריית שליחות" icon="📜"/>
@@ -2977,6 +2980,133 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
       </div>)}
     </Modal>}
   </div>
+}
+
+// ━━━ RECENT CHATS — quick send-images to anyone you've recently chatted with
+function RecentChats({sellers,brokerProps}){
+  const[chats,setChats]=useState([]);
+  const[loading,setLoading]=useState(false);
+  const[loadedOnce,setLoadedOnce]=useState(false);
+  const[search,setSearch]=useState("");
+  const[picker,setPicker]=useState(null); // {phone, name} or null
+  const[manualPhone,setManualPhone]=useState("");
+
+  function fmtIsraeliPhone(intl){
+    if(!intl)return "";
+    let p=String(intl).replace(/@c\.us$/i,"");
+    if(p.startsWith("972"))p="0"+p.slice(3);
+    if(/^\d{10}$/.test(p))return p.slice(0,3)+"-"+p.slice(3,6)+"-"+p.slice(6);
+    return p;
+  }
+  function avatarLetter(name,fallback){
+    const s=((name||fallback||"").trim());
+    const ch=s.charAt(0).toUpperCase();
+    return ch||"?";
+  }
+  function manualToChatId(raw){
+    let p=(raw||"").replace(/[-\s+]/g,"");
+    if(p.startsWith("0"))p="972"+p.slice(1);
+    if(!p.endsWith("@c.us"))p=p+"@c.us";
+    return p;
+  }
+
+  async function loadChats(){
+    setLoading(true);
+    try{
+      const r=await fetch("https://api.ultramsg.com/instance169955/chats?token=slhhpfslyuey11fp");
+      const data=await r.json();
+      const arr=Array.isArray(data)?data:(Array.isArray(data&&data.chats)?data.chats:[]);
+      const filtered=arr
+        .filter(c=>c&&c.id&&!/@g\.us$/i.test(c.id)&&!c.isGroup)
+        .sort((a,b)=>(b.last_time||0)-(a.last_time||0))
+        .slice(0,20);
+      setChats(filtered);
+      setLoadedOnce(true);
+    }catch(e){console.error("loadChats err",e);toast("⚠️ שגיאה בטעינת צ'אטים")}
+    setLoading(false);
+  }
+
+  const visible=chats.filter(c=>{
+    if(!search)return true;
+    const q=search.toLowerCase();
+    const name=(c.name||"").toLowerCase();
+    const phone=fmtIsraeliPhone(c.id);
+    const idRaw=(c.id||"").replace(/@c\.us$/i,"");
+    return name.includes(q)||phone.includes(search)||idRaw.includes(search.replace(/[-\s]/g,""));
+  });
+  const searchClean=search.replace(/[-\s+]/g,"");
+  const isPhoneSearch=/^0\d{9}$/.test(searchClean)||/^972\d{9}$/.test(searchClean);
+  const phoneNotInList=isPhoneSearch&&visible.length===0;
+
+  const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
+
+  async function sendImagesFromPicker(prop){
+    if(!picker)return;
+    const target=picker;
+    setPicker(null);
+    const urls=(prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
+    if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}
+    const ok=await sendWhatsAppImagesOnly(target.phone,urls);
+    if(ok)toast("📷 "+urls.length+" תמונות נשלחו ל-"+(target.name||fmtIsraeliPhone(target.phone)));
+  }
+
+  return <div style={S.card}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div style={{fontSize:"1rem",fontWeight:700,color:"var(--text-white)"}}>📱 צ'אטים אחרונים</div>
+      <button onClick={loadChats} disabled={loading} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--text-gray)",padding:"6px 12px",borderRadius:8,fontSize:"0.78rem",cursor:loading?"not-allowed":"pointer",fontFamily:"inherit"}}>{loading?"טוען...":(loadedOnce?"🔄 רענן":"📥 טען")}</button>
+    </div>
+
+    {!loadedOnce&&<div style={{textAlign:"center",padding:"24px 14px",color:"var(--text-gray)",fontSize:"0.88rem",lineHeight:1.6}}>
+      לחץ "טען" כדי לקבל את 20 השיחות הפרטיות האחרונות מ-WhatsApp,<br/>או הזן מספר ידנית בתחתית.
+    </div>}
+
+    {loadedOnce&&<>
+      <input type="text" placeholder="חיפוש לפי שם או מספר..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:12,fontSize:"0.88rem"}}/>
+
+      {phoneNotInList&&<button onClick={()=>setPicker({phone:manualToChatId(searchClean),name:searchClean})} style={{width:"100%",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",color:G,padding:"10px",borderRadius:10,fontSize:"0.85rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>📤 שלח ל-{searchClean}</button>}
+
+      <div style={{maxHeight:400,overflowY:"auto"}}>
+        {visible.length===0?<div style={{color:"var(--text-gray)",padding:14,textAlign:"center",fontSize:13}}>לא נמצאו צ'אטים</div>:visible.map(c=>{
+          const phone=fmtIsraeliPhone(c.id);
+          const isSel=picker&&picker.phone===c.id;
+          return <div key={c.id} onClick={()=>setPicker({phone:c.id,name:c.name||phone})} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",borderRadius:10,marginBottom:2,background:isSel?"var(--gold-soft)":"transparent",border:isSel?"1px solid var(--border-gold)":"1px solid transparent",transition:"background .2s ease"}}>
+            <div style={{width:42,height:42,borderRadius:"50%",background:"var(--blue-soft)",border:"1px solid rgba(26,86,219,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:600,color:"var(--blue)",flexShrink:0}}>{avatarLetter(c.name,phone)}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:"0.95rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name||"ללא שם"}</div>
+              <div style={{fontSize:"0.78rem",color:"var(--text-gray)",direction:"ltr",textAlign:"right"}}>{phone}</div>
+            </div>
+            <button onClick={e=>{e.stopPropagation();setPicker({phone:c.id,name:c.name||phone})}} title="שלח תמונות בלבד" className="icon-btn icon-btn-purple" style={{width:38,height:38,fontSize:15}}>📷</button>
+          </div>;
+        })}
+      </div>
+    </>}
+
+    <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--border)"}}>
+      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:8}}>או הזינו מספר טלפון:</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <input type="tel" placeholder="05X-XXX-XXXX" value={manualPhone} onChange={e=>setManualPhone(e.target.value)} style={{...S.inp,flex:"1 1 180px",direction:"ltr",textAlign:"left"}}/>
+        <Btn sm ch="📷 שלח תמונות" c={PU} ghost onClick={()=>{
+          const clean=(manualPhone||"").replace(/[-\s+]/g,"");
+          if(!/^0\d{9}$/.test(clean)&&!/^972\d{9}$/.test(clean)){toast("⚠️ מספר לא תקין");return}
+          setPicker({phone:manualToChatId(clean),name:manualPhone});
+        }}/>
+      </div>
+    </div>
+
+    {/* Property picker modal */}
+    {picker&&<Modal title={"בחר נכס לשליחה — "+(picker.name||fmtIsraeliPhone(picker.phone))} color={PU} onClose={()=>setPicker(null)} center>
+      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:12,lineHeight:1.6}}>נשלחות רק התמונות, ללא טקסט מלווה. השהייה 2 שניות בין תמונה.</div>
+      {allProps.length===0?<div style={{color:"var(--text-gray)",padding:20,textAlign:"center"}}>אין נכסים זמינים</div>:<div style={{maxHeight:300,overflowY:"auto"}}>
+        {allProps.map(p=>{const imgCount=(p.images||[]).filter(i=>i&&i.type!=="video").length;return <div key={p._src+"_"+p.id} onClick={()=>sendImagesFromPicker(p)} style={{padding:"12px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:imgCount>0?"pointer":"not-allowed",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,opacity:imgCount>0?1:0.5}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{color:"var(--text-white)",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+            <div style={{color:"var(--text-gray)",fontSize:12}}>{p.rooms?p.rooms+" חד'":""}{p.price?" · "+fmtP(p.price):""}{imgCount>0?" · 📷 "+imgCount:" · ללא תמונות"}</div>
+          </div>
+          <span style={{color:PU,fontSize:18}}>📤</span>
+        </div>})}
+      </div>}
+    </Modal>}
+  </div>;
 }
 
 // ━━━ LANDING PAGE EDITOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
