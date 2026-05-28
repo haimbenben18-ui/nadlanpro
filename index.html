@@ -1080,7 +1080,7 @@ function AddTaskModal({client,onClose,onAdd}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts,fbGroups,addFbGroup,delFbGroup}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts}){
   const[tab,setTab]=useState(initialTab||"sellers");
   useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);const[distOpen,setDistOpen]=useState(false);
   // seller form
@@ -1226,7 +1226,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="seller");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="seller"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"seller"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
       </div>
-      <VipQuickSend prop={sel}/>
+      <VipQuickSend prop={sel} customAgentTexts={customAgentTexts}/>
 
       {/* Send choose modal */}
       {sendModal==="choose"&&<Modal title={"📤 שלח נכס — "+sel.address} color={OR} onClose={()=>setSendModal(null)}>
@@ -1378,7 +1378,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
-      <VipQuickSend prop={s}/>
+      <VipQuickSend prop={s} customAgentTexts={customAgentTexts}/>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
@@ -1395,7 +1395,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
 }
 
 // ━━━ BROKER PROPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts,fbGroups,addFbGroup,delFbGroup}){
+function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts}){
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
@@ -1472,7 +1472,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
         {sel.images&&sel.images.length>0&&<Btn sm ch="פתח גלריה" c={PU} onClick={()=>setGalleryOpen(sel.images)} icon="📸"/>}
         {(()=>{const isHot=(hotProps||[]).some(h=>h.id===sel.id&&h.source==="broker");return <Btn sm ch={isHot?"🔥 חמה ✓":"🔥 סמן כחמה"} c={OR} onClick={()=>{let nh;if(isHot)nh=(hotProps||[]).filter(h=>!(h.id===sel.id&&h.source==="broker"));else{if((hotProps||[]).length>=10){toast("⚠️ מקסימום 10");return}nh=[...(hotProps||[]),{id:sel.id,source:"broker"}]}setHotProps(nh);toast(isHot?"הוסר מדירות חמות":"🔥 נוסף לדירות חמות")}}/>})()}
       </div>
-      <VipQuickSend prop={sel}/>
+      <VipQuickSend prop={sel} customAgentTexts={customAgentTexts}/>
 
       {/* Send choose modal */}
       {pubOpen==="chooseMethod"&&<Modal title={"📤 שלח נכס — "+(sel.address||"")} color={GR} onClose={()=>setPubOpen(false)}>
@@ -1549,7 +1549,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       {p.images&&p.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{p.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:14}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div><div style={{color:TE,fontSize:12}}>מתווך: {p.agentName||"—"}</div></div><Tag c={TE} ch={fmtP(p.price)}/></div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
-      <VipQuickSend prop={p}/>
+      <VipQuickSend prop={p} customAgentTexts={customAgentTexts}/>
     </div>)}
   </div>
 }
@@ -2624,6 +2624,16 @@ const AGENT_GROUP_TEMPLATES=[
 ];
 function propKeyOf(p){return (p&&p._src?p._src:"s")+"_"+(p&&p.id)}
 
+// Load the message text for a property — prefers a previously saved
+// 'custom' text (already substituted, ready to send) over the first
+// template. NEVER re-applies placeholder substitution on saved text.
+function loadPropertyText(prop,customAgentTexts){
+  if(!prop)return "";
+  const saved=(customAgentTexts||{})[propKeyOf(prop)];
+  if(saved&&typeof saved==="string"&&saved.trim()!=="")return saved;
+  return AGENT_GROUP_TEMPLATES[0].build(prop);
+}
+
 function buildAgentShortMsg(prop){
   const city=prop.city||"באר שבע";
   const addr=prop.address||prop.name||"";
@@ -2673,41 +2683,61 @@ function wantsImagesText(s){
   return /אפשר תמונות|יש תמונות|תמונות\?|תמונות /.test(t);
 }
 
-function VipQuickSend({prop}){
-  const[sent,setSent]=useState({});    // {phone: true} after success
-  const[sending,setSending]=useState({}); // {phone: true} while in-flight
-  async function sendToVip(v){
-    if(sending[v.phone]||sent[v.phone])return;
+function VipQuickSend({prop,customAgentTexts}){
+  const[status,setStatus]=useState({}); // {`${phone}_${action}`: 'sending'|'sent'}
+  function key(p,a){return p+"_"+a}
+  function setBtn(p,a,v){setStatus(s=>{const n={...s};const k=key(p,a);if(v==null)delete n[k];else n[k]=v;return n})}
+  function autoReset(p,a){setTimeout(()=>setBtn(p,a,null),3000)}
+
+  async function sendPhotos(v){
+    if(status[key(v.phone,"photos")])return;
     const urls=(prop&&prop.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);
     if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}
-    setSending(s=>({...s,[v.phone]:true}));
+    setBtn(v.phone,"photos","sending");
     const ok=await sendWhatsAppImagesOnly(v.phone+"@c.us",urls);
-    setSending(s=>{const n={...s};delete n[v.phone];return n});
-    if(ok){
-      setSent(s=>({...s,[v.phone]:true}));
-      toast("📷 "+urls.length+" תמונות נשלחו ל-"+v.fullName);
-    }
+    if(ok){setBtn(v.phone,"photos","sent");toast("🖼️ "+urls.length+" תמונות נשלחו ל-"+v.fullName);autoReset(v.phone,"photos")}
+    else{setBtn(v.phone,"photos",null)}
   }
+  async function sendDetails(v){
+    if(status[key(v.phone,"details")])return;
+    const text=loadPropertyText(prop,customAgentTexts);
+    if(!text||!text.trim()){toast("⚠️ אין טקסט לנכס זה");return}
+    setBtn(v.phone,"details","sending");
+    const ok=await sendDirectMessage(v.phone+"@c.us",text);
+    if(ok){setBtn(v.phone,"details","sent");toast("📝 פרטים נשלחו ל-"+v.fullName);autoReset(v.phone,"details")}
+    else{setBtn(v.phone,"details",null)}
+  }
+
+  function btnContent(p,a,defaultIcon){
+    const s=status[key(p,a)];
+    if(s==="sending")return "⏳";
+    if(s==="sent")return "✓";
+    return defaultIcon;
+  }
+  function btnStyle(p,a,defaultClass){
+    const s=status[key(p,a)];
+    const sent=s==="sent";
+    return {width:34,height:34,fontSize:14,color:sent?"#22c55e":undefined,opacity:s==="sending"?0.7:1};
+  }
+
   return <div style={{marginTop:12}}>
     <div style={{fontSize:"0.8rem",color:"var(--text-dim)",marginBottom:8,fontWeight:500}}>שליחה מהירה למתווכי VIP</div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+    <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
       {VIP_AGENTS.map(v=>{
-        const isSent=!!sent[v.phone];
-        const isSending=!!sending[v.phone];
-        const dis=isSent||isSending;
-        const label=isSent?("✓ נשלח — "+v.name):(isSending?("⏳ "+v.name):("📷 "+v.name));
-        return <button key={v.phone} onClick={()=>sendToVip(v)} disabled={dis} title={v.fullName} style={{
-          display:"inline-flex",alignItems:"center",gap:6,
-          padding:"6px 12px",borderRadius:20,
-          fontSize:"0.75rem",fontWeight:500,
-          cursor:dis?"default":"pointer",
-          transition:"all .2s ease",
-          background:isSent?"rgba(22,163,74,0.10)":"rgba(168,85,247,0.08)",
-          border:"1px solid "+(isSent?"rgba(22,163,74,0.30)":"rgba(168,85,247,0.20)"),
-          color:isSent?"#4ade80":"#a78bfa",
-          fontFamily:"inherit",
-          opacity:isSending?0.65:1
-        }}>{label}</button>;
+        return <div key={v.phone} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:12,display:"flex",flexDirection:"column",gap:10,transition:"border-color .2s ease",minWidth:140,flex:"0 1 auto"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:"var(--gold-soft)",border:"1px solid var(--border-gold)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.85rem",fontWeight:600,color:"var(--gold)",flexShrink:0}}>{v.fullName.charAt(0)}</div>
+            <div style={{display:"flex",flexDirection:"column",minWidth:0}}>
+              <span style={{fontSize:"0.82rem",fontWeight:600,color:"var(--text-white)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.fullName}</span>
+              <span style={{fontSize:"0.6rem",color:"var(--gold)",letterSpacing:"0.02em"}}>⭐ VIP</span>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6,justifyContent:"center"}}>
+            <button onClick={()=>sendPhotos(v)} disabled={!!status[key(v.phone,"photos")]} title="תמונות בלבד" className="icon-btn icon-btn-purple" style={btnStyle(v.phone,"photos")}>{btnContent(v.phone,"photos","🖼️")}</button>
+            <button onClick={()=>sendDetails(v)} disabled={!!status[key(v.phone,"details")]} title="פרטים שמורים" className="icon-btn icon-btn-edit" style={btnStyle(v.phone,"details")}>{btnContent(v.phone,"details","📝")}</button>
+            <a href={"https://wa.me/"+v.phone} target="_blank" rel="noopener" title="פתח בווטסאפ" className="icon-btn icon-btn-wa" style={{width:34,height:34,fontSize:14,textDecoration:"none"}}>📱</a>
+          </div>
+        </div>;
       })}
     </div>
   </div>;
@@ -2948,12 +2978,12 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
             <Btn sm ch="🗑" c={RE} ghost onClick={()=>removeProp(p._qId)}/>
           </div>
         </div>
-        <VipQuickSend prop={p}/>
+        <VipQuickSend prop={p} customAgentTexts={customAgentTexts}/>
       </div>)}
     </div>
 
     {/* Recent chats — quick send-images to anyone not in the agent network */}
-    <RecentChats sellers={sellers} brokerProps={brokerProps}/>
+    <RecentChats sellers={sellers} brokerProps={brokerProps} customAgentTexts={customAgentTexts}/>
 
     {/* Log */}
     {Object.keys(lastSent).length>0&&<div style={S.card}>
@@ -3057,7 +3087,7 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
 }
 
 // ━━━ RECENT CHATS — quick send-images to anyone you've recently chatted with
-function RecentChats({sellers,brokerProps}){
+function RecentChats({sellers,brokerProps,customAgentTexts}){
   const[chats,setChats]=useState([]);
   const[loading,setLoading]=useState(false);
   const[loadedOnce,setLoadedOnce]=useState(false);
@@ -3121,9 +3151,13 @@ function RecentChats({sellers,brokerProps}){
     const mode=target.mode||"images";
     setPicker(null);
     if(mode==="details"){
-      // Open the template picker with the first template applied to this prop.
+      // Prefer the user's saved custom text for this property; otherwise
+      // fall back to the first template. Never re-applies placeholder
+      // substitution on saved text — it's stored final.
+      const saved=(customAgentTexts||{})[propKeyOf(prop)];
+      const hasSaved=saved&&typeof saved==="string"&&saved.trim()!=="";
       const tpl=AGENT_GROUP_TEMPLATES[0];
-      setTplPicker({phone:target.phone,name:target.name,prop,template:tpl.key,text:tpl.build(prop)});
+      setTplPicker({phone:target.phone,name:target.name,prop,template:hasSaved?"custom":tpl.key,text:hasSaved?saved:tpl.build(prop)});
       return;
     }
     // Default: images-only send.
@@ -3469,8 +3503,8 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects} landingConfig={landingConfig||{}} setLandingConfig={setLandingConfig}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
-      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}}/>}
+      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}}/>}
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups} customAgentTexts={customAgentTexts||{}} setCustomAgentTexts={setCustomAgentTexts}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
