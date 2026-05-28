@@ -2601,7 +2601,7 @@ async function saveCustomText(propertyId,text){
     {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(text)});
 }
 
-function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
+function VipSection({queue,customAgentTexts,setCustomAgentTexts,sellers,brokerProps}){
   const[open,setOpen]=useState(true);
   const[status,setStatus]=useState({});
   const[lastSentTimes,setLastSentTimes]=useState({});
@@ -2612,8 +2612,11 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
   const[hotlistSelected,setHotlistSelected]=useState({});
   const[hotlistText,setHotlistText]=useState("");
   const[approvalLoop,setApprovalLoop]=useState(null);
+  const[propPicker,setPropPicker]=useState(null);
+  const[hotlistSaveText,setHotlistSaveText]=useState(false);
 
   const vipList=VIP_AGENTS;
+  const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
   const prop=queue&&queue.length>0?queue[Math.min(selectedPropIdx,queue.length-1)]:null;
   const selectedCount=Object.values(selectedVips).filter(Boolean).length;
 
@@ -2626,10 +2629,23 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
   function selectAllVips(){const m={};vipList.forEach(v=>{m[v.phone]=true});setSelectedVips(m)}
   function clearAllVips(){setSelectedVips({})}
 
-  async function sendPhotos(v){
-    if(!prop){toast("⚠️ בחר נכס קודם");return}
+  // Load saved hotlist text from Firebase on mount
+  useEffect(()=>{(async()=>{try{const doc=await db.collection("hotlists").doc("last_edited").get();if(doc.exists&&doc.data()&&doc.data().text){setHotlistText(doc.data().text)}}catch(e){console.log("No saved hotlist")}})()},[]);
+
+  // Property picker handler — routes to photos or details after user picks a property
+  async function handlePropPick(pickedProp){
+    if(!propPicker)return;
+    const v=propPicker.vip;const mode=propPicker.mode;
+    setPropPicker(null);
+    if(mode==="photos"){await sendPhotos(v,pickedProp)}
+    else{await openDetailsModal(v,pickedProp)}
+  }
+
+  async function sendPhotos(v,targetProp){
+    const p=targetProp||prop;
+    if(!p){toast("⚠️ בחר נכס קודם");return}
     if(status[key(v.phone,"photos")])return;
-    const media=(prop.images||[]).filter(i=>i&&i.url);
+    const media=(p.images||[]).filter(i=>i&&i.url);
     if(media.length===0){toast("⚠️ אין מדיה לנכס זה");return}
     setBtn(v.phone,"photos","sending");
     const ok=await sendWhatsAppMedia(v.phone+"@c.us","",media);
@@ -2637,16 +2653,18 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
     else{setBtn(v.phone,"photos",null)}
   }
 
-  async function openDetailsModal(v){
-    if(!prop){toast("⚠️ בחר נכס קודם");return}
-    const pk=propKeyOf(prop);
-    const result=await getPropertyText(pk,prop);
+  async function openDetailsModal(v,targetProp){
+    const p=targetProp||prop;
+    if(!p){toast("⚠️ בחר נכס קודם");return}
+    const pk=propKeyOf(p);
+    const result=await getPropertyText(pk,p);
     const greeting=getVipGreeting(v);
-    setDetailsModal({vip:v,text:result.text,isCustom:result.isCustom,greeting});
+    setDetailsModal({vip:v,text:result.text,isCustom:result.isCustom,greeting,prop:p});
   }
 
   async function sendDetailsFromModal(){
-    if(!detailsModal||!prop)return;
+    const modalProp=(detailsModal&&detailsModal.prop)||prop;
+    if(!detailsModal||!modalProp)return;
     const v=detailsModal.vip;
     const greeting=detailsModal.greeting;
     const body=greeting+'\n'+(detailsModal.text||'').trim();
@@ -2657,7 +2675,7 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
       markSent(v.phone);
       toast("📝 פרטים נשלחו ל-"+v.name);
       if(detailsModal.saveCustom){
-        const pk=propKeyOf(prop);
+        const pk=propKeyOf(modalProp);
         await saveCustomText(pk,detailsModal.text);
         if(setCustomAgentTexts)setCustomAgentTexts(prev=>({...(prev||{}),[pk]:detailsModal.text}));
         toast("💾 טקסט נשמר");
@@ -2718,6 +2736,10 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
   function sendHotlistToTargets(targets){
     const hotText=(hotlistText||"").trim();
     if(!hotText){toast("⚠️ בחר נכסים לרשימה");return}
+    if(hotlistSaveText){
+      try{db.collection("hotlists").doc("last_edited").set({text:hotText,savedAt:new Date().toISOString()})}catch(e){console.error("hotlist save err",e)}
+      toast("💾 טקסט Hotlist נשמר");
+    }
     setHotlistModal(false);
     startApprovalLoop(targets.map(v=>({vip:v,text:getVipGreeting(v)+'\n\n'+hotText})));
   }
@@ -2767,8 +2789,8 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
             </div>
             <div className="vip-last-sent">שליחה אחרונה: {lastSentTimes[v.phone]||"---"}</div>
             <div className="vip-actions">
-              <button onClick={()=>sendPhotos(v)} disabled={!!st} className="vip-action photos" title="מדיה (תמונות+סרטונים)" style={{opacity:st?0.7:1}}>{btnContent(v.phone,"photos","🖼️")}</button>
-              <button onClick={()=>openDetailsModal(v)} disabled={!!stD} className="vip-action details" title="הודעה מותאמת" style={{opacity:stD?0.7:1}}>{btnContent(v.phone,"details","📝")}</button>
+              <button onClick={()=>setPropPicker({vip:v,mode:"photos"})} disabled={!!st} className="vip-action photos" title="בחר נכס ושלח מדיה" style={{opacity:st?0.7:1}}>{btnContent(v.phone,"photos","🖼️")}</button>
+              <button onClick={()=>setPropPicker({vip:v,mode:"details"})} disabled={!!stD} className="vip-action details" title="בחר נכס ושלח פרטים" style={{opacity:stD?0.7:1}}>{btnContent(v.phone,"details","📝")}</button>
               <a href={"https://wa.me/"+v.phone} target="_blank" rel="noopener" className="vip-action mobile" title="פתח בווטסאפ">📱</a>
             </div>
           </div>;
@@ -2805,6 +2827,10 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
       {Object.values(hotlistSelected).some(Boolean)&&<div style={{marginBottom:14}}>
         <Lbl t="הודעת Hotlist (ניתן לעריכה)" icon="✏️"/>
         <textarea value={hotlistText} onChange={e=>setHotlistText(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid var(--border-gold)",borderRadius:14,padding:"14px 16px",color:"var(--text-white)",fontSize:"0.88rem",lineHeight:1.65,fontFamily:"'Heebo',sans-serif",direction:"rtl",resize:"none",minHeight:150,outline:"none",boxSizing:"border-box"}}/>
+        <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:"0.85rem",color:"var(--text-gray)",marginTop:10}}>
+          <input type="checkbox" checked={hotlistSaveText} onChange={e=>setHotlistSaveText(e.target.checked)} style={{width:18,height:18,accentColor:PU}}/>
+          <span>💾 שמור טקסט זה</span>
+        </label>
       </div>}
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         <button onClick={()=>sendHotlistToTargets(vipList)} disabled={!Object.values(hotlistSelected).some(Boolean)} style={{flex:1,background:"linear-gradient(135deg, var(--gold), #a8882e)",color:"var(--midnight)",fontWeight:700,fontSize:"0.85rem",padding:"12px 0",borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",opacity:Object.values(hotlistSelected).some(Boolean)?1:0.5}}>📤 לכל VIP</button>
@@ -2838,6 +2864,27 @@ function VipSection({queue,customAgentTexts,setCustomAgentTexts}){
         </div>
       </Modal>;
     })()}
+
+    {/* Dynamic property picker — select any property for VIP send */}
+    {propPicker&&<Modal title={(propPicker.mode==="photos"?"🖼️ בחר נכס — ":"📝 בחר נכס — ")+propPicker.vip.name} color={propPicker.mode==="photos"?PU:G} onClose={()=>setPropPicker(null)} center>
+      <div style={{color:"var(--text-gray)",fontSize:"0.85rem",marginBottom:12,lineHeight:1.6}}>
+        {propPicker.mode==="photos"?"בחר נכס לשליחת מדיה (תמונות וסרטונים):":"בחר נכס לשליחת פרטים:"}
+      </div>
+      {allProps.length===0?<div style={{color:"var(--text-gray)",padding:20,textAlign:"center"}}>אין נכסים זמינים</div>:
+      <div style={{maxHeight:340,overflowY:"auto"}}>
+        {allProps.map(p=>{
+          const mediaCount=(p.images||[]).filter(i=>i&&i.url).length;
+          const dis=propPicker.mode==="photos"&&mediaCount===0;
+          return <div key={p._src+"_"+p.id} onClick={()=>{if(!dis)handlePropPick(p)}} style={{padding:"12px 8px",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:dis?"not-allowed":"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,opacity:dis?0.5:1}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{color:"var(--text-white)",fontSize:14,fontWeight:600}}>{p.address||p.name||"—"}{p._src==="b"&&<span style={{color:TE,fontSize:11,marginRight:6}}> 🤝</span>}</div>
+              <div style={{color:"var(--text-gray)",fontSize:12}}>{p.rooms?p.rooms+" חד'":""}{p.price?" · "+fmtP(p.price):""}{mediaCount>0?" · 📷 "+mediaCount:(propPicker.mode==="details"?"":" · ללא מדיה")}</div>
+            </div>
+            <span style={{color:propPicker.mode==="photos"?PU:G,fontSize:18}}>📤</span>
+          </div>;
+        })}
+      </div>}
+    </Modal>}
   </div>;
 }
 
@@ -3081,7 +3128,7 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
     </div>
 
     {/* VIP Realtors — collapsible section */}
-    <VipSection queue={queue} customAgentTexts={customAgentTexts} setCustomAgentTexts={setCustomAgentTexts} key={"vip_"+vipVer}/>
+    <VipSection queue={queue} customAgentTexts={customAgentTexts} setCustomAgentTexts={setCustomAgentTexts} sellers={sellers} brokerProps={brokerProps} key={"vip_"+vipVer}/>
 
     {/* Recent chats — quick send-images to anyone not in the agent network */}
     <RecentChats sellers={sellers} brokerProps={brokerProps} customAgentTexts={customAgentTexts} onVipChange={()=>setVipVer(v=>v+1)}/>
