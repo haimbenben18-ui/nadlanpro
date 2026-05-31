@@ -789,22 +789,29 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     const ok=await sendDirectMessage(prospect.phone,m);
     if(ok)toast("✅ דף נחיתה נשלח");
   }
+  const[seqEditMsg,setSeqEditMsg]=useState("");
+  const[seqSending,setSeqSending]=useState(false);
   function startRecruitSequence(p){
     if(!p.phone){toast("⚠️ אין מספר טלפון");return}
     const dates=getSequenceDates();
     const name=(p.name||"").trim();
     const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
-    const phone972=p.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
-    const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
-    setSeqModal({prospect:p,dates,t1msg,t1link});
+    const t2msg="היי"+(name?" "+name:"")+", מקווה שמצאת ערך בסרטונים ששלחתי. עלו לך שאלות לגבי התהליך? אני כאן לכל התייעצות מקצועית. חיים.";
+    const t3msg="היי"+(name?" "+name:"")+", רציתי לשתף אותך בנכס דומה לשלך שמכרנו השבוע בשכונה. ידע ושיווק נכון עושים את ההבדל. נשתמע? חיים.";
+    setSeqModal({prospect:p,dates,t1msg,t2msg,t3msg});
+    setSeqEditMsg(t1msg);
   }
-  function confirmRecruitSequence(){
-    if(!seqModal)return;
+  async function confirmRecruitSequence(){
+    if(!seqModal||seqSending)return;
+    setSeqSending(true);
     const{prospect:p,dates}=seqModal;
-    window.open(seqModal.t1link,"_blank");
-    addPLog(p.id,"🚀 Touch 1 — רצף שיווקי הופעל");
-    updProspect(p.id,"sentMaterial",true);
-    toast("🚀 רצף שיווקי הופעל — Touch 1 נשלח");
+    const ok=await sendDirectMessage(p.phone,seqEditMsg);
+    if(ok){
+      addPLog(p.id,"🚀 Touch 1 — רצף שיווקי הופעל");
+      updProspect(p.id,"sentMaterial",true);
+      toast("🚀 Touch 1 נשלח ברקע");
+    }else{toast("❌ שליחה נכשלה")}
+    setSeqSending(false);
     setSeqModal(null);
   }
 
@@ -900,25 +907,28 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     </div>}
 
     {seqModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setSeqModal(null)}>
-      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:380,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:400,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
         <div style={{fontWeight:800,fontSize:16,color:G,marginBottom:14}}>🚀 רצף שיווקי — {seqModal.prospect.phone}</div>
         <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:16,lineHeight:1.7}}>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
             <span style={{background:GR+"22",color:GR,borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T1 היום</span>
-            <span>{fmtDate(seqModal.dates.t1)} — שלח הודעה חמה בווטסאפ</span>
+            <span>{fmtDate(seqModal.dates.t1)} — שלח הודעה בווטסאפ (API ישיר)</span>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
-            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 מחר</span>
-            <span>{fmtDate(seqModal.dates.t2)} — שיחת מעקב</span>
+            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 יום 2</span>
+            <span>{fmtDate(seqModal.dates.t2)} — מעקב: שאלות על הסרטונים</span>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 +4</span>
-            <span>{fmtDate(seqModal.dates.t3)} — שלח תמונות/סרטון</span>
+            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 יום 5</span>
+            <span>{fmtDate(seqModal.dates.t3)} — שיתוף עסקה דומה</span>
           </div>
         </div>
-        <div style={{background:"var(--midnight-light)",borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:"var(--text-gray)",lineHeight:1.6,direction:"rtl",wordBreak:"break-word"}}>{seqModal.t1msg}</div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--gold)",marginBottom:6}}>✏️ הודעת Touch 1 (ניתן לערוך):</div>
+          <textarea value={seqEditMsg} onChange={e=>setSeqEditMsg(e.target.value)} rows={6} style={{...S.inp,resize:"none",fontSize:13,lineHeight:1.6,direction:"rtl"}}/>
+        </div>
         <div style={{display:"flex",gap:10}}>
-          <Btn full ch="🚀 הפעל רצף" c={G} onClick={confirmRecruitSequence}/>
+          <Btn full ch={seqSending?"שולח...":"🚀 שלח עכשיו (API)"} c={G} onClick={confirmRecruitSequence} dis={seqSending}/>
           <Btn ghost ch="ביטול" onClick={()=>setSeqModal(null)}/>
         </div>
       </div>
@@ -1090,30 +1100,35 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   }
 
   // ━━━ 3-TOUCH MARKETING SEQUENCE ━━━━━━━━━━━━━━━━━━━━━━━━
-  const[seqModal,setSeqModal]=useState(null); // {seller, dates, t1msg, t1link}
+  const[seqModal,setSeqModal]=useState(null);
+  const[seqEditMsg,setSeqEditMsg]=useState("");
+  const[seqSending,setSeqSending]=useState(false);
   function startMarketingSequence(s){
     if(!s.phone){toast("⚠️ אין מספר טלפון למוכר");return}
     const dates=getSequenceDates();
-    const street=(s.address||"הנכס שלך").trim();
     const name=(s.name||"").trim();
     const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
-    const phone972=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
-    const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
-    setSeqModal({seller:s,dates,t1msg,t1link});
+    const t2msg="היי"+(name?" "+name:"")+", מקווה שמצאת ערך בסרטונים ששלחתי. עלו לך שאלות לגבי התהליך? אני כאן לכל התייעצות מקצועית. חיים.";
+    const t3msg="היי"+(name?" "+name:"")+", רציתי לשתף אותך בנכס דומה לשלך שמכרנו השבוע בשכונה. ידע ושיווק נכון עושים את ההבדל. נשתמע? חיים.";
+    setSeqModal({seller:s,dates,t1msg,t2msg,t3msg});
+    setSeqEditMsg(t1msg);
   }
-  function confirmSequence(){
-    if(!seqModal)return;
+  async function confirmSequence(){
+    if(!seqModal||seqSending)return;
+    setSeqSending(true);
     const{seller:s,dates}=seqModal;
-    // Touch 1: open wa.me now
-    window.open(seqModal.t1link,"_blank");
-    addLog(s.id,"🚀 Touch 1 — דף נחיתה נשלח","s");
-    // Touch 2: schedule task
-    const t2task={id:Date.now()+1,text:"📞 Touch 2 — שיחה עם "+s.name+" ("+s.address+")",done:false,date:dates.t2.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
-    // Touch 3: schedule task
-    const t3task={id:Date.now()+2,text:"📸 Touch 3 — שלח תמונות/סרטון ל"+s.name+" ("+s.address+")",done:false,date:dates.t3.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
-    const nt=[...(tasks||[]),t2task,t3task];setTasks(nt);sv("tasks",nt);
-    updS(s.id,"actions",[...(s.actions||[]),"🚀 רצף שיווקי"]);
-    toast("🚀 רצף שיווקי הופעל — 3 נגיעות");
+    const ok=await sendDirectMessage(s.phone,seqEditMsg);
+    if(ok){
+      addLog(s.id,"🚀 Touch 1 — הודעה נשלחה","s");
+      // Touch 2: schedule task with actual message
+      const t2task={id:Date.now()+1,text:"💬 Touch 2 — "+seqModal.t2msg,done:false,date:dates.t2.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
+      // Touch 3: schedule task with actual message
+      const t3task={id:Date.now()+2,text:"💬 Touch 3 — "+seqModal.t3msg,done:false,date:dates.t3.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
+      const nt=[...(tasks||[]),t2task,t3task];setTasks(nt);sv("tasks",nt);
+      updS(s.id,"actions",[...(s.actions||[]),"🚀 רצף שיווקי"]);
+      toast("🚀 Touch 1 נשלח ברקע — T2/T3 תוזמנו");
+    }else{toast("❌ שליחה נכשלה")}
+    setSeqSending(false);
     setSeqModal(null);
   }
 
@@ -1417,25 +1432,28 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     </div>}
 
     {seqModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setSeqModal(null)}>
-      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:360,width:"100%"}}>
+      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:400,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
         <div style={{fontWeight:800,fontSize:16,color:G,marginBottom:14}}>🚀 רצף שיווקי — {seqModal.seller.name}</div>
         <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:16,lineHeight:1.7}}>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
             <span style={{background:GR+"22",color:GR,borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T1 היום</span>
-            <span>{fmtDate(seqModal.dates.t1)} — שלח דף נחיתה בווטסאפ</span>
+            <span>{fmtDate(seqModal.dates.t1)} — שלח הודעה בווטסאפ (API ישיר)</span>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
-            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 מחר</span>
-            <span>{fmtDate(seqModal.dates.t2)} — משימה: שיחת מעקב</span>
+            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 יום 2</span>
+            <span>{fmtDate(seqModal.dates.t2)} — מעקב: שאלות על הסרטונים</span>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 +4</span>
-            <span>{fmtDate(seqModal.dates.t3)} — משימה: שלח תמונות/סרטון</span>
+            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 יום 5</span>
+            <span>{fmtDate(seqModal.dates.t3)} — שיתוף עסקה דומה</span>
           </div>
         </div>
-        <div style={{background:"var(--midnight-light)",borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:"var(--text-gray)",lineHeight:1.6,direction:"rtl",wordBreak:"break-word"}}>{seqModal.t1msg}</div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--gold)",marginBottom:6}}>✏️ הודעת Touch 1 (ניתן לערוך):</div>
+          <textarea value={seqEditMsg} onChange={e=>setSeqEditMsg(e.target.value)} rows={6} style={{...S.inp,resize:"none",fontSize:13,lineHeight:1.6,direction:"rtl"}}/>
+        </div>
         <div style={{display:"flex",gap:10}}>
-          <Btn full ch="🚀 הפעל רצף" c={G} onClick={confirmSequence}/>
+          <Btn full ch={seqSending?"שולח...":"🚀 שלח עכשיו (API)"} c={G} onClick={confirmSequence} dis={seqSending}/>
           <Btn ghost ch="ביטול" onClick={()=>setSeqModal(null)}/>
         </div>
       </div>
@@ -3777,18 +3795,18 @@ function PublicLanding({onLogin,landingConfig}){
     <div style={{marginBottom:24}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>🎬 הכנתי עבורכם סרטוני תוכן שיעזרו להגיע להחלטה הנכונה</div>
       {[
-        {title:"🎬 משיווק ועד עסקה",desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:lcVideos[0]?lcVideos[0].url:"assets/video1.mp4"},
-        {title:"💡 3 טיפים לבחירת מתווך",desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה 3 דברים שחשוב לבדוק לפני שבוחרים.",src:lcVideos[1]?lcVideos[1].url:"assets/video2.mp4"},
-        {title:"💰 למה מתווך מקצועי עולה כסף",desc:"מתווך טוב לא עולה לכם כסף — הוא חוסך לכם כסף. בסרטון הזה אני מראה למה ההשקעה משתלמת.",src:lcVideos[2]?lcVideos[2].url:"assets/video3.mp4"}
-      ].map((v,i)=><div key={i} style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:18,marginBottom:18}}>
+        {title:"🎬 משיווק ועד עסקה",desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:lcVideos[0]?lcVideos[0].url:"assets/video1.mp4",poster:"assets/thumbnail1.jpg"},
+        {title:"💡 3 טיפים לבחירת מתווך",desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה 3 דברים שחשוב לבדוק לפני שבוחרים.",src:lcVideos[1]?lcVideos[1].url:"assets/video2.mp4",poster:"assets/thumbnail2.jpg"},
+        {title:"💰 למה מתווך מקצועי עולה כסף",desc:"מתווך טוב לא עולה לכם כסף — הוא חוסך לכם כסף. בסרטון הזה אני מראה למה ההשקעה משתלמת.",src:lcVideos[2]?lcVideos[2].url:"assets/video3.mp4",poster:"assets/thumbnail3.jpg"}
+      ].map((v,i)=><div key={i} style={{maxWidth:400,margin:"0 auto 18px",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:18}}>
         <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:20,color:"var(--text-white)",marginBottom:8}}>{v.title}</div>
         <div style={{fontSize:18,color:"#c8ccd4",lineHeight:1.6,marginBottom:14}}>{v.desc}</div>
-        <div style={{position:"relative",width:"100%",aspectRatio:"4/5",borderRadius:16,overflow:"hidden",background:"#000"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();e.currentTarget.querySelector(".play-ov")&&(e.currentTarget.querySelector(".play-ov").style.opacity="0")}}}>
-          <video controls playsInline preload="metadata" poster="assets/video-placeholder.jpg" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",borderRadius:16}}>
+        <div style={{position:"relative",width:"100%",aspectRatio:"4/5",borderRadius:16,overflow:"hidden",background:"#111",cursor:"pointer"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+          <video controls playsInline preload="metadata" poster={v.poster} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",borderRadius:16}}>
             <source src={v.src} type="video/mp4"/>
             הדפדפן שלך לא תומך בתגית וידאו.
           </video>
-          <div className="play-ov" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:72,height:72,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+          <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:72,height:72,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
             <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"14px 0 14px 24px",borderColor:"transparent transparent transparent #fff",marginLeft:4}}/>
           </div>
         </div>
