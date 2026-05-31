@@ -127,3 +127,11 @@ input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-
 .vip-action.details:hover{background:rgba(195,166,82,0.18)}
 .vip-action.mobile{background:rgba(22,163,74,0.08);border-color:rgba(22,163,74,0.15);color:#22c55e}
 .vip-action.mobile:hover{background:rgba(22,163,74,0.18)}
+
+/* ───── RE/MAX Branding ───── */
+.brand-logo{height:30px;vertical-align:middle;object-fit:contain}
+
+/* ───── Archive / Past Clients cards ───── */
+.archive-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:border-color .25s ease}
+.archive-card:hover{border-color:var(--border-hover)}
+.archive-deal{display:inline-flex;align-items:center;padding:3px 11px;border-radius:20px;font-size:0.72rem;font-weight:600;letter-spacing:0.02em;white-space:nowrap}

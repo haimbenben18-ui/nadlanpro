@@ -1265,7 +1265,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=><div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
@@ -1434,7 +1434,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
     {fP.map(p=><div key={p.id} style={S.card}>
       {p.images&&p.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{p.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:14}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div><div style={{color:TE,fontSize:12}}>מתווך: {p.agentName||"—"}</div></div><Tag c={TE} ch={fmtP(p.price)}/></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updProp(p.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
     </div>)}
   </div>
 }
@@ -1536,21 +1536,46 @@ function Settings({onClose}){
 // ━━━ ARCHIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function Archive({sellers,setSellers,buyers,setBuyers}){
   const[tab,setTab]=useState("sellers");
+  const[search,setSearch]=useState("");
   const aS=sellers.filter(s=>s.archived);
   const aB=buyers.filter(b=>b.archived);
+  const q=search.toLowerCase();
+  const fAS=aS.filter(s=>!q||(s.name+s.address+(s.phone||"")).toLowerCase().includes(q));
+  const fAB=aB.filter(b=>!q||(b.name+(b.phone||"")).toLowerCase().includes(q));
   function restoreS(id){const ns=sellers.map(s=>s.id===id?{...s,archived:false}:s);setSellers(ns);sv("sellers",ns);toast("↩️ הוחזר")}
   function restoreB(id){const nb=buyers.map(b=>b.id===id?{...b,archived:false}:b);setBuyers(nb);sv("buyers",nb);toast("↩️ הוחזר")}
   return <div style={{padding:S.pg}} className="fade">
-    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>📦 ארכיון</div>
+    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>📦 לקוחות עבר</div>
+    <div style={{color:"var(--text-gray)",fontSize:14,marginBottom:18}}>עסקאות שהושלמו ולקוחות שהועברו לארכיון</div>
+    <input placeholder="🔍 חיפוש לפי שם, כתובת או טלפון..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:14,fontSize:"0.88rem"}}/>
     <div style={{display:"flex",gap:10,marginBottom:16}}><Pill ch="🏡 מוכרים" count={aS.length} active={tab==="sellers"} onClick={()=>setTab("sellers")} c={OR}/><Pill ch="👥 קונים" count={aB.length} active={tab==="buyers"} onClick={()=>setTab("buyers")} c={BL}/></div>
-    {tab==="sellers"&&<div>{aS.length===0&&<Empty icon="📦" text="אין מוכרים בארכיון"/>}{aS.map(s=><div key={s.id} style={S.card}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><Tag c={OR} ch={fmtP(s.price)}/></div>
-      <Btn sm ch="↩️ החזר" c={PU} onClick={()=>restoreS(s.id)}/>
+    {tab==="sellers"&&<div>{fAS.length===0&&<Empty icon="📦" text="אין מוכרים בארכיון"/>}{fAS.map(s=><div key={s.id} className="archive-card">
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:700,color:"var(--text-white)",fontSize:15}}>{s.name}</div>
+        <div style={{color:"var(--text-gray)",fontSize:13,marginTop:2}}>{s.phone}</div>
+        <div style={{color:"var(--text-dim)",fontSize:13}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}{s.price?" · "+fmtP(s.price):""}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end",flexShrink:0}}>
+        <span className="archive-deal" style={{background:"rgba(249,115,22,0.1)",border:"1px solid rgba(249,115,22,0.3)",color:OR}}>נמכר</span>
+        <div style={{display:"flex",gap:6}}>
+          {s.phone&&<a href={"tel:"+s.phone} className="icon-btn icon-btn-tel" style={{width:32,height:32,fontSize:13,textDecoration:"none"}}>📞</a>}
+          <button onClick={()=>restoreS(s.id)} className="icon-btn icon-btn-purple" style={{width:32,height:32,fontSize:13}} title="החזר">↩️</button>
+        </div>
+      </div>
     </div>)}</div>}
-    {tab==="buyers"&&<div>{aB.length===0&&<Empty icon="📦" text="אין קונים בארכיון"/>}{aB.map(b=><div key={b.id} style={S.card}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div><div style={{color:"#777",fontSize:14}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div><GradeBadge grade={b.grade} onChange={()=>{}}/></div>
-      {b.notes&&<div style={{color:"#666",fontSize:13,marginBottom:10}}>{b.notes.substring(0,100)}</div>}
-      <Btn sm ch="↩️ החזר" c={PU} onClick={()=>restoreB(b.id)}/>
+    {tab==="buyers"&&<div>{fAB.length===0&&<Empty icon="📦" text="אין קונים בארכיון"/>}{fAB.map(b=><div key={b.id} className="archive-card">
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:700,color:"var(--text-white)",fontSize:15}}>{b.name}</div>
+        <div style={{color:"var(--text-gray)",fontSize:13,marginTop:2}}>{b.phone}{b.budget?" · "+fmtP(b.budget):""}</div>
+        {b.notes&&<div style={{color:"var(--text-dim)",fontSize:12,marginTop:2}}>{b.notes.substring(0,80)}{b.notes.length>80?"...":""}</div>}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end",flexShrink:0}}>
+        <span className="archive-deal" style={{background:"rgba(26,86,219,0.1)",border:"1px solid rgba(26,86,219,0.3)",color:"#5b8def"}}>קנה</span>
+        <div style={{display:"flex",gap:6}}>
+          {b.phone&&<a href={"tel:"+b.phone} className="icon-btn icon-btn-tel" style={{width:32,height:32,fontSize:13,textDecoration:"none"}}>📞</a>}
+          <button onClick={()=>restoreB(b.id)} className="icon-btn icon-btn-purple" style={{width:32,height:32,fontSize:13}} title="החזר">↩️</button>
+        </div>
+      </div>
     </div>)}</div>}
   </div>
 }
@@ -1559,7 +1584,7 @@ function Archive({sellers,setSellers,buyers,setBuyers}){
 const TABS=[
   {k:"home",l:"בית",i:"🏠"},{k:"recruit",l:"גיוס",i:"📤"},{k:"daily",l:"יומי",i:"📅"},
   {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"agents",l:"רשת",i:"📒"},{k:"autoagents",l:"אוטומציה",i:"🤖"},{k:"report",l:"דיווח",i:"📊"},
-  {k:"tiktok",l:"טיקטוק",i:"🎬"},{k:"uni",l:"אוני׳",i:"🎓"},{k:"archive",l:"ארכיון",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
+  {k:"archive",l:"לקוחות עבר",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
 
 const LANDING_URL="https://nadlanpro.vercel.app/landing.html";
@@ -3527,9 +3552,9 @@ function LandingVideoSlot({index,video,onChange,onDelete}){
   </div>;
 }
 
-const LANDING_DEFAULT_TITLE='חיים בן סימון | מומחה נדל"ן למשקיעים ושותף ב-RE/MAX';
-const LANDING_DEFAULT_SUBTITLE='הניסיון שלי – הביטחון שלך: עם 13 שנות ניסיון בשוק הנדל"ן של באר שבע ומוניטין של מאות עסקאות מוצלחות, אני לא כאן לניסוי וטעייה. אני מביא אליך את השילוב המנצח: מומחיות מקומית יחד עם כוח שיווקי ארצי.';
-const LANDING_DEFAULT_CTA='חיים, בוא נבנה תוכנית שיווק לדירה שלי';
+const LANDING_DEFAULT_TITLE='חיים בן סימון — 15 שנה של עסקאות מוצלחות בנדל"ן באר שבע';
+const LANDING_DEFAULT_SUBTITLE='כשאתה מוכר את הנכס הכי יקר שלך, אתה צריך מישהו שמכיר כל שכונה, כל רחוב, כל מספר.\n\nאני חיים בן סימון, שותף בכיר ברשת RE/MAX עם 15 שנות ניסיון ומאות עסקאות סגורות בבאר שבע. אני לא מתווך שמפרסם מודעה ומחכה — אני בונה אסטרטגיית שיווק מותאמת אישית לכל נכס: סרטוני טיקטוק, פרסום ממוקד בפייסבוק, רשת של 200+ משקיעים פעילים, ושיתופי פעולה עם מתווכים בכל הארץ.\n\nהתוצאה? הנכסים שלי נמכרים מהר יותר ובמחיר גבוה יותר מהממוצע בשוק.\n\nפנה אלי היום — ונתחיל לעבוד על העסקה הבאה שלך.';
+const LANDING_DEFAULT_CTA='חיים, אני רוצה למכור את הנכס שלי במחיר הכי טוב';
 
 function LandingEditor({landingConfig,setLandingConfig}){
   const c=landingConfig||{};
@@ -3563,6 +3588,8 @@ function LandingEditor({landingConfig,setLandingConfig}){
     <textarea value={title} onChange={e=>setTitle(e.target.value)} rows={2} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.6}}/>
     <Lbl t="כותרת משנית"/>
     <textarea value={subtitle} onChange={e=>setSubtitle(e.target.value)} rows={4} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.7}}/>
+    <div id="profile-photo" style={{background:"var(--surface)",border:"2px dashed var(--border)",borderRadius:14,padding:28,textAlign:"center",marginBottom:14,color:"var(--text-dim)",fontSize:13}}>📷 תמונת פרופיל מקצועית — יתווסף בקרוב</div>
+    <div id="testimonial-video" style={{background:"var(--surface)",border:"2px dashed var(--border)",borderRadius:14,padding:28,textAlign:"center",marginBottom:14,color:"var(--text-dim)",fontSize:13}}>🎥 סרטון המלצות לקוחות — יתווסף בקרוב</div>
     <Lbl t="טלפון" icon="📱"/>
     <input value={phone} onChange={e=>setPhone(e.target.value)} style={{...S.inp,marginBottom:12,direction:"ltr",textAlign:"left"}}/>
     <Lbl t="טקסט כפתור CTA (ווטסאפ צף)" icon="💬"/>
@@ -3710,9 +3737,12 @@ function App(){
     <div style={{position:"relative",zIndex:1}}>
       <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div>
-            <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
-            <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX · חיים בן סימון · באר שבע</div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/>
+            <div>
+              <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
+              <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX · חיים בן סימון · באר שבע</div>
+            </div>
           </div>
           <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
         </div>
@@ -3733,12 +3763,11 @@ function App(){
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups} customAgentTexts={customAgentTexts||{}} setCustomAgentTexts={setCustomAgentTexts}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
-      {tab==="tiktok"&&<Tiktok/>}
-      {tab==="uni"&&<University/>}
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
       <nav style={{position:"fixed",bottom:14,left:18,right:18,height:54,background:"rgba(15,17,25,0.82)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:27,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:50,padding:"0 8px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+        <img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/40px-REMAX_Balloon.svg.png" alt="RE/MAX" className="brand-logo" style={{opacity:0.5,marginInlineEnd:4,flexShrink:0}}/>
         {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} className="dock-btn" style={{flex:"0 0 auto",minWidth:46,background:active?"var(--gold-soft)":"transparent",border:"none",cursor:"pointer",padding:"6px 14px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",color:active?G:"var(--text-dim)"}}>
           <span style={{fontSize:20,lineHeight:1}}>{t.i}</span>
           <span style={{fontSize:"0.6rem",marginTop:2,fontWeight:500,fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
