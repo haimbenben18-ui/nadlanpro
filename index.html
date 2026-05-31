@@ -3770,17 +3770,21 @@ function PublicLanding({onLogin,landingConfig}){
       <div style={{fontWeight:700,fontSize:14}}>תמונת פרופיל מקצועית</div>
     </div>
 
-    {lcVideos.length>0?<div style={{marginBottom:24}}>
-      <div style={{fontSize:16,fontWeight:700,color:"var(--gold)",textAlign:"center",marginBottom:14}}>🎬 סרטונים</div>
-      {lcVideos.map((v,i)=><div key={i} style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:14,marginBottom:12}}>
-        {v.title&&<div style={{fontWeight:700,fontSize:14,color:"var(--text-white)",marginBottom:10,textAlign:"center"}}>{v.title}</div>}
-        <video src={v.url} controls playsinline preload="metadata" style={{width:"100%",borderRadius:10,background:"#000",maxHeight:280,display:"block"}}/>
+    <div style={{marginBottom:24}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>🎬 הכנתי עבורכם סרטוני תוכן שיעזרו להגיע להחלטה הנכונה</div>
+      {[
+        {title:"🎬 משיווק ועד עסקה",desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:lcVideos[0]?lcVideos[0].url:"assets/video1.mp4"},
+        {title:"💡 3 טיפים לבחירת מתווך",desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה 3 דברים שחשוב לבדוק לפני שבוחרים.",src:lcVideos[1]?lcVideos[1].url:"assets/video2.mp4"},
+        {title:"💰 למה מתווך מקצועי עולה כסף",desc:"מתווך טוב לא עולה לכם כסף — הוא חוסך לכם כסף. בסרטון הזה אני מראה למה ההשקעה משתלמת.",src:lcVideos[2]?lcVideos[2].url:"assets/video3.mp4"}
+      ].map((v,i)=><div key={i} style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:16,marginBottom:14}}>
+        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:800,fontSize:16,color:"var(--text-white)",marginBottom:6}}>{v.title}</div>
+        <div style={{fontSize:13,color:"var(--text-gray)",lineHeight:1.7,marginBottom:12}}>{v.desc}</div>
+        <video controls playsInline preload="metadata" poster="assets/video-placeholder.jpg" style={{width:"100%",borderRadius:12,background:"#000",display:"block"}}>
+          <source src={v.src} type="video/mp4"/>
+          הדפדפן שלך לא תומך בתגית וידאו.
+        </video>
       </div>)}
-    </div>:<div id="testimonial-video" className="landing-placeholder" style={{margin:"0 auto 24px"}}>
-      <div style={{fontSize:44,marginBottom:8,opacity:0.5}}>🎥</div>
-      <div style={{fontWeight:700,fontSize:14}}>סרטון המלצות לקוחות</div>
-      <div style={{fontSize:12,opacity:0.4,marginTop:4}}>בקרוב</div>
-    </div>}
+    </div>
 
     <a href={"https://wa.me/972544740691?text="+encodeURIComponent(lcCta)} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"16px 24px",borderRadius:14,fontWeight:700,fontSize:16,textDecoration:"none",boxShadow:"0 6px 24px rgba(195,166,82,0.3)",marginBottom:20}}>💬 {lcCta}</a>
     <div style={{textAlign:"center",marginBottom:20}}><img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/200px-REMAX_Balloon.svg.png" alt="RE/MAX Balloon" style={{height:70,objectFit:"contain",opacity:0.85}}/></div>
