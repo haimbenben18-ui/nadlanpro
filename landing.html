@@ -56,6 +56,19 @@
   .video-wrap .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #fff;margin-left:4px}
   .video-wrap video:not([paused]) ~ .play-overlay,.video-wrap.playing .play-overlay{opacity:0}
 
+  /* Testimonials */
+  .testimonials-section{background:#fff;border-top:1px solid #eee8d8}
+  .testimonials-scroll{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 0 16px}
+  .testimonials-scroll::-webkit-scrollbar{height:4px}
+  .testimonials-scroll::-webkit-scrollbar-thumb{background:#D4AF37;border-radius:4px}
+  .testimonial-card{flex:0 0 280px;scroll-snap-align:start;background:#f9f7f2;border:1px solid #eee8d8;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,31,63,0.05)}
+  .testimonial-video{position:relative;width:100%;aspect-ratio:1/1;background:#111;cursor:pointer;overflow:hidden}
+  .testimonial-video video{width:100%;height:100%;object-fit:cover;display:block}
+  .testimonial-video .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:rgba(0,0,0,0.55);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+  .testimonial-video .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #fff;margin-left:3px}
+  .testimonial-video.playing .play-overlay{opacity:0}
+  .testimonial-label{padding:12px 14px;text-align:center;font-weight:700;font-size:14px;color:#003366}
+
   /* Footer */
   .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
   .footer .flogo{font-family:'Heebo',sans-serif;font-weight:900;color:#fff;letter-spacing:1.5px;font-size:20px;margin-bottom:6px}
@@ -179,6 +192,34 @@
         </video>
         <div class="play-overlay"></div>
       </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── Testimonials ─── -->
+<section class="section testimonials-section">
+  <div class="section-title">⭐ הלקוחות שלנו מספרים</div>
+  <div class="testimonials-scroll">
+
+    <div class="testimonial-card">
+      <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+        <video controls playsinline preload="metadata">
+          <source src="assets/testimonial1.mp4" type="video/mp4">
+        </video>
+        <div class="play-overlay"></div>
+      </div>
+      <div class="testimonial-label">🗣️ לקוח ממליץ</div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+        <video controls playsinline preload="metadata">
+          <source src="assets/testimonial2.mp4" type="video/mp4">
+        </video>
+        <div class="play-overlay"></div>
+      </div>
+      <div class="testimonial-label">🗣️ לקוח ממליץ</div>
     </div>
 
   </div>

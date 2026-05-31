@@ -3837,6 +3837,27 @@ function PublicLanding({onLogin,landingConfig}){
       </div>)}
     </div>
 
+    {/* ── Testimonials Section ── */}
+    <div style={{marginBottom:24}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>⭐ הלקוחות שלנו מספרים</div>
+      <div style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px"}}>
+        {[
+          {label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"},
+          {label:"🗣️ לקוח ממליץ",src:"assets/testimonial2.mp4"}
+        ].map((t,i)=><div key={i} style={{flex:"0 0 280px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
+          <div style={{position:"relative",width:"100%",aspectRatio:"1/1",background:"#111",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+            <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}>
+              <source src={t.src} type="video/mp4"/>
+            </video>
+            <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:64,height:64,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+              <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"12px 0 12px 20px",borderColor:"transparent transparent transparent #fff",marginLeft:3}}/>
+            </div>
+          </div>
+          <div style={{padding:"12px 14px",textAlign:"center",fontWeight:700,fontSize:14,color:"var(--gold)"}}>{t.label}</div>
+        </div>)}
+      </div>
+    </div>
+
     <a href={"https://wa.me/972544740691?text="+encodeURIComponent(lcCta)} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"16px 24px",borderRadius:14,fontWeight:700,fontSize:16,textDecoration:"none",boxShadow:"0 6px 24px rgba(195,166,82,0.3)",marginBottom:20}}>💬 {lcCta}</a>
     <div style={{textAlign:"center",marginBottom:20}}><img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/200px-REMAX_Balloon.svg.png" alt="RE/MAX Balloon" style={{height:70,objectFit:"contain",opacity:0.85}}/></div>
     <div style={{textAlign:"center",color:"var(--text-dim)",fontSize:12,marginBottom:28}}>RE/MAX Plus · חיים בן סימון · באר שבע · 054-474-0691</div>
