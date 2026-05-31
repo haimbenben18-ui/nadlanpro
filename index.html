@@ -793,7 +793,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     if(!p.phone){toast("⚠️ אין מספר טלפון");return}
     const dates=getSequenceDates();
     const name=(p.name||"").trim();
-    const t1msg="היי"+(name?" "+name:"")+", היה לי נעים לדבר איתך! 😊 כפי שהבטחתי, אני שולח לך את הקישור לכרטיס הביקור הדיגיטלי שלי. בפנים תמצא את אסטרטגיית השיווק המלאה שלי למכירת נכסים, יחד עם כמה טיפים חשובים שצילמתי עבורך כדי לוודא שתעבור את התהליך הזה בצורה הכי בטוחה ורווחית. מוזמן להציץ כאן: "+LANDING_URL+". אני מאמין ששקיפות וידע הם המפתח לעסקה טובה. נדבר שוב מחר אחרי שתראה את הסרטונים? המשך יום מצוין, חיים בן סימון | RE/MAX Plus";
+    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
     const phone972=p.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
     const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
     setSeqModal({prospect:p,dates,t1msg,t1link});
@@ -1057,9 +1057,9 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   const[editAd,setEditAd]=useState(null); // {platform,text} or null
   // ━━━ SELLER EDIT MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const[editSeller,setEditSeller]=useState(null);
-  const[esName,setEsName]=useState("");const[esPhone,setEsPhone]=useState("");const[esAddr,setEsAddr]=useState("");const[esPrice,setEsPrice]=useState("");const[esRooms,setEsRooms]=useState("");const[esStatus,setEsStatus]=useState("");
-  function openEditSeller(s){setEditSeller(s);setEsName(s.name||"");setEsPhone(s.phone||"");setEsAddr(s.address||"");setEsPrice(s.price||"");setEsRooms(s.rooms||"");setEsStatus(s.status||"חדש")}
-  function saveEditSeller(){if(!editSeller)return;const ns=sellers.map(x=>x.id===editSeller.id?{...x,name:esName,phone:esPhone,address:esAddr,price:esPrice,rooms:esRooms,status:esStatus}:x);setSellers(ns);sv("sellers",ns);toast("✅ עודכן");setEditSeller(null)}
+  const[esName,setEsName]=useState("");const[esPhone,setEsPhone]=useState("");const[esAddr,setEsAddr]=useState("");const[esPrice,setEsPrice]=useState("");const[esRooms,setEsRooms]=useState("");const[esStatus,setEsStatus]=useState("");const[esNotes,setEsNotes]=useState("");
+  function openEditSeller(s){setEditSeller(s);setEsName(s.name||"");setEsPhone(s.phone||"");setEsAddr(s.address||"");setEsPrice(s.price||"");setEsRooms(s.rooms||"");setEsStatus(s.status||"חדש");setEsNotes(s.internalNotes||"")}
+  function saveEditSeller(){if(!editSeller)return;const ns=sellers.map(x=>x.id===editSeller.id?{...x,name:esName,phone:esPhone,address:esAddr,price:esPrice,rooms:esRooms,status:esStatus,internalNotes:esNotes}:x);setSellers(ns);sv("sellers",ns);toast("✅ עודכן");setEditSeller(null)}
   function getTouchCount(s){return(s.logs||[]).filter(l=>l.text&&l.text.includes("Touch")).length}
   const SELLER_STATUSES=["חדש","פעיל","בלעדיות","נמכר","מוקפא"];
   function buildSendMsg(buyerName,prop,variant){
@@ -1096,7 +1096,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     const dates=getSequenceDates();
     const street=(s.address||"הנכס שלך").trim();
     const name=(s.name||"").trim();
-    const t1msg="היי"+(name?" "+name:"")+", היה לי נעים לדבר איתך! 😊 כפי שהבטחתי, אני שולח לך את הקישור לכרטיס הביקור הדיגיטלי שלי. בפנים תמצא את אסטרטגיית השיווק המלאה שלי למכירת נכסים, יחד עם כמה טיפים חשובים שצילמתי עבורך כדי לוודא שתעבור את התהליך הזה בצורה הכי בטוחה ורווחית. מוזמן להציץ כאן: "+LANDING_URL+". אני מאמין ששקיפות וידע הם המפתח לעסקה טובה. נדבר שוב מחר אחרי שתראה את הסרטונים? המשך יום מצוין, חיים בן סימון | RE/MAX Plus";
+    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
     const phone972=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
     const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
     setSeqModal({seller:s,dates,t1msg,t1link});
@@ -1390,16 +1390,20 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {editSeller&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setEditSeller(null)}>
       <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:380,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
         <div style={{fontWeight:800,fontSize:16,color:G,marginBottom:16}}>✏️ עריכת מוכר</div>
-        <Inp label="שם" val={esName} set={setEsName} mb={10}/>
-        <Inp label="טלפון" val={esPhone} set={setEsPhone} mb={10}/>
+        <Inp label="שם מלא" val={esName} set={setEsName} mb={10}/>
         <Inp label="כתובת" val={esAddr} set={setEsAddr} mb={10}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <Inp label="מחיר" val={esPrice} set={setEsPrice} mb={0}/>
+          <Inp label="מחיר מבוקש" val={esPrice} set={setEsPrice} mb={0}/>
           <Inp label="חדרים" val={esRooms} set={setEsRooms} mb={0}/>
         </div>
         <div style={{marginBottom:14}}>
           <Lbl t="סטטוס" icon="📋"/>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{SELLER_STATUSES.map(st=><button key={st} onClick={()=>setEsStatus(st)} style={{padding:"6px 14px",borderRadius:10,border:"1px solid "+(esStatus===st?"var(--gold)":"var(--border)"),background:esStatus===st?"var(--gold-soft)":"transparent",color:esStatus===st?"var(--gold)":"var(--text-gray)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{st}</button>)}</div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <Lbl t="הערות פנימיות (לשימוש אישי בלבד)" icon="🔒"/>
+          <textarea value={esNotes} onChange={e=>setEsNotes(e.target.value)} rows={4} placeholder="הערות פרטיות — לא נשלחות ללקוח לעולם..." style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.6,background:"rgba(220,38,38,0.04)",border:"1px solid rgba(220,38,38,0.15)"}}/>
+          <div style={{fontSize:11,color:"var(--red)",marginTop:4,fontWeight:600,opacity:0.7}}>🔒 שדה פרטי — לא נכלל בהודעות אוטומטיות</div>
         </div>
         {(()=>{const tc=getTouchCount(editSeller);const touchLogs=(editSeller.logs||[]).filter(l=>l.text&&l.text.includes("Touch"));return <div style={{background:"var(--midnight-light)",borderRadius:10,padding:12,marginBottom:14}}>
           <div style={{fontSize:13,fontWeight:700,color:"var(--gold)",marginBottom:8}}>🎯 נגיעות: {tc}/3</div>
@@ -3776,13 +3780,18 @@ function PublicLanding({onLogin,landingConfig}){
         {title:"🎬 משיווק ועד עסקה",desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:lcVideos[0]?lcVideos[0].url:"assets/video1.mp4"},
         {title:"💡 3 טיפים לבחירת מתווך",desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה 3 דברים שחשוב לבדוק לפני שבוחרים.",src:lcVideos[1]?lcVideos[1].url:"assets/video2.mp4"},
         {title:"💰 למה מתווך מקצועי עולה כסף",desc:"מתווך טוב לא עולה לכם כסף — הוא חוסך לכם כסף. בסרטון הזה אני מראה למה ההשקעה משתלמת.",src:lcVideos[2]?lcVideos[2].url:"assets/video3.mp4"}
-      ].map((v,i)=><div key={i} style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:16,marginBottom:14}}>
-        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:800,fontSize:16,color:"var(--text-white)",marginBottom:6}}>{v.title}</div>
-        <div style={{fontSize:13,color:"var(--text-gray)",lineHeight:1.7,marginBottom:12}}>{v.desc}</div>
-        <video controls playsInline preload="metadata" poster="assets/video-placeholder.jpg" style={{width:"100%",borderRadius:12,background:"#000",display:"block"}}>
-          <source src={v.src} type="video/mp4"/>
-          הדפדפן שלך לא תומך בתגית וידאו.
-        </video>
+      ].map((v,i)=><div key={i} style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:18,marginBottom:18}}>
+        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:20,color:"var(--text-white)",marginBottom:8}}>{v.title}</div>
+        <div style={{fontSize:18,color:"#c8ccd4",lineHeight:1.6,marginBottom:14}}>{v.desc}</div>
+        <div style={{position:"relative",width:"100%",aspectRatio:"4/5",borderRadius:16,overflow:"hidden",background:"#000"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();e.currentTarget.querySelector(".play-ov")&&(e.currentTarget.querySelector(".play-ov").style.opacity="0")}}}>
+          <video controls playsInline preload="metadata" poster="assets/video-placeholder.jpg" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",borderRadius:16}}>
+            <source src={v.src} type="video/mp4"/>
+            הדפדפן שלך לא תומך בתגית וידאו.
+          </video>
+          <div className="play-ov" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:72,height:72,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+            <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"14px 0 14px 24px",borderColor:"transparent transparent transparent #fff",marginLeft:4}}/>
+          </div>
+        </div>
       </div>)}
     </div>
 
