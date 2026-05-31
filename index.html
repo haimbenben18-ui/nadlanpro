@@ -591,6 +591,33 @@ function openWA(phone,msg){
 function addCal(title,date,time){const dt=date||(new Date().toISOString().split("T")[0]);const t=time||"09:00";const s=dt.replace(/-/g,"")+"T"+t.replace(":","")+"00";const h=String(Math.min(23,parseInt(t.split(":")[0])+1)).padStart(2,"0");const e=dt.replace(/-/g,"")+"T"+h+t.split(":")[1]+"00";window.open("https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+s+"/"+e,"_blank")}
 function fmtP(p){if(!p||isNaN(Number(p)))return"—";return Number(p).toLocaleString("he-IL")+"₪"}
 function daysTo(str){if(!str)return null;const p=str.split("/");if(p.length<3)return null;const y=p[2].length===2?"20"+p[2]:p[2];return Math.ceil((new Date(parseInt(y),parseInt(p[1])-1,parseInt(p[0]))-new Date())/86400000)}
+
+// ━━━ REST-DAY CHECK & 3-TOUCH SCHEDULING ━━━━━━━━━━━━━━━━
+function isRestDay(date){
+  const d=new Date(date);
+  if(d.getDay()===6)return true; // Saturday
+  // Major Israeli holidays (approximate fixed dates — Gregorian anchors for 2025-2027)
+  const m=d.getMonth()+1;const day=d.getDate();
+  const holidays=[[9,22],[9,23],[9,24],[10,1],[10,2],[10,6],[10,7],[10,13],[10,14],[10,20],[10,21],[4,12],[4,13],[4,18],[4,19],[6,1],[6,2]];
+  return holidays.some(h=>h[0]===m&&h[1]===day);
+}
+function nextWorkday(from,addDays){
+  const d=new Date(from);
+  let added=0;
+  while(added<addDays){
+    d.setDate(d.getDate()+1);
+    if(!isRestDay(d))added++;
+  }
+  return d;
+}
+function getSequenceDates(){
+  let t1=new Date();
+  while(isRestDay(t1))t1.setDate(t1.getDate()+1);
+  const t2=nextWorkday(t1,1);
+  const t3=nextWorkday(t1,4);
+  return{t1,t2,t3};
+}
+function fmtDate(d){return d.toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"2-digit"})}
 function nowStr(){const d=new Date();return d.toLocaleDateString("he")+" "+d.toLocaleTimeString("he",{hour:"2-digit",minute:"2-digit"})}
 
 function ImgUp({images=[],onAdd,onRemove}){const fr=useRef();const[prev,setPrev]=useState(null);async function handle(files){const arr=Array.from(files);if(arr.length===0)return;toast("⏳ מעלה "+arr.length+" קבצים...");const newMedia=[];for(const f of arr){try{const isVideo=f.type.startsWith('video/');if(isVideo&&f.size>40*1024*1024){toast("⚠️ וידאו גדול מדי (מקס 40MB): "+f.name);continue}const fd=new FormData();fd.append('file',f);fd.append('upload_preset','nadlanpro');const resourceType=isVideo?'video':'image';const r=await fetch('https://api.cloudinary.com/v1_1/dopvqfgzw/'+resourceType+'/upload',{method:'POST',body:fd});const d=await r.json();if(d.secure_url){newMedia.push({id:Date.now()+Math.random(),url:d.secure_url,type:isVideo?'video':'image'})}else{console.error(d);toast("❌ שגיאה ב-"+f.name)}}catch(e){console.error(e);toast("❌ "+e.message)}}if(newMedia.length>0){onAdd(newMedia);toast("✅ "+newMedia.length+" קבצים הועלו")}else{toast("❌ שגיאה בהעלאה")}}return <div>{prev&&<div onClick={()=>setPrev(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}>{prev.type==='video'?<video src={prev.url} controls style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/>:<img src={prev.url||prev} style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:16}}/>}</div>}<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{images.map(img=><div key={img.id} style={{position:"relative"}}>{img.type==='video'?<video src={img.url} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)"}} onClick={()=>setPrev(img)}/>:<img src={img.url} onClick={()=>setPrev(img)} style={{width:92,height:74,objectFit:"cover",borderRadius:12,border:"2px solid rgba(201,168,76,0.25)",cursor:"pointer"}}/>}{onRemove&&<button onClick={()=>onRemove(img.id)} style={{position:"absolute",top:-8,left:-8,width:24,height:24,borderRadius:"50%",background:RE,border:"2px solid #07060d",color:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>×</button>}</div>)}{onAdd&&<button onClick={()=>fr.current.click()} style={{width:92,height:74,borderRadius:12,border:"2px dashed rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.04)",color:G,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,fontSize:12,fontWeight:700}}><span style={{fontSize:26}}>📷</span>הוסף</button>}</div>{onAdd&&<input ref={fr} type="file" accept="image/*,video/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>}</div>}
@@ -1008,6 +1035,35 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     if(type==="s"){const ns=sellers.map(s=>s.id===id?{...s,logs:[...(s.logs||[]),{text,time:nowStr()}]}:s);setSellers(ns);sv("sellers",ns);if(sel&&sel.id===id)setSel(ns.find(s=>s.id===id))}
     else{const nb=buyers.map(b=>b.id===id?{...b,logs:[...(b.logs||[]),{text,time:nowStr()}]}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
   }
+
+  // ━━━ 3-TOUCH MARKETING SEQUENCE ━━━━━━━━━━━━━━━━━━━━━━━━
+  const[seqModal,setSeqModal]=useState(null); // {seller, dates, t1msg, t1link}
+  function startMarketingSequence(s){
+    if(!s.phone){toast("⚠️ אין מספר טלפון למוכר");return}
+    const dates=getSequenceDates();
+    const street=(s.address||"הנכס שלך").trim();
+    const name=(s.name||"").trim();
+    const t1msg="שלום"+(name?" "+name:"")+", שמחתי לדבר איתך על הנכס ב"+street+". הכנתי עבורך פרופיל מקצועי ותוכנית שיווק: "+LANDING_URL;
+    const phone972=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
+    const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
+    setSeqModal({seller:s,dates,t1msg,t1link});
+  }
+  function confirmSequence(){
+    if(!seqModal)return;
+    const{seller:s,dates}=seqModal;
+    // Touch 1: open wa.me now
+    window.open(seqModal.t1link,"_blank");
+    addLog(s.id,"🚀 Touch 1 — דף נחיתה נשלח","s");
+    // Touch 2: schedule task
+    const t2task={id:Date.now()+1,text:"📞 Touch 2 — שיחה עם "+s.name+" ("+s.address+")",done:false,date:dates.t2.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
+    // Touch 3: schedule task
+    const t3task={id:Date.now()+2,text:"📸 Touch 3 — שלח תמונות/סרטון ל"+s.name+" ("+s.address+")",done:false,date:dates.t3.toISOString().slice(0,10),phone:s.phone||"",type:"seller",created:nowStr()};
+    const nt=[...(tasks||[]),t2task,t3task];setTasks(nt);sv("tasks",nt);
+    updS(s.id,"actions",[...(s.actions||[]),"🚀 רצף שיווקי"]);
+    toast("🚀 רצף שיווקי הופעל — 3 נגיעות");
+    setSeqModal(null);
+  }
+
   function addTaskFromModal(task){
     const nt=[...(tasks||[]),task];
     setTasks(nt);
@@ -1264,7 +1320,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=><div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div></div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="🚀" c={G} onClick={()=>startMarketingSequence(s)}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>)}</div>}
@@ -1277,6 +1333,31 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {b.phone&&<InlineMsgBox phone={b.phone} name={b.name} onSent={text=>{const pn=b.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(b.id,"📤 הודעה ישירה: "+text.substring(0,40),"b")}}/>}
     </div>)}</div>}
     {taskModal&&<AddTaskModal client={taskModal} onClose={()=>setTaskModal(null)} onAdd={addTaskFromModal}/>}
+
+    {seqModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setSeqModal(null)}>
+      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:360,width:"100%"}}>
+        <div style={{fontWeight:800,fontSize:16,color:G,marginBottom:14}}>🚀 רצף שיווקי — {seqModal.seller.name}</div>
+        <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:16,lineHeight:1.7}}>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
+            <span style={{background:GR+"22",color:GR,borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T1 היום</span>
+            <span>{fmtDate(seqModal.dates.t1)} — שלח דף נחיתה בווטסאפ</span>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
+            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 מחר</span>
+            <span>{fmtDate(seqModal.dates.t2)} — משימה: שיחת מעקב</span>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 +4</span>
+            <span>{fmtDate(seqModal.dates.t3)} — משימה: שלח תמונות/סרטון</span>
+          </div>
+        </div>
+        <div style={{background:"var(--midnight-light)",borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:"var(--text-gray)",lineHeight:1.6,direction:"rtl",wordBreak:"break-word"}}>{seqModal.t1msg}</div>
+        <div style={{display:"flex",gap:10}}>
+          <Btn full ch="🚀 הפעל רצף" c={G} onClick={confirmSequence}/>
+          <Btn ghost ch="ביטול" onClick={()=>setSeqModal(null)}/>
+        </div>
+      </div>
+    </div>}
   </div>
 }
 
