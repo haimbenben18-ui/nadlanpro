@@ -3582,9 +3582,9 @@ function LandingEditor({landingConfig,setLandingConfig}){
 // ━━━ AUTH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const AUTH_PASS="Haimefrat054";
 function useAuth(){
-  const[authed,setAuthed]=useState(()=>sessionStorage.getItem("np7_auth")==="1");
-  function login(pw){if(pw===AUTH_PASS){sessionStorage.setItem("np7_auth","1");setAuthed(true);return true}return false}
-  function logout(){sessionStorage.removeItem("np7_auth");setAuthed(false)}
+  const[authed,setAuthed]=useState(()=>localStorage.getItem("np7_auth")==="1");
+  function login(pw){if(pw===AUTH_PASS){localStorage.setItem("np7_auth","1");setAuthed(true);return true}return false}
+  function logout(){localStorage.removeItem("np7_auth");setAuthed(false)}
   return{authed,login,logout}
 }
 
@@ -3596,7 +3596,7 @@ function PublicLanding({onLogin}){
   function tryLogin(){if(onLogin(pw)){setShowLogin(false)}else{setErr(true);setTimeout(()=>setErr(false),1500)}}
   return <div style={{padding:"0 16px 120px",maxWidth:600,margin:"0 auto"}} className="fade">
     <div style={{textAlign:"center",padding:"36px 0 20px"}}>
-      <div className="remax-branding" style={{marginBottom:16,display:"inline-flex"}}><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo" style={{height:48}}/></div>
+      <div className="remax-branding" style={{marginBottom:16,display:"inline-flex"}}><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" style={{height:45,objectFit:"contain"}}/></div>
       <h1 style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:26,fontWeight:900,color:"var(--gold)",lineHeight:1.35,marginBottom:14}}>{LANDING_DEFAULT_TITLE}</h1>
       <p style={{color:"var(--text-gray)",fontSize:15,lineHeight:1.8,maxWidth:480,margin:"0 auto 24px",whiteSpace:"pre-line"}}>{LANDING_DEFAULT_SUBTITLE}</p>
     </div>
@@ -3610,12 +3610,13 @@ function PublicLanding({onLogin}){
       <div style={{fontSize:12,opacity:0.4,marginTop:4}}>בקרוב</div>
     </div>
     <a href={"https://wa.me/972544740691?text="+encodeURIComponent(LANDING_DEFAULT_CTA)} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"16px 24px",borderRadius:14,fontWeight:700,fontSize:16,textDecoration:"none",boxShadow:"0 6px 24px rgba(195,166,82,0.3)",marginBottom:20}}>💬 {LANDING_DEFAULT_CTA}</a>
+    <div style={{textAlign:"center",marginBottom:20}}><img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/200px-REMAX_Balloon.svg.png" alt="RE/MAX Balloon" style={{height:70,objectFit:"contain",opacity:0.85}}/></div>
     <div style={{textAlign:"center",color:"var(--text-dim)",fontSize:12,marginBottom:28}}>RE/MAX Plus · חיים בן סימון · באר שבע · 054-474-0691</div>
 
     <div style={{textAlign:"center"}}><button onClick={()=>setShowLogin(!showLogin)} style={{background:"transparent",border:"none",color:"var(--text-dim)",fontSize:18,cursor:"pointer",opacity:0.4,padding:8}} title="כניסת מנהל">🔒</button></div>
     {showLogin&&<div className="fade" style={{maxWidth:320,margin:"16px auto 0",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:20}}>
       <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:10,textAlign:"center"}}>כניסת מנהל</div>
-      <input type="password" placeholder="סיסמה" value={pw} onChange={e=>{setPw(e.target.value);setErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(err?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
+      <input type="password" autoComplete="current-password" placeholder="סיסמה" value={pw} onChange={e=>{setPw(e.target.value);setErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(err?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
       <button onClick={tryLogin} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"10px 0",color:"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{err?"❌ סיסמה שגויה":"כניסה"}</button>
     </div>}
   </div>
@@ -3758,14 +3759,12 @@ function App(){
 
   // ── PUBLIC: show landing page when not authenticated ──
   if(!authed){return <div style={{background:"var(--midnight)",minHeight:"100vh"}}>
-    <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div className="remax-branding"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/></div>
-          <div>
-            <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
-            <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX Plus · חיים בן סימון · באר שבע</div>
-          </div>
+    <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border-gold)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
+      <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:10}}>
+        <div className="remax-branding"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" style={{height:45,objectFit:"contain"}}/></div>
+        <div>
+          <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
+          <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX Plus · חיים בן סימון · באר שבע</div>
         </div>
       </div>
     </div>
@@ -3777,16 +3776,11 @@ function App(){
     <div style={{position:"relative",zIndex:1}}>
       <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div className="remax-branding"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/></div>
-            <div>
-              <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
-              <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX Plus · חיים בן סימון · באר שבע</div>
-            </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
+            <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>CRM · חיים בן סימון</div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
-          </div>
+          <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
         </div>
       </div>
 
@@ -3811,13 +3805,12 @@ function App(){
       {loginModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{setLoginModal(false);setLoginPw("");setLoginErr(false)}}>
         <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:24,width:280}}>
           <div style={{fontSize:14,fontWeight:700,color:"var(--gold)",marginBottom:12,textAlign:"center"}}>🔐 כניסת מנהל</div>
-          <input type="password" placeholder="סיסמה" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryFooterLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(loginErr?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
+          <input type="password" autoComplete="current-password" placeholder="סיסמה" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryFooterLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(loginErr?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
           <button onClick={tryFooterLogin} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"10px 0",color:"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{loginErr?"❌ סיסמה שגויה":"כניסה"}</button>
         </div>
       </div>}
 
       <nav style={{position:"fixed",bottom:14,left:18,right:18,height:54,background:"rgba(15,17,25,0.82)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:27,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:50,padding:"0 8px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
-        <div className="remax-branding" style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}><img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/40px-REMAX_Balloon.svg.png" alt="RE/MAX" className="brand-logo" style={{opacity:0.8}}/></div>
         {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} className="dock-btn" style={{flex:"0 0 auto",minWidth:46,background:active?"var(--gold-soft)":"transparent",border:"none",cursor:"pointer",padding:"6px 14px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",color:active?G:"var(--text-dim)"}}>
           <span style={{fontSize:20,lineHeight:1}}>{t.i}</span>
           <span style={{fontSize:"0.6rem",marginTop:2,fontWeight:500,fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
