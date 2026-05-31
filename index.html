@@ -3593,7 +3593,8 @@ function PublicLanding({onLogin}){
   const[showLogin,setShowLogin]=useState(false);
   const[pw,setPw]=useState("");
   const[err,setErr]=useState(false);
-  function tryLogin(){if(onLogin(pw)){setShowLogin(false)}else{setErr(true);setTimeout(()=>setErr(false),1500)}}
+  const[showPw,setShowPw]=useState(false);
+  function tryLogin(e){if(e)e.preventDefault();if(onLogin(pw)){setShowLogin(false)}else{setErr(true);setTimeout(()=>setErr(false),1500)}}
   return <div style={{padding:"0 16px 120px",maxWidth:600,margin:"0 auto"}} className="fade">
     <div style={{textAlign:"center",padding:"36px 0 20px"}}>
       <div className="remax-branding" style={{marginBottom:16,display:"inline-flex"}}><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" style={{height:45,objectFit:"contain"}}/></div>
@@ -3614,11 +3615,13 @@ function PublicLanding({onLogin}){
     <div style={{textAlign:"center",color:"var(--text-dim)",fontSize:12,marginBottom:28}}>RE/MAX Plus · חיים בן סימון · באר שבע · 054-474-0691</div>
 
     <div style={{textAlign:"center"}}><button onClick={()=>setShowLogin(!showLogin)} style={{background:"transparent",border:"none",color:"var(--text-dim)",fontSize:18,cursor:"pointer",opacity:0.4,padding:8}} title="כניסת מנהל">🔒</button></div>
-    {showLogin&&<div className="fade" style={{maxWidth:320,margin:"16px auto 0",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:20}}>
-      <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:10,textAlign:"center"}}>כניסת מנהל</div>
-      <input type="password" autoComplete="current-password" placeholder="סיסמה" value={pw} onChange={e=>{setPw(e.target.value);setErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(err?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
-      <button onClick={tryLogin} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"10px 0",color:"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{err?"❌ סיסמה שגויה":"כניסה"}</button>
-    </div>}
+    {showLogin&&<form onSubmit={tryLogin} autoComplete="on" className="fade" style={{maxWidth:280,margin:"16px auto 0",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:20}}>
+      <div style={{position:"relative"}}>
+        <input type={showPw?"text":"password"} name="password" autoComplete="current-password" placeholder="סיסמה" value={pw} onChange={e=>{setPw(e.target.value);setErr(false)}} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(err?"var(--red)":"var(--border-gold)"),borderRadius:10,padding:"12px 44px 12px 14px",color:"var(--text-white)",fontSize:15,marginBottom:12,direction:"ltr"}}/>
+        <button type="button" onClick={()=>setShowPw(!showPw)} style={{position:"absolute",top:10,right:10,background:"none",border:"none",color:"var(--text-dim)",fontSize:18,cursor:"pointer",padding:2,lineHeight:1}}>{showPw?"🙈":"👁️"}</button>
+      </div>
+      <button type="submit" style={{width:"100%",background:err?"var(--red)":"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"11px 0",color:err?"#fff":"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",transition:"background .2s ease"}}>{err?"סיסמה שגויה":"כניסה"}</button>
+    </form>}
   </div>
 }
 
@@ -3629,7 +3632,8 @@ function App(){
   const[loginModal,setLoginModal]=useState(false);
   const[loginPw,setLoginPw]=useState("");
   const[loginErr,setLoginErr]=useState(false);
-  function tryFooterLogin(){if(login(loginPw)){setLoginModal(false);setLoginPw("");setLoginErr(false);toast("✅ מחובר")}else{setLoginErr(true);setTimeout(()=>setLoginErr(false),1500)}}
+  const[loginShowPw,setLoginShowPw]=useState(false);
+  function tryFooterLogin(e){if(e)e.preventDefault();if(login(loginPw)){setLoginModal(false);setLoginPw("");setLoginErr(false);setLoginShowPw(false);toast("✅ מחובר")}else{setLoginErr(true);setTimeout(()=>setLoginErr(false),1500)}}
   const PRIVATE_TABS=["home","recruit","daily","crm","broker","agents","autoagents","report","archive","settings"];
   // Guard: if not authed and trying to access private tab, reset to landing
   useEffect(()=>{if(!authed&&PRIVATE_TABS.includes(tab)){setTab("landing")}},[authed,tab]);
@@ -3802,12 +3806,14 @@ function App(){
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
-      {loginModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{setLoginModal(false);setLoginPw("");setLoginErr(false)}}>
-        <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:24,width:280}}>
-          <div style={{fontSize:14,fontWeight:700,color:"var(--gold)",marginBottom:12,textAlign:"center"}}>🔐 כניסת מנהל</div>
-          <input type="password" autoComplete="current-password" placeholder="סיסמה" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginErr(false)}} onKeyDown={e=>e.key==="Enter"&&tryFooterLogin()} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(loginErr?"var(--red)":"var(--border)"),borderRadius:10,padding:"10px 14px",color:"var(--text-white)",fontSize:14,marginBottom:10,textAlign:"center",direction:"ltr"}}/>
-          <button onClick={tryFooterLogin} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"10px 0",color:"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{loginErr?"❌ סיסמה שגויה":"כניסה"}</button>
-        </div>
+      {loginModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{setLoginModal(false);setLoginPw("");setLoginErr(false);setLoginShowPw(false)}}>
+        <form onSubmit={tryFooterLogin} autoComplete="on" onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:14,padding:20,width:260}}>
+          <div style={{position:"relative"}}>
+            <input type={loginShowPw?"text":"password"} name="password" autoComplete="current-password" placeholder="סיסמה" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginErr(false)}} style={{width:"100%",background:"var(--midnight-light)",border:"1px solid "+(loginErr?"var(--red)":"var(--border-gold)"),borderRadius:10,padding:"12px 44px 12px 14px",color:"var(--text-white)",fontSize:15,marginBottom:12,direction:"ltr"}}/>
+            <button type="button" onClick={()=>setLoginShowPw(!loginShowPw)} style={{position:"absolute",top:10,right:10,background:"none",border:"none",color:"var(--text-dim)",fontSize:18,cursor:"pointer",padding:2,lineHeight:1}}>{loginShowPw?"🙈":"👁️"}</button>
+          </div>
+          <button type="submit" style={{width:"100%",background:loginErr?"var(--red)":"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",borderRadius:10,padding:"11px 0",color:loginErr?"#fff":"var(--midnight)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",transition:"background .2s ease"}}>{loginErr?"סיסמה שגויה":"כניסה"}</button>
+        </form>
       </div>}
 
       <nav style={{position:"fixed",bottom:14,left:18,right:18,height:54,background:"rgba(15,17,25,0.82)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:27,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:50,padding:"0 8px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
