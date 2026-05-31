@@ -780,6 +780,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
   const[msg,setMsg]=useState("");
   const[viewP,setViewP]=useState(null);
   const[mode,setMode]=useState("send"); // send | list | landing
+  const[seqModal,setSeqModal]=useState(null);
   async function sendLandingPage(prospect){
     if(!prospect.phone){toast("⚠️ אין מספר טלפון");return}
     const name=(prospect.name||"").trim();
@@ -787,6 +788,24 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     const m=greet+", כאן חיים בן סימון מרימקס. בהמשך לשיחתנו, הכנתי עבורכם דף מקצועי עם האסטרטגיה השיווקית שלי: "+LANDING_URL;
     const ok=await sendDirectMessage(prospect.phone,m);
     if(ok)toast("✅ דף נחיתה נשלח");
+  }
+  function startRecruitSequence(p){
+    if(!p.phone){toast("⚠️ אין מספר טלפון");return}
+    const dates=getSequenceDates();
+    const name=(p.name||"").trim();
+    const t1msg="היי"+(name?" "+name:"")+", היה לי נעים לדבר איתך! 😊 כפי שהבטחתי, אני שולח לך את הקישור לכרטיס הביקור הדיגיטלי שלי. בפנים תמצא את אסטרטגיית השיווק המלאה שלי למכירת נכסים, יחד עם כמה טיפים חשובים שצילמתי עבורך כדי לוודא שתעבור את התהליך הזה בצורה הכי בטוחה ורווחית. מוזמן להציץ כאן: "+LANDING_URL+". אני מאמין ששקיפות וידע הם המפתח לעסקה טובה. נדבר שוב מחר אחרי שתראה את הסרטונים? המשך יום מצוין, חיים בן סימון | RE/MAX Plus";
+    const phone972=p.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
+    const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
+    setSeqModal({prospect:p,dates,t1msg,t1link});
+  }
+  function confirmRecruitSequence(){
+    if(!seqModal)return;
+    const{prospect:p,dates}=seqModal;
+    window.open(seqModal.t1link,"_blank");
+    addPLog(p.id,"🚀 Touch 1 — רצף שיווקי הופעל");
+    updProspect(p.id,"sentMaterial",true);
+    toast("🚀 רצף שיווקי הופעל — Touch 1 נשלח");
+    setSeqModal(null);
   }
 
   const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX Plus — 15 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX Plus","שלום 👋\nחיים בן סימון מרימקס פלוס.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX Plus","שלום 👋\nחיים בן סימון מרימקס פלוס.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX Plus | 15 שנות ניסיון"];
@@ -826,6 +845,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
         <Btn sm ch="💬 ווטסאפ" c={GR} onClick={()=>openWA(viewP.phone)}/>
         {viewP.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(viewP.phone||'')}/>}
         <Btn sm ch="🌐 שלח דף נחיתה" c={BL} ghost onClick={()=>{if(confirm("לשלוח דף נחיתה ל-"+(viewP.phone||"")+"?"))sendLandingPage(viewP)}}/>
+        {viewP.phone&&<Btn sm ch="🚀 רצף שיווקי" c={OR} onClick={()=>startRecruitSequence(viewP)}/>}
       </div>
       <Lbl t="תיעוד" icon="📝"/>
       {viewP.logs&&viewP.logs.map((l,i)=><div key={i} style={{padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:13}}><span style={{color:"#555"}}>{l.time}</span> — <span style={{color:"#bbb"}}>{l.text}</span></div>)}
@@ -873,9 +893,35 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
           <Btn sm ch="💬" c={GR} onClick={()=>openWA(p.phone)}/>
           {p.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(p.phone||'')}/>}
           {p.phone&&<Btn sm ch="🌐 דף נחיתה" c={BL} ghost onClick={()=>{if(confirm("לשלוח דף נחיתה ל-"+p.phone+"?"))sendLandingPage(p)}}/>}
+          {p.phone&&<Btn sm ch="🚀 רצף" c={OR} onClick={()=>startRecruitSequence(p)}/>}
           <Btn sm ghost c={RE} ch="מחק" onClick={()=>delProspect(p.id)}/>
         </div>
       </div>)}
+    </div>}
+
+    {seqModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setSeqModal(null)}>
+      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:22,maxWidth:380,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
+        <div style={{fontWeight:800,fontSize:16,color:G,marginBottom:14}}>🚀 רצף שיווקי — {seqModal.prospect.phone}</div>
+        <div style={{fontSize:13,color:"var(--text-gray)",marginBottom:16,lineHeight:1.7}}>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
+            <span style={{background:GR+"22",color:GR,borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T1 היום</span>
+            <span>{fmtDate(seqModal.dates.t1)} — שלח הודעה חמה בווטסאפ</span>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:10}}>
+            <span style={{background:BL+"22",color:"#5b8def",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T2 מחר</span>
+            <span>{fmtDate(seqModal.dates.t2)} — שיחת מעקב</span>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+            <span style={{background:PU+"22",color:"#a78bfa",borderRadius:8,padding:"2px 8px",fontWeight:700,fontSize:12,flexShrink:0}}>T3 +4</span>
+            <span>{fmtDate(seqModal.dates.t3)} — שלח תמונות/סרטון</span>
+          </div>
+        </div>
+        <div style={{background:"var(--midnight-light)",borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:"var(--text-gray)",lineHeight:1.6,direction:"rtl",wordBreak:"break-word"}}>{seqModal.t1msg}</div>
+        <div style={{display:"flex",gap:10}}>
+          <Btn full ch="🚀 הפעל רצף" c={G} onClick={confirmRecruitSequence}/>
+          <Btn ghost ch="ביטול" onClick={()=>setSeqModal(null)}/>
+        </div>
+      </div>
     </div>}
   </div>
 }
@@ -1050,7 +1096,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     const dates=getSequenceDates();
     const street=(s.address||"הנכס שלך").trim();
     const name=(s.name||"").trim();
-    const t1msg="שלום"+(name?" "+name:"")+", שמחתי לדבר איתך על הנכס ב"+street+". הכנתי עבורך פרופיל מקצועי ותוכנית שיווק: "+LANDING_URL;
+    const t1msg="היי"+(name?" "+name:"")+", היה לי נעים לדבר איתך! 😊 כפי שהבטחתי, אני שולח לך את הקישור לכרטיס הביקור הדיגיטלי שלי. בפנים תמצא את אסטרטגיית השיווק המלאה שלי למכירת נכסים, יחד עם כמה טיפים חשובים שצילמתי עבורך כדי לוודא שתעבור את התהליך הזה בצורה הכי בטוחה ורווחית. מוזמן להציץ כאן: "+LANDING_URL+". אני מאמין ששקיפות וידע הם המפתח לעסקה טובה. נדבר שוב מחר אחרי שתראה את הסרטונים? המשך יום מצוין, חיים בן סימון | RE/MAX Plus";
     const phone972=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
     const t1link="https://wa.me/"+phone972+"?text="+encodeURIComponent(t1msg);
     setSeqModal({seller:s,dates,t1msg,t1link});
@@ -1324,8 +1370,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     <div style={{display:"flex",gap:10,marginBottom:16}}><Pill ch="🏡 מוכרים" count={sellers.length} active={tab==="sellers"} onClick={()=>{setTab("sellers");setMode("list");setSel(null)}} c={OR}/><Pill ch="👥 קונים" count={buyers.length} active={tab==="buyers"} onClick={()=>{setTab("buyers");setMode("list");setSel(null)}} c={BL}/></div>
     <div style={{display:"flex",gap:10,marginBottom:16}}><input placeholder="🔍 חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,flex:1}}/><Btn sm ch="+ הוסף" onClick={()=>setMode("add")} c={tab==="sellers"?OR:BL}/></div>
 
-    {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=>{const tc=getTouchCount(s);return <div key={s.id} style={{...S.card,position:"relative"}}>
-      {s.phone&&<button onClick={()=>startMarketingSequence(s)} title="רצף שיווקי" style={{position:"absolute",top:12,left:12,width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,var(--gold),#a8882e)",border:"none",color:"var(--midnight)",fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 14px rgba(195,166,82,0.35)",zIndex:2,transition:"transform .15s ease"}}>🚀</button>}
+    {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=>{const tc=getTouchCount(s);return <div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div>{tc>0&&<div style={{fontSize:12,color:"var(--gold)",marginTop:4,fontWeight:600}}>🎯 נגיעות: {tc}/3</div>}</div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}{s.status&&s.status!=="חדש"&&<span style={{fontSize:11,color:"var(--gold)",fontWeight:600}}>{s.status}</span>}</div></div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/><Btn sm ch="✏️" c={G} onClick={()=>openEditSeller(s)}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
