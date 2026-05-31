@@ -602,7 +602,7 @@ async function aiCall(prompt,max=900){
     method:"POST",
     headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:max,
-      system:"אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX בבאר שבע עם 13 שנות ניסיון. ענה תמיד בעברית, בקצרה ובמקצועיות.",
+      system:"אתה עוזר אישי של חיים בן סימון, מתווך נדל\"ן RE/MAX Plus בבאר שבע עם 15 שנות ניסיון. ענה תמיד בעברית, בקצרה ובמקצועיות.",
       messages:[{role:"user",content:prompt}]})
   });
   const d=await r.json();
@@ -762,7 +762,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     if(ok)toast("✅ דף נחיתה נשלח");
   }
 
-  const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX 13 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX","שלום 👋\nחיים בן סימון מרימקס.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX","שלום 👋\nחיים בן סימון מרימקס.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX | 13 שנות ניסיון"];
+  const templates=["שלום 👋\nחיים בן סימון, מתווך RE/MAX Plus — 15 שנה.\nראיתי את הנכס שלך ויש לי 2 קונים רציניים עם הון עצמי מוכן שמחפשים בדיוק באזור שלך.\nאשמח לשיחה קצרה של 3 דקות — בלי התחייבות.\nמתי נוח לך? 📞\nחיים בן סימון | RE/MAX Plus","שלום 👋\nחיים בן סימון מרימקס פלוס.\nפניתי אליך כי יש לי קונה עם מזומן שמחפש נכס בדיוק כמו שלך — והוא רוצה לסגור השבוע.\nשווה שיחה של 5 דקות? אני זמין היום.\nחיים | RE/MAX Plus","שלום 👋\nחיים בן סימון מרימקס פלוס.\nבעקבות המעבר לעיר הבהד\"ים יש לי קונים מצה\"ל ומשרד הביטחון עם תקציב מוכן שמחפשים דירות בדיוק באזור שלך.\nאשמח לשיחה קצרה — בלי התחייבות.\nחיים בן סימון | RE/MAX Plus | 15 שנות ניסיון"];
 
   useEffect(()=>{setMsg(templates[selMsg])},[selMsg]);
 
@@ -1472,42 +1472,7 @@ function WeeklyReport({sellers}){
   </div>
 }
 // ━━━ TIKTOK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function Tiktok(){
-  const[script,setScript]=useState("");const[loading,setLoading]=useState(false);const[custom,setCustom]=useState("");const[selDay,setSelDay]=useState(null);const[selT,setSelT]=useState(null);
-  const plan=[{day:"ראשון",time:"10:00 + 19:00",type:"השוואה",dur:"45שנ",icon:"📊",color:BL,why:"3X שיתופים — 2 סרטונים ביום",topics:["כמה עולה 3 חד בכל שכונה?","שכונה ד vs ה","מה מקבלים ב700K?"]},{day:"שני",time:"10:00 + 20:00",type:"סיפור אישי",dur:"60שנ",icon:"🎭",color:PU,why:"סיפורים אישיים = 300K צפיות",topics:["לקוח שסירב — 3 חודשים אחר כך","הדירה שנמכרה ב+200K","סיור שלא תאמינו"]},{day:"שלישי",time:"10:00 + 19:00",type:"חינוך",dur:"45שנ",icon:"🎓",color:G,why:"תוכן חינוכי = 40% עוקבים",topics:["3 טעויות של קונה","מה לשאול מוכר","מה זה בלעדיות"]},{day:"רביעי",time:"10:00 + 20:00",type:"בהד\"ים/צבא",dur:"45שנ",icon:"🎖",color:OR,why:"נישה חמה — מעבר עיר הבהד\"ים",topics:["למה אנשי צבא קונים בבאר שבע","5 שכונות מומלצות ליד הבסיס","איך לקנות דירה עם תקציב צבאי"]},{day:"חמישי",time:"10:00 + 19:00",type:"Quick tip",dur:"30שנ",icon:"⚡",color:RE,why:"X2 engagement",topics:["שאלה שחוסכת 50K","סוד על תמחור","לפני/אחרי שיפוץ"]},{day:"שישי",time:"10:00",type:"סיכום שבועי",dur:"60שנ",icon:"📋",color:TE,why:"סיכום שבוע = שמירות",topics:["מה קרה השבוע בנדל\"ן באר שבע","3 דירות שנמכרו — מה למדנו","טיפ אחד ליום שישי"]},{day:"שבת",time:"20:00",type:"מוטיבציה",dur:"30שנ",icon:"💪",color:G,why:"שבת ערב = גלילה ארוכה",topics:["למה באר שבע ב-2026","סיפור הצלחה של לקוח","מה שמתווכים לא מספרים"]}];
-  async function gen(topic,type,dur){setLoading(true);setScript("");try{const txt=await aiCall("סקריפט טיקטוק מלא לחיים בן סימון רימקס 13 שנה.\nנושא: \""+topic+"\" | סוג: "+type+" | אורך: "+dur+"\n\n🎬 HOOK\n---\n📢 גוף\n---\n🎯 CTA\n---\n🎥 B-ROLL\n---\n#האשטגים",1400);setScript(txt)}catch(e){}setLoading(false)}
-  return <div style={{padding:S.pg}} className="fade">
-    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>🎬 טיקטוק</div>
-    {plan.map(d=>{const open=selDay&&selDay.day===d.day;return <div key={d.day} style={{marginBottom:12}}>
-      <button onClick={()=>{setSelDay(open?null:d);setSelT(null);setScript("")}} style={{width:"100%",background:open?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.02)",border:"1px solid "+(open?d.color+"44":"rgba(255,255,255,0.06)"),borderRadius:open?"16px 16px 0 0":16,padding:"18px 20px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",gap:14,alignItems:"center"}}><span style={{fontSize:28}}>{d.icon}</span><div style={{textAlign:"right"}}><div style={{display:"flex",gap:8,marginBottom:5}}><Tag c={d.color} ch={d.day}/><Tag c="#555" ch={d.time}/></div><div style={{color:"#777",fontSize:13}}>{d.type}</div></div></div><span style={{color:open?d.color:"#333",fontSize:20}}>{open?"▲":"▼"}</span></button>
-      {open&&<div style={{border:"1px solid "+d.color+"1a",borderTop:"none",borderRadius:"0 0 16px 16px",padding:18,background:"rgba(0,0,0,0.18)"}}>
-        {d.topics.map((t,i)=>{const isSel=selT===t;return <div key={i} style={{...S.card,border:isSel?"1px solid "+d.color+"44":"1px solid rgba(255,255,255,0.06)",marginBottom:10}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center"}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:15,flex:1}}>{t}</div><Btn sm ch="סקריפט" c={d.color} onClick={()=>{setSelT(t);gen(t,d.type,d.dur)}}/></div>
-          {isSel&&<div style={{marginTop:14}}>
-            {loading&&<div style={{textAlign:"center",padding:20}}><div className="spinner"/></div>}
-            {script&&!loading&&<div><div style={{background:"rgba(255,255,255,0.03)",borderRadius:14,padding:18,marginBottom:14,color:"#d0c8e8",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{script}</div><div style={{display:"flex",gap:10}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(script);toast("📋!")}} icon="📋" style={{flex:1}}/><Btn sm ghost ch="🔄" onClick={()=>gen(t,d.type,d.dur)} style={{flex:1}}/></div></div>}
-          </div>}
-        </div>})}
-      </div>}
-    </div>})}
-    <div style={{...S.card,marginTop:8}}><Lbl t="נושא חופשי" icon="✏️"/><input placeholder="נושא..." value={custom} onChange={e=>setCustom(e.target.value)} style={{...S.inp,marginBottom:12}}/><Btn full ch={loading?"מכין...":"צור סקריפט"} onClick={()=>{if(custom.trim()){setSelT("c");gen(custom,"חופשי","45-60שנ")}}} dis={!custom.trim()||loading} icon="🎬"/></div>
-  </div>
-}
-
-// ━━━ UNIVERSITY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function University(){
-  const[topic,setTopic]=useState("");const[loading,setLoading]=useState(false);const[content,setContent]=useState(null);const[cat,setCat]=useState("market");
-  const cats=[{k:"market",l:"שוק",i:"📈",c:G},{k:"law",l:"דינים",i:"⚖️",c:BL},{k:"sales",l:"מכירות",i:"💬",c:GR},{k:"finance",l:"מימון",i:"💰",c:OR},{k:"marketing",l:"שיווק",i:"📱",c:PU},{k:"ai",l:"AI",i:"🤖",c:TE}];
-  const topics={market:["מגמות מחירים באר שבע 2026","השפעת הריבית","שכונות בצמיחה","מדד מחירים"],law:["מה זה טאבו","הסכם בלעדיות","חובות גילוי","העברת בעלות"],sales:["SPIN Selling","התמודדות עם התנגדויות","בניית rapport","מו\"מ"],finance:["מסלולי משכנתא","LTV","מענקים","מחזור"],marketing:["טיקטוק 2026","כתיבה שיווקית","מותג אישי","SEO"],ai:["Claude לנדלן","ChatGPT למודעות","Midjourney","אוטומציות"]};
-  async function learn(t){setLoading(true);setContent(null);try{const txt=await aiCall("מרצה מומחה. נושא: \""+t+"\"\n\n📚 תקציר (3 משפטים)\n---\n🔑 5 נקודות\n---\n💼 יישום מעשי\n---\n📖 מקורות\n---\n✅ שאלת חשיבה",1200);setContent({topic:t,text:txt})}catch(e){}setLoading(false)}
-  return <div style={{padding:S.pg}} className="fade">
-    <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:18}}>🎓 אוניברסיטה</div>
-    <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8,marginBottom:18}}>{cats.map(c=><Pill key={c.k} ch={c.i+" "+c.l} active={cat===c.k} onClick={()=>setCat(c.k)} c={c.c}/>)}</div>
-    {!content&&!loading&&<div>{(topics[cat]||[]).map((t,i)=><button key={i} onClick={()=>learn(t)} style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px 20px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,fontFamily:"inherit",textAlign:"right",marginBottom:8}}><span style={{fontSize:26}}>{cats.find(c=>c.k===cat)?.i}</span><span style={{color:"#d0c090",fontSize:15,flex:1,fontWeight:600}}>{t}</span><span style={{color:"#333",fontSize:18}}>←</span></button>)}<div style={{...S.card,marginTop:8}}><Lbl t="נושא שלי" icon="✏️"/><input placeholder="כתוב..." value={topic} onChange={e=>setTopic(e.target.value)} onKeyDown={e=>e.key==="Enter"&&topic.trim()&&learn(topic)} style={{...S.inp,marginBottom:12}}/><Btn full ch="למד" onClick={()=>learn(topic)} dis={!topic.trim()} icon="🎓"/></div></div>}
-    {loading&&<div style={{...S.card,textAlign:"center",padding:44}}><div className="spinner" style={{margin:"0 auto 16px"}}/><div style={{color:G,fontWeight:700}}>מכין שיעור...</div></div>}
-    {content&&!loading&&<div className="fade"><button onClick={()=>setContent(null)} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזרה</button><div style={S.cg}><div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:20,color:G,marginBottom:16}}>{content.topic}</div><div style={{color:"#d0c8e8",fontSize:15,lineHeight:2,whiteSpace:"pre-wrap"}}>{content.text}</div><div style={{display:"flex",gap:10,marginTop:20}}><Btn ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(content.text);toast("📋!")}} icon="📋" style={{flex:1}}/><Btn ghost ch="נושא חדש" onClick={()=>setContent(null)} style={{flex:1}}/></div></div></div>}
-  </div>
-}
+// (Tiktok & University removed — functionality migrated to content generation platforms)
 
 // ━━━ SETTINGS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function Settings({onClose}){
@@ -1529,7 +1494,7 @@ function Settings({onClose}){
       <div style={{color:"#777",fontSize:13,marginBottom:12}}>שלח הודעת בדיקה למספר שלך כדי לוודא שהכל עובד</div>
       <Btn full ch="שלח הודעת בדיקה ל-0544740691" c={GR} onClick={async()=>{await sendWhatsAppMedia("0544740691","✅ בדיקת מערכת NadlanPro - אם אתה רואה את זה, המערכת עובדת!",[])}} icon="🧪"/>
     </div>
-    <div style={S.card}><Lbl t="גרסה" icon="💎"/><div style={{color:"#777",fontSize:14}}>NadlanPro v7 · RE/MAX חיים בן סימון · באר שבע</div></div>
+    <div style={S.card}><Lbl t="גרסה" icon="💎"/><div style={{color:"#777",fontSize:14}}>NadlanPro v7 · RE/MAX Plus · חיים בן סימון · באר שבע</div></div>
   </div>
 }
 
@@ -3552,8 +3517,8 @@ function LandingVideoSlot({index,video,onChange,onDelete}){
   </div>;
 }
 
-const LANDING_DEFAULT_TITLE='חיים בן סימון — 15 שנה של עסקאות מוצלחות בנדל"ן באר שבע';
-const LANDING_DEFAULT_SUBTITLE='כשאתה מוכר את הנכס הכי יקר שלך, אתה צריך מישהו שמכיר כל שכונה, כל רחוב, כל מספר.\n\nאני חיים בן סימון, שותף בכיר ברשת RE/MAX עם 15 שנות ניסיון ומאות עסקאות סגורות בבאר שבע. אני לא מתווך שמפרסם מודעה ומחכה — אני בונה אסטרטגיית שיווק מותאמת אישית לכל נכס: סרטוני טיקטוק, פרסום ממוקד בפייסבוק, רשת של 200+ משקיעים פעילים, ושיתופי פעולה עם מתווכים בכל הארץ.\n\nהתוצאה? הנכסים שלי נמכרים מהר יותר ובמחיר גבוה יותר מהממוצע בשוק.\n\nפנה אלי היום — ונתחיל לעבוד על העסקה הבאה שלך.';
+const LANDING_DEFAULT_TITLE='חיים בן סימון — 15 שנה של תוצאות בנדל"ן באר שבע';
+const LANDING_DEFAULT_SUBTITLE='כשאתה שם את הנכס הכי יקר שלך על השולחן, אתה צריך מישהו שיודע בדיוק מה הוא שווה — ומי ישלם את המחיר הנכון.\n\nאני חיים בן סימון, שותף בכיר ב-RE/MAX Plus עם 15 שנות ניסיון ומאות עסקאות סגורות. אני מתמחה בדירות להשקעה, נכסים מניבים ועסקאות מורכבות בבאר שבע — עם רשת של 200+ משקיעים פעילים שמחפשים בדיוק את מה שיש לך.\n\nלא מודעה ותפילה. אסטרטגיה: שיווק ממוקד, פרסום דיגיטלי, ושיתופי פעולה עם מתווכים בכל הארץ.\n\n📈 התוצאה? נכסים שנמכרים מהר יותר ובמחיר גבוה יותר מהממוצע.\n\n→ דבר איתי היום — ונתחיל לעבוד על העסקה הבאה שלך.';
 const LANDING_DEFAULT_CTA='חיים, אני רוצה למכור את הנכס שלי במחיר הכי טוב';
 
 function LandingEditor({landingConfig,setLandingConfig}){
@@ -3588,8 +3553,16 @@ function LandingEditor({landingConfig,setLandingConfig}){
     <textarea value={title} onChange={e=>setTitle(e.target.value)} rows={2} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.6}}/>
     <Lbl t="כותרת משנית"/>
     <textarea value={subtitle} onChange={e=>setSubtitle(e.target.value)} rows={4} style={{...S.inp,resize:"none",marginBottom:12,fontSize:14,lineHeight:1.7}}/>
-    <div id="profile-photo" style={{background:"var(--surface)",border:"2px dashed var(--border)",borderRadius:14,padding:28,textAlign:"center",marginBottom:14,color:"var(--text-dim)",fontSize:13}}>📷 תמונת פרופיל מקצועית — יתווסף בקרוב</div>
-    <div id="testimonial-video" style={{background:"var(--surface)",border:"2px dashed var(--border)",borderRadius:14,padding:28,textAlign:"center",marginBottom:14,color:"var(--text-dim)",fontSize:13}}>🎥 סרטון המלצות לקוחות — יתווסף בקרוב</div>
+    <div id="profile-photo" className="landing-placeholder">
+      <div style={{fontSize:36,marginBottom:8,opacity:0.6}}>📷</div>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:4}}>תמונת פרופיל מקצועית</div>
+      <div style={{fontSize:12,opacity:0.5}}>גרור תמונה או לחץ להעלאה — בקרוב</div>
+    </div>
+    <div id="testimonial-video" className="landing-placeholder">
+      <div style={{fontSize:36,marginBottom:8,opacity:0.6}}>🎥</div>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:4}}>סרטון המלצות לקוחות</div>
+      <div style={{fontSize:12,opacity:0.5}}>סרטון ערוך יתווסף כאן — בקרוב</div>
+    </div>
     <Lbl t="טלפון" icon="📱"/>
     <input value={phone} onChange={e=>setPhone(e.target.value)} style={{...S.inp,marginBottom:12,direction:"ltr",textAlign:"left"}}/>
     <Lbl t="טקסט כפתור CTA (ווטסאפ צף)" icon="💬"/>
@@ -3741,7 +3714,7 @@ function App(){
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/>
             <div>
               <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
-              <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX · חיים בן סימון · באר שבע</div>
+              <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX Plus · חיים בן סימון · באר שבע</div>
             </div>
           </div>
           <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
