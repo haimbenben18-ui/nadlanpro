@@ -1050,8 +1050,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
       yad2:basePrompt+"\nכתוב מודעת יד2 מקצועית עם כותרת קצרה בשורה ראשונה, תיאור מפתה, פרטים טכניים, ו-CTA. עד 150 מילה.",
       facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
-      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
-      tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
+      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות."
     };
     try{const txt=await aiCall(prompts[pubPlat],500);setPubResult(txt)}catch(e){toast("⚠️ שגיאה")}setPubLoading(false)
   }
@@ -1147,7 +1146,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         <button onClick={()=>setPubOpen(!pubOpen)} style={{width:"100%",background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:16,padding:"16px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit"}}>📣 פרסום לנכס</button>
         {pubOpen&&<div style={{marginTop:12}}>
           <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
-            {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
+            {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"yad2",l:"יד 2",i:"🏡",c:G},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
           </div>
           <Btn full ch={pubLoading?"מייצר...":"צור פרסום"} onClick={()=>genPublish(sel)} dis={pubLoading} icon="🤖"/>
           {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/>{pubPlat==="whatsapp"&&<Btn sm ch="שלח" c={GR} onClick={()=>openWA("",pubResult)} icon="📱"/>}<Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updS(sel.id,"savedAds",ads);toast("💾 פרסום "+pubPlat+" נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPublish(sel)}/></div></div>}
@@ -1159,7 +1158,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         <Lbl t="פרסומים שמורים" icon="📣"/>
         {Object.entries(sel.savedAds).map(([platform,ad])=><div key={platform} style={{...S.card,border:"1px solid rgba(155,142,196,0.15)",marginBottom:8}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:platform==="tiktok"?PU:G} ch={platform}/>
+            <Tag c={platform==="whatsapp"?GR:platform==="facebook"?BL:platform==="instagram"?RE:G} ch={platform}/>
             <span style={{color:"#555",fontSize:11}}>{ad.time}</span>
           </div>
           {editAd&&editAd.platform===platform?<>
@@ -1324,8 +1323,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
     const prompts={
       whatsapp:basePrompt+"\nכתוב הודעת ווטסאפ שיווקית חמה ואישית עם אימוג'ים. עד 10 שורות. התחל ב-שלום 👋",
       facebook:basePrompt+"\nכתוב פוסט פייסבוק שיווקי מושך עם אימוג'ים ושורה לכל רעיון. 6-10 שורות.",
-      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות.",
-      tiktok:basePrompt+"\nכתוב סקריפט טיקטוק של 45 שניות: Hook מושך בתחילה, גוף עם הפרטים הכי חזקים, וקריאה לפעולה בסוף. פורמט: HOOK/גוף/CTA."
+      instagram:basePrompt+"\nכתוב קפשן אינסטגרם מושך עם אימוג'ים ו-5-8 האשטגים רלוונטיים (נדלן, באר שבע, השקעה, דירה למכירה וכו). 3-6 שורות."
     };
     try{const txt=await aiCall(prompts[pubPlat]||prompts.whatsapp,500);setPubResult(txt)}catch(e){toast("⚠️ שגיאה")}setPubLoading(false)
   }
@@ -1390,7 +1388,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
       <button onClick={()=>setPubOpen(pubOpen===true?false:true)} style={{width:"100%",background:"rgba(155,142,196,0.06)",border:"1px solid rgba(155,142,196,0.2)",borderRadius:16,padding:"16px",cursor:"pointer",color:PU,fontSize:15,fontWeight:700,fontFamily:"inherit"}}>📣 פרסום</button>
       {pubOpen===true&&<div style={{marginTop:12}}>
         <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto"}}>
-          {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE},{k:"tiktok",l:"טיקטוק",i:"🎬",c:PU}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
+          {[{k:"whatsapp",l:"ווטסאפ",i:"💬",c:GR},{k:"facebook",l:"פייסבוק",i:"📘",c:BL},{k:"instagram",l:"אינסטגרם",i:"📸",c:RE}].map(p=><Pill key={p.k} ch={p.i+" "+p.l} active={pubPlat===p.k} onClick={()=>{setPubPlat(p.k);setPubResult(null)}} c={p.c}/>)}
         </div>
         <Btn full ch={pubLoading?"מייצר...":"צור"} onClick={()=>genPub(sel)} dis={pubLoading} icon="🤖"/>
         {pubResult&&<div style={{marginTop:12}}><textarea value={pubResult} onChange={e=>setPubResult(e.target.value)} rows={8} style={{...S.inp,resize:"none",fontSize:14,lineHeight:1.7,marginBottom:12}}/><div style={{display:"flex",gap:8}}><Btn sm ch="העתק" c={G} onClick={()=>{navigator.clipboard.writeText(pubResult);toast("📋 הועתק!")}} icon="📋"/><Btn sm ch="שמור" c={PU} onClick={()=>{const ads=sel.savedAds||{};ads[pubPlat]={text:pubResult,time:nowStr()};updProp(sel.id,"savedAds",ads);toast("💾 נשמר!")}} icon="💾"/><Btn sm ghost ch="🔄" onClick={()=>genPub(sel)}/></div></div>}
@@ -1472,7 +1470,6 @@ function WeeklyReport({sellers}){
   </div>
 }
 // ━━━ TIKTOK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// (Tiktok & University removed — functionality migrated to content generation platforms)
 
 // ━━━ SETTINGS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function Settings({onClose}){
@@ -1512,6 +1509,9 @@ function Archive({sellers,setSellers,buyers,setBuyers}){
   return <div style={{padding:S.pg}} className="fade">
     <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>📦 לקוחות עבר</div>
     <div style={{color:"var(--text-gray)",fontSize:14,marginBottom:18}}>עסקאות שהושלמו ולקוחות שהועברו לארכיון</div>
+    <div id="sold-properties-gallery" className="sold-gallery">
+      <div style={{textAlign:"center",padding:"28px 16px",color:"var(--text-dim)",fontSize:13}}>🏠 גלריית נכסים שנמכרו — תמונות יתווספו בקרוב</div>
+    </div>
     <input placeholder="🔍 חיפוש לפי שם, כתובת או טלפון..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,marginBottom:14,fontSize:"0.88rem"}}/>
     <div style={{display:"flex",gap:10,marginBottom:16}}><Pill ch="🏡 מוכרים" count={aS.length} active={tab==="sellers"} onClick={()=>setTab("sellers")} c={OR}/><Pill ch="👥 קונים" count={aB.length} active={tab==="buyers"} onClick={()=>setTab("buyers")} c={BL}/></div>
     {tab==="sellers"&&<div>{fAS.length===0&&<Empty icon="📦" text="אין מוכרים בארכיון"/>}{fAS.map(s=><div key={s.id} className="archive-card">
@@ -3517,8 +3517,8 @@ function LandingVideoSlot({index,video,onChange,onDelete}){
   </div>;
 }
 
-const LANDING_DEFAULT_TITLE='חיים בן סימון — 15 שנה של תוצאות בנדל"ן באר שבע';
-const LANDING_DEFAULT_SUBTITLE='כשאתה שם את הנכס הכי יקר שלך על השולחן, אתה צריך מישהו שיודע בדיוק מה הוא שווה — ומי ישלם את המחיר הנכון.\n\nאני חיים בן סימון, שותף בכיר ב-RE/MAX Plus עם 15 שנות ניסיון ומאות עסקאות סגורות. אני מתמחה בדירות להשקעה, נכסים מניבים ועסקאות מורכבות בבאר שבע — עם רשת של 200+ משקיעים פעילים שמחפשים בדיוק את מה שיש לך.\n\nלא מודעה ותפילה. אסטרטגיה: שיווק ממוקד, פרסום דיגיטלי, ושיתופי פעולה עם מתווכים בכל הארץ.\n\n📈 התוצאה? נכסים שנמכרים מהר יותר ובמחיר גבוה יותר מהממוצע.\n\n→ דבר איתי היום — ונתחיל לעבוד על העסקה הבאה שלך.';
+const LANDING_DEFAULT_TITLE='חיים בן סימון - המומחה שלך לנדל"ן והשקעות בבאר שבע';
+const LANDING_DEFAULT_SUBTITLE='עם מעל ל-15 שנות ניסיון ומומחיות מוכחת באזור הדרום, אני מלווה אתכם בביטחון מלא לעסקה הבאה שלכם. מקצוענות, שקיפות ותוצאות בשטח.';
 const LANDING_DEFAULT_CTA='חיים, אני רוצה למכור את הנכס שלי במחיר הכי טוב';
 
 function LandingEditor({landingConfig,setLandingConfig}){
@@ -3711,7 +3711,7 @@ function App(){
       <div style={{background:"rgba(8,9,13,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"18px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/>
+            <div className="remax-branding"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Remax_logo.svg/320px-Remax_logo.svg.png" alt="RE/MAX" className="brand-logo"/></div>
             <div>
               <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
               <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>RE/MAX Plus · חיים בן סימון · באר שבע</div>
@@ -3740,7 +3740,7 @@ function App(){
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 
       <nav style={{position:"fixed",bottom:14,left:18,right:18,height:54,background:"rgba(15,17,25,0.82)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:27,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:50,padding:"0 8px",overflowX:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
-        <img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/40px-REMAX_Balloon.svg.png" alt="RE/MAX" className="brand-logo" style={{opacity:0.5,marginInlineEnd:4,flexShrink:0}}/>
+        <div className="remax-branding" style={{marginInlineEnd:4,flexShrink:0}}><img src="https://upload.wikimedia.org/wikipedia/he/thumb/5/59/REMAX_Balloon.svg/40px-REMAX_Balloon.svg.png" alt="RE/MAX" className="brand-logo" style={{opacity:0.7}}/></div>
         {TABS.map(t=>{const active=tab===t.k;return <button key={t.k} onClick={()=>setTab(t.k)} className="dock-btn" style={{flex:"0 0 auto",minWidth:46,background:active?"var(--gold-soft)":"transparent",border:"none",cursor:"pointer",padding:"6px 14px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",color:active?G:"var(--text-dim)"}}>
           <span style={{fontSize:20,lineHeight:1}}>{t.i}</span>
           <span style={{fontSize:"0.6rem",marginTop:2,fontWeight:500,fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</span>
