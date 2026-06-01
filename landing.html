@@ -87,12 +87,13 @@
   .testimonial-video.playing .play-overlay{opacity:0;transform:translate(-50%,-50%) scale(1.3)}
   .testimonial-label{padding:12px 14px;text-align:center;font-weight:700;font-size:14px;color:#003366}
 
-  /* Sold Gallery */
-  .sold-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:440px;margin:0 auto}
-  .sold-item{position:relative;border-radius:14px;overflow:hidden;border:1px solid #eee8d8;box-shadow:0 4px 14px rgba(0,31,63,0.05)}
-  .sold-item img{width:100%;display:block;object-fit:cover;aspect-ratio:1/1}
+  /* Sold Auto-Scroll */
+  @keyframes sold-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .sold-track{display:flex;gap:12px;width:max-content;animation:sold-scroll 90s linear infinite}
+  .sold-track:hover{animation-play-state:paused}
+  .sold-card{flex:0 0 160px;position:relative;border-radius:12px;overflow:hidden;border:1px solid #eee8d8;box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+  .sold-card img{width:160px;height:160px;display:block;object-fit:cover}
   .sold-tag{position:absolute;bottom:6px;right:6px;color:#fff;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.4);line-height:1.3;max-width:90%}
-  .sold-hidden{display:none}
 
   /* Footer */
   .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
@@ -243,13 +244,12 @@
 </section>
 <script>document.addEventListener('DOMContentLoaded',function(){var c=document.getElementById('tCarousel');if(c)c.scrollLeft=320})</script>
 
-<!-- ─── Success Gallery — 52 Photos (Grid + Load More) ─── -->
-<section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8">
+<!-- ─── Success Gallery — 52 Photos (Auto-Scroll) ─── -->
+<section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8;overflow:hidden">
   <div class="section-title">🏆 הוכחות מהשטח: עסקאות שסגרנו לאחרונה בבאר שבע</div>
   <div style="text-align:center;font-size:13px;color:#7a7e8f;margin:-10px 0 18px">52 עסקאות · מכרו בביטחון · RE/MAX באר שבע</div>
-  <div class="sold-grid" id="soldGrid"></div>
-  <div style="text-align:center;margin-top:16px" id="loadMoreBtn">
-    <button onclick="document.querySelectorAll('.sold-hidden').forEach(function(e){e.classList.remove('sold-hidden')});document.getElementById('loadMoreBtn').style.display='none'" style="background:#fff;border:1px solid #D4AF37;border-radius:12px;padding:12px 28px;color:#003366;font-weight:800;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif">📸 טען עוד עסקאות (40 נוספות)</button>
+  <div style="overflow:hidden;padding:4px 0">
+    <div class="sold-track" id="soldTrack"></div>
   </div>
   <div style="text-align:center;margin-top:18px">
     <a class="guide-cta" href="assets/guide-selling.pdf" target="_blank" rel="noopener" download style="max-width:420px;margin:0 auto">📥 רוצה שגם הנכס שלך יופיע כאן? הורד את המדריך למכירה מוצלחת</a>
@@ -289,15 +289,16 @@
 document.addEventListener('DOMContentLoaded',function(){
   var b=['נמכר תוך 24-48 שעות!','נמכר תוך 14-30 יום!','נמכר תוך חודש וחצי / חודשיים!'];
   var c=['#dc2626','#D4AF37','#16a34a'];
-  var g=document.getElementById('soldGrid');
-  if(!g)return;
-  for(var i=1;i<=52;i++){
-    var x=i<=10?0:i<=30?1:2;
-    var d=document.createElement('div');
-    d.className='sold-item'+(i>12?' sold-hidden':'');
-    d.innerHTML='<img src="assets/sold'+i+'.jpg" loading="lazy"><div class="sold-tag" style="background:'+c[x]+'">✅ '+b[x]+'</div>';
-    g.appendChild(d);
+  var t=document.getElementById('soldTrack');
+  if(!t)return;
+  var html='';
+  for(var pass=0;pass<2;pass++){
+    for(var i=1;i<=52;i++){
+      var x=i<=10?0:i<=30?1:2;
+      html+='<div class="sold-card"><img src="assets/sold'+i+'.jpg" loading="lazy"><div class="sold-tag" style="background:'+c[x]+'">✅ '+b[x]+'</div></div>';
+    }
   }
+  t.innerHTML=html;
 });
 </script>
 </body>
