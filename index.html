@@ -3839,7 +3839,7 @@ function PublicLanding({onLogin,landingConfig}){
     {/* ── Infinite Testimonials Carousel ── */}
     {function(){
       const tRef=React.useRef(null);
-      const vids=[{label:"🗣️ לקוחה ממליצה",src:"assets/testimonial2.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video3.mp4"}];
+      const vids=[{label:"🗣️ לקוחה ממליצה",src:"assets/testimonial2.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video2.mp4"}];
       const scrollT=(dir)=>{if(!tRef.current)return;const el=tRef.current;el.scrollBy({left:dir*320,behavior:"smooth"});setTimeout(()=>{if(el.scrollLeft<=2)el.scrollLeft=el.scrollWidth-el.clientWidth-2;else if(el.scrollLeft>=el.scrollWidth-el.clientWidth-2)el.scrollLeft=2},350)};
       const allVids=[vids[vids.length-1],...vids,vids[0]];
       React.useEffect(()=>{if(tRef.current)tRef.current.scrollLeft=320},[]);
@@ -3867,9 +3867,9 @@ function PublicLanding({onLogin,landingConfig}){
 
     {/* ── Auto-Scrolling Sold Marquee — 52 photos ── */}
     {function(){
-      const badges=["נמכר תוך 24-48 שעות!","נמכר תוך 21 יום!","נמכר תוך חודש!","נמכר תוך חודש וחצי!","נמכר תוך חודשיים!"];
-      const badgeColors=["#dc2626","var(--gold)","#1a56db","#16a34a","#7c3aed"];
-      const photos=Array.from({length:52},(_,i)=>{const n=i+1;const b=n<=10?0:n<=20?1:n<=30?2:n<=41?3:4;return{src:"assets/sold"+n+".jpg",tag:badges[b],tagBg:badgeColors[b]}});
+      const badges=["נמכר תוך 24-48 שעות!","נמכר תוך 14-30 יום!","נמכר תוך חודש וחצי / חודשיים!"];
+      const badgeColors=["#dc2626","var(--gold)","#16a34a"];
+      const photos=Array.from({length:52},(_,i)=>{const n=i+1;const b=n<=10?0:n<=30?1:2;return{src:"assets/sold"+n+".jpg",tag:badges[b],tagBg:badgeColors[b]}});
       const doubled=[...photos,...photos];
       return <div style={{marginBottom:28,overflow:"hidden"}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:6}}>🏆 הוכחות מהשטח</div>
