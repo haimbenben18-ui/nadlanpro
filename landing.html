@@ -56,6 +56,20 @@
   .video-wrap .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #fff;margin-left:4px}
   .video-wrap video:not([paused]) ~ .play-overlay,.video-wrap.playing .play-overlay{opacity:0}
 
+  /* Guide Card */
+  .guide-section{background:#f5f3ee;border-top:1px solid #eee8d8}
+  .guide-card{max-width:400px;margin:0 auto;background:linear-gradient(160deg,#003366 0%,#001a33 100%);border-radius:20px;padding:28px 24px;position:relative;overflow:hidden;box-shadow:0 8px 30px rgba(0,51,102,0.25)}
+  .guide-card:before{content:"";position:absolute;top:-40%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(212,175,55,0.2),transparent 70%);pointer-events:none}
+  .guide-icon{width:64px;height:64px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:2px solid rgba(212,175,55,0.4);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px;position:relative;z-index:1}
+  .guide-heading{font-family:'Frank Ruhl Libre',serif;font-size:20px;font-weight:900;color:#fff;text-align:center;margin-bottom:16px;line-height:1.4;position:relative;z-index:1}
+  .guide-list{list-style:none;padding:0;margin:0 0 20px;position:relative;z-index:1}
+  .guide-list li{color:#d0d8e8;font-size:14px;line-height:1.7;padding:6px 0 6px 0;display:flex;gap:10px;align-items:flex-start}
+  .guide-list li:before{content:"✓";color:#D4AF37;font-weight:900;font-size:15px;flex-shrink:0;margin-top:1px}
+  .guide-cta{display:block;width:100%;background:linear-gradient(135deg,#D4AF37,#b8962e);color:#003366;text-align:center;padding:14px 20px;border-radius:12px;font-weight:800;font-size:15px;text-decoration:none;border:none;cursor:pointer;font-family:'Heebo',sans-serif;box-shadow:0 4px 18px rgba(212,175,55,0.3);transition:transform .15s ease,box-shadow .15s ease;position:relative;z-index:1}
+  .guide-cta:hover{transform:scale(1.02);box-shadow:0 6px 24px rgba(212,175,55,0.4)}
+  .guide-cta:active{transform:scale(0.98)}
+  .guide-badge{display:inline-block;background:rgba(212,175,55,0.15);color:#D4AF37;border:1px solid rgba(212,175,55,0.4);padding:3px 12px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;margin-bottom:14px;text-align:center;position:relative;z-index:1}
+
   /* Testimonials */
   .testimonials-section{background:#fff;border-top:1px solid #eee8d8}
   .testimonials-scroll{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 0 16px}
@@ -222,6 +236,23 @@
       <div class="testimonial-label">🗣️ לקוח ממליץ</div>
     </div>
 
+  </div>
+</section>
+
+<!-- ─── Property Sales Guide ─── -->
+<section class="section guide-section">
+  <div class="section-title">📘 ידע ששווה כסף</div>
+  <div class="guide-card">
+    <div class="guide-icon">📄</div>
+    <div class="guide-badge">מהדורת 2026 · חינם</div>
+    <div class="guide-heading">המדריך המלא למכירת נכס: 2026</div>
+    <ul class="guide-list">
+      <li>אסטרטגיות להכנת הבית למכירה מוצלחת.</li>
+      <li>שיטות לתמחור נכון של הנכס בשוק המקומי.</li>
+      <li>רשימת המסמכים הדרושים למניעת עיכובים בבירוקרטיה.</li>
+      <li>טיפים לניהול משא ומתן אפקטיבי.</li>
+    </ul>
+    <a class="guide-cta" href="https://wa.me/972544740691?text=%D7%94%D7%99%D7%99%20%D7%97%D7%99%D7%99%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%90%D7%AA%20%D7%94%D7%9E%D7%93%D7%A8%D7%99%D7%9A%20%D7%9C%D7%9E%D7%9B%D7%99%D7%A8%D7%AA%20%D7%A0%D7%9B%D7%A1" target="_blank" rel="noopener">📥 להורדת המדריך בחינם</a>
   </div>
 </section>
 

@@ -797,7 +797,7 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
     if(!p.phone){toast("⚠️ אין מספר טלפון");return}
     const dates=getSequenceDates();
     const name=(p.name||"").trim();
-    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
+    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. מצורף הקישור לאסטרטגיית השיווק המלאה שלי ולמדריך למכירת נכס שהכנתי עבורך — כולל סרטוני תוכן, טיפים זהב וכלים מעשיים: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
     const t2msg="היי"+(name?" "+name:"")+", מקווה שמצאת ערך בסרטונים ששלחתי. עלו לך שאלות לגבי התהליך? אני כאן לכל התייעצות מקצועית. חיים.";
     const t3msg="היי"+(name?" "+name:"")+", רציתי לשתף אותך בנכס דומה לשלך שמכרנו השבוע בשכונה. ידע ושיווק נכון עושים את ההבדל. נשתמע? חיים.";
     setSeqModal({prospect:p,dates,t1msg,t2msg,t3msg});
@@ -1121,7 +1121,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     if(!s.phone){toast("⚠️ אין מספר טלפון למוכר");return}
     const dates=getSequenceDates();
     const name=(s.name||"").trim();
-    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. בקישור מחכה לך מדריך למכירת נכס, הצצה לתהליך עבודה מלא מהשיווק ועד העסקה, וטיפים זהב לבחירת מתווך ונכס: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
+    const t1msg=(name?name+", ":"")+"שמחתי להכיר 🤝 כפי שהבטחתי, אני שולח לך את התוכנית העסקית שלי למכירת הבית שלך. מצורף הקישור לאסטרטגיית השיווק המלאה שלי ולמדריך למכירת נכס שהכנתי עבורך — כולל סרטוני תוכן, טיפים זהב וכלים מעשיים: "+LANDING_URL+". המטרה שלי היא שתגיע לתהליך הזה בביטחון מלא. נדבר מחר. חיים בן סימון | RE/MAX Plus";
     const t2msg="היי"+(name?" "+name:"")+", מקווה שמצאת ערך בסרטונים ששלחתי. עלו לך שאלות לגבי התהליך? אני כאן לכל התייעצות מקצועית. חיים.";
     const t3msg="היי"+(name?" "+name:"")+", רציתי לשתף אותך בנכס דומה לשלך שמכרנו השבוע בשכונה. ידע ושיווק נכון עושים את ההבדל. נשתמע? חיים.";
     setSeqModal({seller:s,dates,t1msg,t2msg,t3msg});
@@ -3855,6 +3855,21 @@ function PublicLanding({onLogin,landingConfig}){
           </div>
           <div style={{padding:"12px 14px",textAlign:"center",fontWeight:700,fontSize:14,color:"var(--gold)"}}>{t.label}</div>
         </div>)}
+      </div>
+    </div>
+
+    {/* ── Property Sales Guide ── */}
+    <div style={{marginBottom:28}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>📘 ידע ששווה כסף</div>
+      <div style={{maxWidth:400,margin:"0 auto",background:"linear-gradient(160deg,#0a1628,#06101f)",border:"1px solid var(--border-gold)",borderRadius:20,padding:"28px 24px",position:"relative",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.4)"}}>
+        <div style={{position:"absolute",top:"-40%",right:"-30%",width:200,height:200,background:"radial-gradient(circle,rgba(195,166,82,0.15),transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{width:64,height:64,background:"linear-gradient(135deg,rgba(195,166,82,0.2),rgba(195,166,82,0.05))",border:"2px solid rgba(195,166,82,0.4)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 16px",position:"relative",zIndex:1}}>📄</div>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:14,position:"relative",zIndex:1}}><span style={{background:"rgba(195,166,82,0.15)",color:"var(--gold)",border:"1px solid rgba(195,166,82,0.4)",padding:"3px 12px",borderRadius:20,fontSize:11,fontWeight:800,letterSpacing:"1px"}}>מהדורת 2026 · חינם</span></div>
+        <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:20,fontWeight:900,color:"#fff",textAlign:"center",marginBottom:16,lineHeight:1.4,position:"relative",zIndex:1}}>המדריך המלא למכירת נכס: 2026</div>
+        <ul style={{listStyle:"none",padding:0,margin:"0 0 20px",position:"relative",zIndex:1}}>
+          {["אסטרטגיות להכנת הבית למכירה מוצלחת.","שיטות לתמחור נכון של הנכס בשוק המקומי.","רשימת המסמכים הדרושים למניעת עיכובים בבירוקרטיה.","טיפים לניהול משא ומתן אפקטיבי."].map((item,i)=><li key={i} style={{color:"#c8ccd4",fontSize:14,lineHeight:1.7,padding:"6px 0",display:"flex",gap:10,alignItems:"flex-start"}}><span style={{color:"var(--gold)",fontWeight:900,fontSize:15,flexShrink:0,marginTop:1}}>✓</span>{item}</li>)}
+        </ul>
+        <a href={"https://wa.me/972544740691?text="+encodeURIComponent("היי חיים, אשמח לקבל את המדריך למכירת נכס")} target="_blank" rel="noopener noreferrer" style={{display:"block",width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"14px 20px",borderRadius:12,fontWeight:800,fontSize:15,textDecoration:"none",boxShadow:"0 4px 18px rgba(195,166,82,0.3)",position:"relative",zIndex:1}}>📥 להורדת המדריך בחינם</a>
       </div>
     </div>
 
