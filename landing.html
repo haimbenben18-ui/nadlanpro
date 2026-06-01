@@ -223,12 +223,10 @@
 <section class="section testimonials-section">
   <div class="section-title">⭐ הלקוחות שלנו מספרים</div>
   <div class="carousel-wrapper">
-    <button class="carousel-arrow carousel-arrow-right" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:-320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft<=2)el.scrollLeft=el.scrollWidth-el.clientWidth-2},350)">‹</button>
-    <button class="carousel-arrow carousel-arrow-left" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft>=el.scrollWidth-el.clientWidth-2)el.scrollLeft=2},350)">›</button>
-    <div class="testimonials-scroll" id="tCarousel">
-      <!-- clone of last (video2) for infinite loop -->
-      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/video2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-      <!-- 1st: Blonde woman -->
+    <button class="carousel-arrow carousel-arrow-right" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:-320,behavior:'smooth'})">‹</button>
+    <button class="carousel-arrow carousel-arrow-left" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:320,behavior:'smooth'})">›</button>
+    <div class="testimonials-scroll">
+      <!-- 1st: Blonde curly woman -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/testimonial2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוחה ממליצה</div></div>
       <!-- 2nd -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/video1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
@@ -236,12 +234,9 @@
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/testimonial1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
       <!-- 4th -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/video2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-      <!-- clone of first (testimonial2) for infinite loop -->
-      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="auto"><source src="assets/testimonial2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוחה ממליצה</div></div>
     </div>
   </div>
 </section>
-<script>document.addEventListener('DOMContentLoaded',function(){var c=document.getElementById('tCarousel');if(c)c.scrollLeft=320})</script>
 
 <!-- ─── Success Gallery — 52 Photos (Static Grid) ─── -->
 <section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8">

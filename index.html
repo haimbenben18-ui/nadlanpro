@@ -3837,13 +3837,11 @@ function PublicLanding({onLogin,landingConfig}){
       </div>)}
     </div>
 
-    {/* ── Infinite Testimonials Carousel ── */}
+    {/* ── Testimonials Carousel (Simple, No Clones) ── */}
     {function(){
       const tRef=React.useRef(null);
       const vids=[{label:"🗣️ לקוחה ממליצה",src:"assets/testimonial2.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"},{label:"🗣️ לקוח ממליץ",src:"assets/video2.mp4"}];
-      const scrollT=(dir)=>{if(!tRef.current)return;const el=tRef.current;el.scrollBy({left:dir*320,behavior:"smooth"});setTimeout(()=>{if(el.scrollLeft<=2)el.scrollLeft=el.scrollWidth-el.clientWidth-2;else if(el.scrollLeft>=el.scrollWidth-el.clientWidth-2)el.scrollLeft=2},350)};
-      const allVids=[vids[vids.length-1],...vids,vids[0]];
-      React.useEffect(()=>{if(tRef.current)tRef.current.scrollLeft=320},[]);
+      const scrollT=(dir)=>{if(tRef.current)tRef.current.scrollBy({left:dir*320,behavior:"smooth"})};
       const arrowS={position:"absolute",top:"50%",transform:"translateY(-50%)",zIndex:5,width:44,height:44,borderRadius:"50%",background:"rgba(195,166,82,0.9)",border:"none",color:"var(--midnight)",fontSize:22,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 12px rgba(0,0,0,0.3)"};
       return <div style={{marginBottom:28}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>⭐ הלקוחות שלנו מספרים</div>
@@ -3851,7 +3849,7 @@ function PublicLanding({onLogin,landingConfig}){
         <button onClick={()=>scrollT(-1)} style={{...arrowS,right:-6}}>‹</button>
         <button onClick={()=>scrollT(1)} style={{...arrowS,left:-6}}>›</button>
         <div ref={tRef} style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px",scrollbarWidth:"none"}} className="hide-scroll">
-          {allVids.map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
+          {vids.map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
             <div style={{position:"relative",width:"100%",aspectRatio:"9/16",background:"#1a1a2e",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.controls=true;vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov){ov.style.opacity="0";ov.style.transform="translate(-50%,-50%) scale(1.3)"}}}}>
               <video playsInline preload="auto" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}>
                 <source src={t.src} type="video/mp4"/>
