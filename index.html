@@ -3825,8 +3825,8 @@ function PublicLanding({onLogin,landingConfig}){
       ].map((v,i)=><div key={i} style={{maxWidth:400,margin:"0 auto 18px",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:18}}>
         <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:20,color:"var(--text-white)",marginBottom:8}}>{v.title}</div>
         <div style={{fontSize:18,color:"#c8ccd4",lineHeight:1.6,marginBottom:14}}>{v.desc}</div>
-        <div style={{position:"relative",width:"100%",aspectRatio:"1/1",borderRadius:16,overflow:"hidden",background:"#111",cursor:"pointer"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
-          <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",borderRadius:16}}>
+        <div style={{position:"relative",width:"100%",aspectRatio:"9/16",borderRadius:16,overflow:"hidden",background:"#000",cursor:"pointer"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+          <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"contain",display:"block",borderRadius:16}}>
             <source src={v.src} type="video/mp4"/>
           </video>
           <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:72,height:72,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
@@ -3841,11 +3841,12 @@ function PublicLanding({onLogin,landingConfig}){
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>⭐ הלקוחות שלנו מספרים</div>
       <div style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px"}}>
         {[
-          {label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"},
-          {label:"🗣️ לקוח ממליץ",src:"assets/testimonial2.mp4"}
-        ].map((t,i)=><div key={i} style={{flex:"0 0 280px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
-          <div style={{position:"relative",width:"100%",aspectRatio:"1/1",background:"#111",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
-            <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}>
+          {label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},
+          {label:"🗣️ לקוח ממליץ",src:"assets/video2.mp4"},
+          {label:"🗣️ לקוח ממליץ",src:"assets/video3.mp4"}
+        ].map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
+          <div style={{position:"relative",width:"100%",aspectRatio:"9/16",background:"#000",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+            <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}>
               <source src={t.src} type="video/mp4"/>
             </video>
             <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:64,height:64,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
