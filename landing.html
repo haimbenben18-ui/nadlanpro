@@ -52,9 +52,9 @@
   .video-card .vc-desc{color:#2c3e50;font-size:18px;line-height:1.6;margin-bottom:16px}
   .video-wrap{position:relative;width:100%;aspect-ratio:9/16;border-radius:16px;overflow:hidden;background:#000;cursor:pointer}
   .video-wrap video{width:100%;height:100%;object-fit:contain;display:block;border-radius:16px}
-  .video-wrap .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72px;height:72px;background:rgba(0,0,0,0.55);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-  .video-wrap .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #fff;margin-left:4px}
-  .video-wrap video:not([paused]) ~ .play-overlay,.video-wrap.playing .play-overlay{opacity:0}
+  .video-wrap .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:84px;height:84px;background:rgba(255,255,255,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 4px 20px rgba(0,0,0,0.35);z-index:2}
+  .video-wrap .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:16px 0 16px 28px;border-color:transparent transparent transparent #003366;margin-left:5px}
+  .video-wrap.playing .play-overlay{opacity:0;transform:translate(-50%,-50%) scale(1.3)}
 
   /* Guide Card */
   .guide-section{background:#f5f3ee;border-top:1px solid #eee8d8}
@@ -82,9 +82,9 @@
   .testimonial-card{flex:0 0 300px;scroll-snap-align:start;background:#f9f7f2;border:1px solid #eee8d8;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,31,63,0.05)}
   .testimonial-video{position:relative;width:100%;aspect-ratio:9/16;background:#000;cursor:pointer;overflow:hidden}
   .testimonial-video video{width:100%;height:100%;object-fit:contain;display:block}
-  .testimonial-video .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:rgba(0,0,0,0.55);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-  .testimonial-video .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #fff;margin-left:3px}
-  .testimonial-video.playing .play-overlay{opacity:0}
+  .testimonial-video .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:84px;height:84px;background:rgba(255,255,255,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 4px 20px rgba(0,0,0,0.35);z-index:2}
+  .testimonial-video .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:16px 0 16px 28px;border-color:transparent transparent transparent #003366;margin-left:5px}
+  .testimonial-video.playing .play-overlay{opacity:0;transform:translate(-50%,-50%) scale(1.3)}
   .testimonial-label{padding:12px 14px;text-align:center;font-weight:700;font-size:14px;color:#003366}
 
   /* Sold Gallery */
@@ -187,8 +187,8 @@
     <div class="video-card">
       <div class="vc-title">🎬 משיווק ועד עסקה: כך אני דואג שתקבלו את המקסימום!</div>
       <div class="vc-desc">איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.</div>
-      <div class="video-wrap" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
+      <div class="video-wrap" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+        <video playsinline preload="metadata">
           <source src="https://res.cloudinary.com/dopvqfgzw/video/upload/v1780243724/nadlanpro/videos/qqpst1z3hijhaq8slnsw.mov" type="video/mp4">
         </video>
         <div class="play-overlay"></div>
@@ -198,8 +198,8 @@
     <div class="video-card">
       <div class="vc-title">💡 מה חשוב לבדוק לפני שבוחרים מתווך נדל"ן?</div>
       <div class="vc-desc">מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה הדברים שחשוב לבדוק לפני שבוחרים.</div>
-      <div class="video-wrap" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
+      <div class="video-wrap" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+        <video playsinline preload="metadata">
           <source src="https://res.cloudinary.com/dopvqfgzw/video/upload/v1780244077/nadlanpro/videos/hpuvytqbst1ybeoyrlvt.mov" type="video/mp4">
         </video>
         <div class="play-overlay"></div>
@@ -209,8 +209,8 @@
     <div class="video-card">
       <div class="vc-title">🏠 איך אני עוזר לקונים להתאהב באזור ולסגור עסקה</div>
       <div class="vc-desc">מה עושה את ההבדל בין חיפוש נכס עצמאי לתהליך מקצועי? בסרטון הזה אני מראה איך אני עוזר לקונים למצוא את הבית המושלם.</div>
-      <div class="video-wrap" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
+      <div class="video-wrap" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+        <video playsinline preload="metadata">
           <source src="https://res.cloudinary.com/dopvqfgzw/video/upload/v1780244092/nadlanpro/videos/niuhqopcz5df8bqgoyr9.mov" type="video/mp4">
         </video>
         <div class="play-overlay"></div>
@@ -229,8 +229,8 @@
     <div class="testimonials-scroll">
 
       <div class="testimonial-card">
-        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-          <video controls playsinline preload="metadata">
+        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+          <video playsinline preload="metadata">
             <source src="assets/video1.mp4" type="video/mp4">
           </video>
           <div class="play-overlay"></div>
@@ -239,8 +239,8 @@
       </div>
 
       <div class="testimonial-card">
-        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-          <video controls playsinline preload="metadata">
+        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+          <video playsinline preload="metadata">
             <source src="assets/video2.mp4" type="video/mp4">
           </video>
           <div class="play-overlay"></div>
@@ -249,8 +249,8 @@
       </div>
 
       <div class="testimonial-card">
-        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-          <video controls playsinline preload="metadata">
+        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+          <video playsinline preload="metadata">
             <source src="assets/video3.mp4" type="video/mp4">
           </video>
           <div class="play-overlay"></div>
@@ -259,8 +259,8 @@
       </div>
 
       <div class="testimonial-card">
-        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-          <video controls playsinline preload="metadata">
+        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
+          <video playsinline preload="metadata">
             <source src="assets/testimonial1.mp4" type="video/mp4">
           </video>
           <div class="play-overlay"></div>
