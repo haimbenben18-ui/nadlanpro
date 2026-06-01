@@ -3873,9 +3873,10 @@ function PublicLanding({onLogin,landingConfig}){
 
     {/* ── Success Gallery — 52 photos (Static Grid) ── */}
     {function(){
-      const badges=["נמכר תוך 24-48 שעות!","נמכר תוך 14-30 יום!","נמכר תוך חודש וחצי / חודשיים!"];
-      const badgeColors=["#dc2626","var(--gold)","#16a34a"];
-      const photos=Array.from({length:52},(_,i)=>{const n=i+1;const b=n<=10?0:n<=30?1:2;return{src:"assets/sold"+n+".jpg",tag:badges[b],tagBg:badgeColors[b]}});
+      const t1=[3,14,29,47],t2=[1,5,8,11,16,19,22,24,27,31,33,36,38,41,43,46,49,51],t3=[2,6,9,12,17,20,23,26,30,34,37,40,44,48,50,52];
+      const lbls={1:["נמכר תוך 24 שעות!","נמכר תוך 48 שעות!","נסגר תוך יומיים!","נמכר תוך 24 שעות!"],2:["נמכר תוך 32 יום","נסגר תוך חודש","נמכר תוך 30 יום","נמכר תוך 28 יום","נסגר תוך 4 שבועות","נמכר תוך חודש"],3:["נמכר תוך 48 יום","נמכר תוך 50 יום","נסגר תוך חודש וחצי","נמכר תוך 40 יום","נמכר תוך 42 יום","נמכר תוך 45 יום"],4:["נמכר תוך 55 יום","נמכר תוך חודשיים","נסגר תוך 60 יום","נמכר תוך 58 יום","נמכר תוך 65 יום","נמכר תוך חודש ושלושה שבועות"]};
+      const clrs={1:"#dc2626",2:"var(--gold)",3:"#1a56db",4:"#16a34a"};
+      const photos=Array.from({length:52},(_,i)=>{const n=i+1;const tier=t1.includes(n)?1:t2.includes(n)?2:t3.includes(n)?3:4;const ls=lbls[tier];return{src:"assets/sold"+n+".jpg",tag:ls[(n*7+3)%ls.length],tagBg:clrs[tier]}});
       return <div style={{marginBottom:28}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:6}}>🏆 הוכחות מהשטח</div>
       <div style={{fontSize:14,color:"var(--text-gray)",textAlign:"center",marginBottom:4}}>עסקאות שסגרנו לאחרונה בבאר שבע</div>
