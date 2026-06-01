@@ -93,7 +93,8 @@
   .sold-item img{width:100%;display:block;object-fit:cover;aspect-ratio:1/1}
   .sold-item-wide{grid-column:1 / -1}
   .sold-item-wide img{aspect-ratio:2/1}
-  .sold-tag{position:absolute;bottom:8px;right:8px;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:0.02em}
+  .sold-tag{position:absolute;bottom:8px;right:8px;color:#fff;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:0.02em;max-width:85%;line-height:1.3}
+  .sold-hidden{display:none}
 
   /* Footer */
   .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
@@ -220,82 +221,38 @@
   </div>
 </section>
 
-<!-- ─── Testimonials Carousel ─── -->
+<!-- ─── Testimonials Carousel (Infinite) ─── -->
 <section class="section testimonials-section">
   <div class="section-title">⭐ הלקוחות שלנו מספרים</div>
   <div class="carousel-wrapper">
-    <button class="carousel-arrow carousel-arrow-right" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:-320,behavior:'smooth'})">‹</button>
-    <button class="carousel-arrow carousel-arrow-left" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:320,behavior:'smooth'})">›</button>
-    <div class="testimonials-scroll">
+    <button class="carousel-arrow carousel-arrow-right" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:-320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft<=2)el.scrollLeft=el.scrollWidth-el.clientWidth-2},350)">‹</button>
+    <button class="carousel-arrow carousel-arrow-left" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft>=el.scrollWidth-el.clientWidth-2)el.scrollLeft=2},350)">›</button>
+    <div class="testimonials-scroll" id="tCarousel">
 
-      <div class="testimonial-card">
-        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
-          <video playsinline preload="metadata">
-            <source src="assets/video1.mp4" type="video/mp4">
-          </video>
-          <div class="play-overlay"></div>
-        </div>
-        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-      </div>
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video3.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
 
-      <div class="testimonial-card">
-        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
-          <video playsinline preload="metadata">
-            <source src="assets/video2.mp4" type="video/mp4">
-          </video>
-          <div class="play-overlay"></div>
-        </div>
-        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-      </div>
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/testimonial1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
 
-      <div class="testimonial-card">
-        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
-          <video playsinline preload="metadata">
-            <source src="assets/video3.mp4" type="video/mp4">
-          </video>
-          <div class="play-overlay"></div>
-        </div>
-        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-      </div>
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
 
-      <div class="testimonial-card">
-        <div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()">
-          <video playsinline preload="metadata">
-            <source src="assets/testimonial1.mp4" type="video/mp4">
-          </video>
-          <div class="play-overlay"></div>
-        </div>
-        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-      </div>
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
+
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video3.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
+
+      <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/testimonial1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
 
     </div>
   </div>
 </section>
+<script>document.addEventListener('DOMContentLoaded',function(){var c=document.getElementById('tCarousel');if(c)c.scrollLeft=320})</script>
 
-<!-- ─── Just Sold Gallery ─── -->
+<!-- ─── Success Gallery — 52 Photos ─── -->
 <section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8">
   <div class="section-title">🏆 הוכחות מהשטח: עסקאות שסגרנו לאחרונה בבאר שבע</div>
-  <div class="sold-grid">
-    <div class="sold-item">
-      <img src="assets/sold1.jpg" alt="נמכר תוך 24 שעות" loading="lazy">
-      <div class="sold-tag" style="background:#dc2626">✅ נמכר תוך 24 שעות!</div>
-    </div>
-    <div class="sold-item">
-      <img src="assets/sold2.jpg" alt="רבי עקיבא נמכר" loading="lazy">
-      <div class="sold-tag" style="background:#D4AF37">✅ נמכר תוך 30 יום</div>
-    </div>
-    <div class="sold-item">
-      <img src="assets/sold3.jpg" alt="יצחק שיפר" loading="lazy">
-      <div class="sold-tag" style="background:#1a56db">✅ יצחק שיפר</div>
-    </div>
-    <div class="sold-item">
-      <img src="assets/sold4.jpg" alt="סוקולוב" loading="lazy">
-      <div class="sold-tag" style="background:#16a34a">✅ סוקולוב</div>
-    </div>
-    <div class="sold-item sold-item-wide">
-      <img src="assets/sold5.jpg" alt="סיכום חודשי" loading="lazy">
-      <div class="sold-tag" style="background:#7c3aed">✅ סיכום חודשי</div>
-    </div>
+  <div style="text-align:center;font-size:13px;color:#7a7e8f;margin:-10px 0 18px">52 עסקאות · RE/MAX באר שבע</div>
+  <div class="sold-grid" id="soldGrid"></div>
+  <div style="text-align:center;margin-top:16px" id="loadMoreWrap">
+    <button onclick="document.querySelectorAll('.sold-hidden').forEach(function(e){e.classList.remove('sold-hidden')});this.parentElement.style.display='none'" style="background:#fff;border:1px solid #D4AF37;border-radius:12px;padding:12px 28px;color:#003366;font-weight:800;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,0.06)">📸 טען עוד עסקאות (40 נוספות)</button>
   </div>
   <div style="text-align:center;margin-top:18px">
     <a class="guide-cta" href="assets/guide-selling.pdf" target="_blank" rel="noopener" download style="max-width:420px;margin:0 auto">📥 רוצה שגם הנכס שלך יופיע כאן? הורד את המדריך למכירה מוצלחת</a>
@@ -331,5 +288,19 @@
   <span>חיים, בוא נבנה תוכנית שיווק לדירה שלי</span>
 </a>
 
+<script>
+(function(){
+  var badges=["נמכר תוך פחות מ-48 שעות!","נמכר תוך 14-21 יום!","נמכר תוך חודש וחצי במחיר הוגן!"];
+  var colors=["#dc2626","#D4AF37","#16a34a"];
+  var grid=document.getElementById("soldGrid");
+  for(var i=1;i<=52;i++){
+    var b=i<=10?0:i<=30?1:2;
+    var d=document.createElement("div");
+    d.className="sold-item"+(i>12?" sold-hidden":"");
+    d.innerHTML='<img src="assets/sold'+i+'.jpg" alt="'+badges[b]+'" loading="lazy"><div class="sold-tag" style="background:'+colors[b]+'">✅ '+badges[b]+'</div>';
+    grid.appendChild(d);
+  }
+})();
+</script>
 </body>
 </html>
