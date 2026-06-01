@@ -231,29 +231,30 @@
     <button class="carousel-arrow carousel-arrow-right" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:-320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft<=2)el.scrollLeft=el.scrollWidth-el.clientWidth-2},350)">‹</button>
     <button class="carousel-arrow carousel-arrow-left" onclick="var el=this.parentElement.querySelector('.testimonials-scroll');el.scrollBy({left:320,behavior:'smooth'});setTimeout(function(){if(el.scrollLeft>=el.scrollWidth-el.clientWidth-2)el.scrollLeft=2},350)">›</button>
     <div class="testimonials-scroll" id="tCarousel">
-
+      <!-- clone of last (video2) for infinite loop -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-
+      <!-- 1st: Blonde woman -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/testimonial2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוחה ממליצה</div></div>
-
+      <!-- 2nd -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-
+      <!-- 3rd: Young man -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/testimonial1.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-
+      <!-- 4th -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/video2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוח ממליץ</div></div>
-
+      <!-- clone of first (testimonial2) for infinite loop -->
       <div class="testimonial-card"><div class="testimonial-video" onclick="var v=this.querySelector('video');this.classList.add('playing');v.controls=true;v.play()"><video playsinline preload="metadata"><source src="assets/testimonial2.mp4" type="video/mp4"></video><div class="play-overlay"></div></div><div class="testimonial-label">🗣️ לקוחה ממליצה</div></div>
-
     </div>
   </div>
 </section>
 <script>document.addEventListener('DOMContentLoaded',function(){var c=document.getElementById('tCarousel');if(c)c.scrollLeft=320})</script>
 
-<!-- ─── Auto-Scrolling Sold Marquee — 52 Photos ─── -->
+<!-- ─── Auto-Scrolling Sold Marquee — 52 Photos (hardcoded) ─── -->
 <section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8;overflow:hidden">
   <div class="section-title">🏆 הוכחות מהשטח: עסקאות שסגרנו לאחרונה בבאר שבע</div>
   <div style="text-align:center;font-size:13px;color:#7a7e8f;margin:-10px 0 18px">52 עסקאות · מכרו בביטחון · RE/MAX באר שבע</div>
-  <div style="overflow:hidden;padding:4px 0" id="marqueeWrap"></div>
+  <div style="overflow:hidden;padding:4px 0">
+    <div class="marquee-track" id="mTrack"></div>
+  </div>
   <div style="text-align:center;margin-top:18px">
     <a class="guide-cta" href="assets/guide-selling.pdf" target="_blank" rel="noopener" download style="max-width:420px;margin:0 auto">📥 רוצה שגם הנכס שלך יופיע כאן? הורד את המדריך למכירה מוצלחת</a>
   </div>
@@ -289,24 +290,21 @@
 </a>
 
 <script>
-(function(){
+document.addEventListener("DOMContentLoaded",function(){
   var badges=["נמכר תוך 24-48 שעות!","נמכר תוך 14-30 יום!","נמכר תוך חודש וחצי / חודשיים!"];
   var colors=["#dc2626","#D4AF37","#16a34a"];
-  var wrap=document.getElementById("marqueeWrap");
-  if(!wrap)return;
-  var track=document.createElement("div");
-  track.className="marquee-track";
+  var track=document.getElementById("mTrack");
+  if(!track){console.error("mTrack not found");return;}
+  var html="";
   for(var pass=0;pass<2;pass++){
     for(var i=1;i<=52;i++){
       var b=i<=10?0:i<=30?1:2;
-      var d=document.createElement("div");
-      d.className="marquee-item";
-      d.innerHTML='<img src="assets/sold'+i+'.jpg" alt="'+badges[b]+'" loading="lazy" style="width:160px;height:160px;display:block;object-fit:cover"><div class="sold-tag" style="background:'+colors[b]+'">✅ '+badges[b]+'</div>';
-      track.appendChild(d);
+      html+='<div class="marquee-item"><img src="assets/sold'+i+'.jpg" alt="'+badges[b]+'" loading="lazy" style="width:160px;height:160px;display:block;object-fit:cover"><div class="sold-tag" style="background:'+colors[b]+'">✅ '+badges[b]+'</div></div>';
     }
   }
-  wrap.appendChild(track);
-})();
+  track.innerHTML=html;
+  console.log("Marquee loaded: "+track.children.length+" items");
+});
 </script>
 </body>
 </html>
