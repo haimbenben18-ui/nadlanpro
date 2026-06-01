@@ -3853,8 +3853,8 @@ function PublicLanding({onLogin,landingConfig}){
       return <div style={{marginBottom:28}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>⭐ הלקוחות שלנו מספרים</div>
       <div style={{position:"relative"}}>
-        <button onClick={()=>scrollT(-1)} style={{...arrowS,right:-6}}>‹</button>
-        <button onClick={()=>scrollT(1)} style={{...arrowS,left:-6}}>›</button>
+        <button onClick={()=>scrollT(1)} style={{...arrowS,right:-6}}>›</button>
+        <button onClick={()=>scrollT(-1)} style={{...arrowS,left:-6}}>‹</button>
         <div ref={tRef} style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px",scrollbarWidth:"none"}} className="hide-scroll">
           {vids.map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
             <div style={{position:"relative",width:"100%",aspectRatio:"9/16",background:"#1a1a2e",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.controls=true;vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov){ov.style.opacity="0";ov.style.transform="translate(-50%,-50%) scale(1.3)"}}}}>
