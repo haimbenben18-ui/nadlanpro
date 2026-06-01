@@ -70,11 +70,15 @@
   .guide-cta:active{transform:scale(0.98)}
   .guide-badge{display:inline-block;background:rgba(212,175,55,0.15);color:#D4AF37;border:1px solid rgba(212,175,55,0.4);padding:3px 12px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;margin-bottom:14px;text-align:center;position:relative;z-index:1}
 
-  /* Testimonials */
+  /* Testimonials Carousel */
   .testimonials-section{background:#fff;border-top:1px solid #eee8d8}
-  .testimonials-scroll{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 0 16px}
-  .testimonials-scroll::-webkit-scrollbar{height:4px}
-  .testimonials-scroll::-webkit-scrollbar-thumb{background:#D4AF37;border-radius:4px}
+  .carousel-wrapper{position:relative}
+  .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border-radius:50%;background:rgba(212,175,55,0.9);border:none;color:#003366;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:transform .15s ease}
+  .carousel-arrow:hover{transform:translateY(-50%) scale(1.1)}
+  .carousel-arrow-right{right:-6px}
+  .carousel-arrow-left{left:-6px}
+  .testimonials-scroll{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 0 16px;scrollbar-width:none;-ms-overflow-style:none}
+  .testimonials-scroll::-webkit-scrollbar{display:none}
   .testimonial-card{flex:0 0 300px;scroll-snap-align:start;background:#f9f7f2;border:1px solid #eee8d8;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,31,63,0.05)}
   .testimonial-video{position:relative;width:100%;aspect-ratio:9/16;background:#000;cursor:pointer;overflow:hidden}
   .testimonial-video video{width:100%;height:100%;object-fit:contain;display:block}
@@ -82,6 +86,14 @@
   .testimonial-video .play-overlay:after{content:"";width:0;height:0;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #fff;margin-left:3px}
   .testimonial-video.playing .play-overlay{opacity:0}
   .testimonial-label{padding:12px 14px;text-align:center;font-weight:700;font-size:14px;color:#003366}
+
+  /* Sold Gallery */
+  .sold-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:440px;margin:0 auto}
+  .sold-item{position:relative;border-radius:14px;overflow:hidden;border:1px solid #eee8d8;box-shadow:0 4px 14px rgba(0,31,63,0.05)}
+  .sold-item img{width:100%;display:block;object-fit:cover;aspect-ratio:1/1}
+  .sold-item-wide{grid-column:1 / -1}
+  .sold-item-wide img{aspect-ratio:2/1}
+  .sold-tag{position:absolute;bottom:8px;right:8px;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:0.02em}
 
   /* Footer */
   .footer{background:#003366;color:#9aa3b5;padding:24px 18px 30px;text-align:center;font-size:13px;line-height:1.85}
@@ -208,41 +220,85 @@
   </div>
 </section>
 
-<!-- ─── Testimonials ─── -->
+<!-- ─── Testimonials Carousel ─── -->
 <section class="section testimonials-section">
   <div class="section-title">⭐ הלקוחות שלנו מספרים</div>
-  <div class="testimonials-scroll">
+  <div class="carousel-wrapper">
+    <button class="carousel-arrow carousel-arrow-right" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:-320,behavior:'smooth'})">‹</button>
+    <button class="carousel-arrow carousel-arrow-left" onclick="this.parentElement.querySelector('.testimonials-scroll').scrollBy({left:320,behavior:'smooth'})">›</button>
+    <div class="testimonials-scroll">
 
-    <div class="testimonial-card">
-      <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
-          <source src="assets/video1.mp4" type="video/mp4">
-        </video>
-        <div class="play-overlay"></div>
+      <div class="testimonial-card">
+        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+          <video controls playsinline preload="metadata">
+            <source src="assets/video1.mp4" type="video/mp4">
+          </video>
+          <div class="play-overlay"></div>
+        </div>
+        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
       </div>
-      <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-    </div>
 
-    <div class="testimonial-card">
-      <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
-          <source src="assets/video2.mp4" type="video/mp4">
-        </video>
-        <div class="play-overlay"></div>
+      <div class="testimonial-card">
+        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+          <video controls playsinline preload="metadata">
+            <source src="assets/video2.mp4" type="video/mp4">
+          </video>
+          <div class="play-overlay"></div>
+        </div>
+        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
       </div>
-      <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-    </div>
 
-    <div class="testimonial-card">
-      <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
-        <video controls playsinline preload="metadata">
-          <source src="assets/video3.mp4" type="video/mp4">
-        </video>
-        <div class="play-overlay"></div>
+      <div class="testimonial-card">
+        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+          <video controls playsinline preload="metadata">
+            <source src="assets/video3.mp4" type="video/mp4">
+          </video>
+          <div class="play-overlay"></div>
+        </div>
+        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
       </div>
-      <div class="testimonial-label">🗣️ לקוח ממליץ</div>
-    </div>
 
+      <div class="testimonial-card">
+        <div class="testimonial-video" onclick="this.classList.add('playing');this.querySelector('video').play()">
+          <video controls playsinline preload="metadata">
+            <source src="assets/testimonial1.mp4" type="video/mp4">
+          </video>
+          <div class="play-overlay"></div>
+        </div>
+        <div class="testimonial-label">🗣️ לקוח ממליץ</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── Just Sold Gallery ─── -->
+<section class="section" style="background:#f5f3ee;border-top:1px solid #eee8d8">
+  <div class="section-title">🏆 הוכחות מהשטח: עסקאות שסגרנו לאחרונה בבאר שבע</div>
+  <div class="sold-grid">
+    <div class="sold-item">
+      <img src="assets/sold1.jpg" alt="נמכר תוך 24 שעות" loading="lazy">
+      <div class="sold-tag" style="background:#dc2626">✅ נמכר תוך 24 שעות!</div>
+    </div>
+    <div class="sold-item">
+      <img src="assets/sold2.jpg" alt="רבי עקיבא נמכר" loading="lazy">
+      <div class="sold-tag" style="background:#D4AF37">✅ נמכר תוך 30 יום</div>
+    </div>
+    <div class="sold-item">
+      <img src="assets/sold3.jpg" alt="יצחק שיפר" loading="lazy">
+      <div class="sold-tag" style="background:#1a56db">✅ יצחק שיפר</div>
+    </div>
+    <div class="sold-item">
+      <img src="assets/sold4.jpg" alt="סוקולוב" loading="lazy">
+      <div class="sold-tag" style="background:#16a34a">✅ סוקולוב</div>
+    </div>
+    <div class="sold-item sold-item-wide">
+      <img src="assets/sold5.jpg" alt="סיכום חודשי" loading="lazy">
+      <div class="sold-tag" style="background:#7c3aed">✅ סיכום חודשי</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:18px">
+    <a class="guide-cta" href="assets/guide-selling.pdf" target="_blank" rel="noopener" download style="max-width:420px;margin:0 auto">📥 רוצה שגם הנכס שלך יופיע כאן? הורד את המדריך למכירה מוצלחת</a>
   </div>
 </section>
 

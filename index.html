@@ -3836,25 +3836,51 @@ function PublicLanding({onLogin,landingConfig}){
       </div>)}
     </div>
 
-    {/* ── Testimonials Section ── */}
-    <div style={{marginBottom:24}}>
+    {/* ── Testimonials Carousel ── */}
+    {function(){const tRef=React.useRef(null);const scrollT=(dir)=>{if(tRef.current)tRef.current.scrollBy({left:dir*320,behavior:"smooth"})};return <div style={{marginBottom:28}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>⭐ הלקוחות שלנו מספרים</div>
-      <div style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px"}}>
-        {[
-          {label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},
-          {label:"🗣️ לקוח ממליץ",src:"assets/video2.mp4"},
-          {label:"🗣️ לקוח ממליץ",src:"assets/video3.mp4"}
-        ].map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
-          <div style={{position:"relative",width:"100%",aspectRatio:"9/16",background:"#000",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
-            <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}>
-              <source src={t.src} type="video/mp4"/>
-            </video>
-            <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:64,height:64,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
-              <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"12px 0 12px 20px",borderColor:"transparent transparent transparent #fff",marginLeft:3}}/>
+      <div style={{position:"relative"}}>
+        <button onClick={()=>scrollT(-1)} style={{position:"absolute",top:"50%",right:-6,transform:"translateY(-50%)",zIndex:5,width:40,height:40,borderRadius:"50%",background:"rgba(195,166,82,0.9)",border:"none",color:"var(--midnight)",fontSize:20,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}}>‹</button>
+        <button onClick={()=>scrollT(1)} style={{position:"absolute",top:"50%",left:-6,transform:"translateY(-50%)",zIndex:5,width:40,height:40,borderRadius:"50%",background:"rgba(195,166,82,0.9)",border:"none",color:"var(--midnight)",fontSize:20,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}}>›</button>
+        <div ref={tRef} style={{display:"flex",gap:16,overflowX:"auto",scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch",padding:"4px 0 16px",scrollbarWidth:"none"}} className="hide-scroll">
+          {[
+            {label:"🗣️ לקוח ממליץ",src:"assets/video1.mp4"},
+            {label:"🗣️ לקוח ממליץ",src:"assets/video2.mp4"},
+            {label:"🗣️ לקוח ממליץ",src:"assets/video3.mp4"},
+            {label:"🗣️ לקוח ממליץ",src:"assets/testimonial1.mp4"}
+          ].map((t,i)=><div key={i} style={{flex:"0 0 300px",scrollSnapAlign:"start",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,overflow:"hidden"}}>
+            <div style={{position:"relative",width:"100%",aspectRatio:"9/16",background:"#000",cursor:"pointer",overflow:"hidden"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+              <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}>
+                <source src={t.src} type="video/mp4"/>
+              </video>
+              <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:64,height:64,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+                <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"12px 0 12px 20px",borderColor:"transparent transparent transparent #fff",marginLeft:3}}/>
+              </div>
             </div>
-          </div>
-          <div style={{padding:"12px 14px",textAlign:"center",fontWeight:700,fontSize:14,color:"var(--gold)"}}>{t.label}</div>
+            <div style={{padding:"12px 14px",textAlign:"center",fontWeight:700,fontSize:14,color:"var(--gold)"}}>{t.label}</div>
+          </div>)}
+        </div>
+      </div>
+    </div>}()}
+
+    {/* ── Just Sold Gallery ── */}
+    <div style={{marginBottom:28}}>
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:6}}>🏆 הוכחות מהשטח</div>
+      <div style={{fontSize:14,color:"var(--text-gray)",textAlign:"center",marginBottom:18}}>עסקאות שסגרנו לאחרונה בבאר שבע</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,maxWidth:440,margin:"0 auto"}}>
+        {[
+          {src:"assets/sold1.jpg",tag:"נמכר תוך 24 שעות!",tagBg:"#dc2626"},
+          {src:"assets/sold2.jpg",tag:"נמכר תוך 30 יום",tagBg:"var(--gold)"},
+          {src:"assets/sold3.jpg",tag:"יצחק שיפר",tagBg:"#1a56db"},
+          {src:"assets/sold4.jpg",tag:"סוקולוב",tagBg:"#16a34a"},
+          {src:"assets/sold5.jpg",tag:"סיכום חודשי",tagBg:"#7c3aed",span:true}
+        ].map((s,i)=><div key={i} style={{position:"relative",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-gold)",gridColumn:s.span?"1 / -1":"auto"}}>
+          <img src={s.src} alt={s.tag} loading="lazy" style={{width:"100%",display:"block",objectFit:"cover",aspectRatio:s.span?"2/1":"1/1"}}/>
+          <div style={{position:"absolute",bottom:8,right:8,background:s.tagBg,color:"#fff",padding:"4px 12px",borderRadius:20,fontSize:11,fontWeight:800,boxShadow:"0 2px 8px rgba(0,0,0,0.4)",letterSpacing:"0.02em"}}>✅ {s.tag}</div>
         </div>)}
+      </div>
+      <div style={{textAlign:"center",marginTop:16}}>
+        <a href="assets/guide-selling.pdf" target="_blank" rel="noopener noreferrer" download style={{display:"inline-block",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",padding:"14px 28px",borderRadius:12,fontWeight:800,fontSize:15,textDecoration:"none",boxShadow:"0 4px 18px rgba(195,166,82,0.3)"}}>📥 רוצה שגם הנכס שלך יופיע כאן? הורד את המדריך למכירה מוצלחת</a>
       </div>
     </div>
 

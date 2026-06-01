@@ -145,6 +145,10 @@ input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-
 /* ───── Sold Properties Gallery ───── */
 .sold-gallery{background:var(--surface);border:1px solid var(--border-gold);border-radius:14px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;overflow:hidden;min-height:80px}
 
+/* ───── Hide scrollbar for carousels ───── */
+.hide-scroll::-webkit-scrollbar{display:none}
+.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
+
 /* ───── Auth / Lock button ───── */
 .lock-btn{transition:opacity .2s ease}
 .lock-btn:hover{opacity:0.8 !important}
