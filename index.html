@@ -3819,16 +3819,15 @@ function PublicLanding({onLogin,landingConfig}){
     <div style={{marginBottom:24}}>
       <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:18,fontWeight:900,color:"var(--gold)",textAlign:"center",marginBottom:16}}>🎬 הכנתי עבורכם סרטוני תוכן שיעזרו להגיע להחלטה הנכונה</div>
       {[
-        {title:"🎬 משיווק ועד עסקה",desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:lcVideos[0]?lcVideos[0].url:"assets/video1.mp4"},
-        {title:"💡 3 טיפים לבחירת מתווך",desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה 3 דברים שחשוב לבדוק לפני שבוחרים.",src:lcVideos[1]?lcVideos[1].url:"assets/video2.mp4"},
-        {title:"🏠 איך לבחור נכס",desc:"מה חשוב לבדוק לפני שבוחרים נכס? בסרטון הזה אני חולק את העקרונות שמבדילים בין עסקה טובה לעסקה מצוינת.",src:lcVideos[2]?lcVideos[2].url:"assets/video3.mp4"}
+        {title:'🎬 משיווק ועד עסקה: כך אני דואג שתקבלו את המקסימום!',desc:"איך נראה התהליך המלא ממכירת נכס ועד חתימה? בסרטון הזה אני מסביר שלב אחרי שלב — בשקיפות מלאה.",src:"https://res.cloudinary.com/dopvqfgzw/video/upload/v1780243724/nadlanpro/videos/qqpst1z3hijhaq8slnsw.mov"},
+        {title:'💡 מה חשוב לבדוק לפני שבוחרים מתווך נדל"ן?',desc:"מה ההבדל בין מתווך שעובד בשבילך לכזה שפשוט מראה דירות? הנה הדברים שחשוב לבדוק לפני שבוחרים.",src:"https://res.cloudinary.com/dopvqfgzw/video/upload/v1780244077/nadlanpro/videos/hpuvytqbst1ybeoyrlvt.mov"},
+        {title:"🏠 איך אני עוזר לקונים להתאהב באזור ולסגור עסקה",desc:"מה עושה את ההבדל בין חיפוש נכס עצמאי לתהליך מקצועי? בסרטון הזה אני מראה איך אני עוזר לקונים למצוא את הבית המושלם.",src:"https://res.cloudinary.com/dopvqfgzw/video/upload/v1780244092/nadlanpro/videos/niuhqopcz5df8bqgoyr9.mov"}
       ].map((v,i)=><div key={i} style={{maxWidth:400,margin:"0 auto 18px",background:"var(--surface)",border:"1px solid var(--border-gold)",borderRadius:16,padding:18}}>
         <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontWeight:900,fontSize:20,color:"var(--text-white)",marginBottom:8}}>{v.title}</div>
         <div style={{fontSize:18,color:"#c8ccd4",lineHeight:1.6,marginBottom:14}}>{v.desc}</div>
-        <div style={{position:"relative",width:"100%",aspectRatio:"4/5",borderRadius:16,overflow:"hidden",background:"#111",cursor:"pointer"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
+        <div style={{position:"relative",width:"100%",aspectRatio:"1/1",borderRadius:16,overflow:"hidden",background:"#111",cursor:"pointer"}} onClick={e=>{const vid=e.currentTarget.querySelector("video");if(vid){vid.play();const ov=e.currentTarget.querySelector("[data-ov]");if(ov)ov.style.opacity="0"}}}>
           <video controls playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",borderRadius:16}}>
             <source src={v.src} type="video/mp4"/>
-            הדפדפן שלך לא תומך בתגית וידאו.
           </video>
           <div data-ov="1" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:72,height:72,background:"rgba(0,0,0,0.55)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",transition:"opacity .3s ease",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
             <div style={{width:0,height:0,borderStyle:"solid",borderWidth:"14px 0 14px 24px",borderColor:"transparent transparent transparent #fff",marginLeft:4}}/>
@@ -3869,7 +3868,7 @@ function PublicLanding({onLogin,landingConfig}){
         <ul style={{listStyle:"none",padding:0,margin:"0 0 20px",position:"relative",zIndex:1}}>
           {["אסטרטגיות להכנת הבית למכירה מוצלחת.","שיטות לתמחור נכון של הנכס בשוק המקומי.","רשימת המסמכים הדרושים למניעת עיכובים בבירוקרטיה.","טיפים לניהול משא ומתן אפקטיבי."].map((item,i)=><li key={i} style={{color:"#c8ccd4",fontSize:14,lineHeight:1.7,padding:"6px 0",display:"flex",gap:10,alignItems:"flex-start"}}><span style={{color:"var(--gold)",fontWeight:900,fontSize:15,flexShrink:0,marginTop:1}}>✓</span>{item}</li>)}
         </ul>
-        <a href={"https://wa.me/972544740691?text="+encodeURIComponent("היי חיים, אשמח לקבל את המדריך למכירת נכס")} target="_blank" rel="noopener noreferrer" style={{display:"block",width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"14px 20px",borderRadius:12,fontWeight:800,fontSize:15,textDecoration:"none",boxShadow:"0 4px 18px rgba(195,166,82,0.3)",position:"relative",zIndex:1}}>📥 להורדת המדריך בחינם</a>
+        <a href="assets/guide-selling.pdf" target="_blank" rel="noopener noreferrer" download style={{display:"block",width:"100%",background:"linear-gradient(135deg,var(--gold),#a8882e)",color:"var(--midnight)",textAlign:"center",padding:"14px 20px",borderRadius:12,fontWeight:800,fontSize:15,textDecoration:"none",boxShadow:"0 4px 18px rgba(195,166,82,0.3)",position:"relative",zIndex:1}}>📥 להורדת המדריך בחינם</a>
       </div>
     </div>
 
