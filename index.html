@@ -519,6 +519,33 @@ const {useState,useRef,useEffect,useCallback,useMemo}=React;
 // throughout the codebase keep working.
 const G="#c3a652",GR="#16a34a",BL="#1a56db",PU="#7c3aed",OR="#fb923c",RE="#dc2626",TE="#38bdf8";
 const PX="np7_";
+
+// ━━━ 10-TOUCHES SEQUENCE (manual, one click per touch) ━━━━━━━━━━━━━━━━━━
+const touchSequence=[
+  {id:1,title:'אסטרטגיה שיווקית',icon:'🎬',mediaType:'video',mediaUrl:'https://res.cloudinary.com/dopvqfgzw/video/upload/v1780243724/nadlanpro/videos/qqpst1z3hijhaq8slnsw.mov',
+    text:'רוצה לראות איך נכס נמכר מהרגע הראשון ועד סגירת העסקה? 🎯\nהסרטון הזה מראה בדיוק את האסטרטגיה שבנינו — שיווק ממוקד, חשיפה מקסימלית, ותוצאה.\nככה אני עובד על כל נכס. רוצה שנבנה אסטרטגיה גם לשלך?'},
+  {id:2,title:'לקוחות ממליצים',icon:'⭐',mediaType:'video',mediaUrl:'assets/video1.mp4',
+    text:'אל תסמוך על המילים שלי — תשמע מהלקוחות עצמם 🎬\nהם מכרו, הם מרוצים, והם מספרים בדיוק למה.\nהצלחה אמיתית נמדדת בשביעות רצון.'},
+  {id:3,title:'מפת מכירות',icon:'📍',mediaType:'image',mediaUrl:'assets/touch-map.jpeg',
+    text:'רואה את כל הנקודות על המפה? 📍\nכל אחת מהן היא דירה שמכרתי. לא הבטחות — תוצאות בשטח.\nאני מכיר כל רחוב, כל שכונה, כל מחיר.\nבוא נוסיף את הדירה שלך למפה 🏠'},
+  {id:4,title:'52 נמכרו',icon:'🏆',mediaType:'image',mediaUrl:'assets/sold1.jpg',
+    text:'52 דירות. 52 משפחות שמצאו קונה. 52 עסקאות שנסגרו ✅\nהמספרים מדברים בעד עצמם.\nמי הבא? 🏡'},
+  {id:5,title:'טיפים למכירה',icon:'📋',mediaType:'image',mediaUrl:'assets/touch-tips.jpeg',
+    text:'לפני שמוכרים — חייבים לדעת את הבסיס 📋\n5 טיפים שיכולים לחסוך לך עשרות אלפי שקלים.\nסדר, תמחור, פרסום, בירור הצד השני, וניהול מו״מ.\nרוצה שאעבור איתך על כל אחד מהם?'},
+  {id:6,title:'הקונים רואים הכל',icon:'👀',mediaType:'image',mediaUrl:'assets/touch-buyers.jpeg',
+    text:'כל הורדת מחיר שאתה עושה — נשמרת לעיני הקונים 👀\nהם רואים הכל: מחיר התחלתי, כמה ירדת, ומתי.\nאל תפגע במחיר של הבית שלך.\nבוא נתמחר נכון מההתחלה.'},
+  {id:7,title:'תמחור נכון',icon:'💰',mediaType:'image',mediaUrl:'assets/touch-pricing.jpeg',
+    text:'תמחור נכון = יותר קונים רציניים = מחיר מכירה מקסימלי 💰\nתמחור שגוי? פגיעה ישירה בכסף שלך.\nסטייה של 10% מהממוצע — ואתה מפסיד קונים.\nאני יודע לתמחר נכון — בוא נדבר.'},
+  {id:8,title:'תוכנית עבודה',icon:'📊',mediaType:'image',mediaUrl:'assets/touch-workplan.jpeg',
+    text:'ככה נראית תוכנית עבודה אמיתית 📊\nעקרונות מנחים, 72 שעות ראשונות, 10 ימים, ופעילות שוטפת.\nשיווק לקהל הרחב, עבודה מול מתווכים, ועדכון שוטף.\nהכל מתוכנן, שקוף, ומקצועי 🤝'},
+  {id:9,title:'הדרך לעסקה',icon:'🚀',mediaType:'image',mediaUrl:'assets/touch-roadmap.jpeg',
+    text:'הדרך שלך לעסקה — מתחילה כאן! 🚀\nשבוע 1-4: מאגרי קונים + 200 סוכנים\nשבוע 5-8: באז בלוחות המכירה\nשבוע 9-14: כל המתווכים עובדים בשבילנו\nעד סגירה — הכל מכוסה. בוא נתחיל.'},
+  {id:10,title:'המדריך למכירה',icon:'📖',mediaType:'document',mediaUrl:'assets/touch-guide.pdf',
+    text:'הכנתי לך מדריך מקצועי למכירת נכס 📖\nהכנת הנכס, תמחור, שיווק, משא ומתן, ניירת — הכל בפנים.\nקרא, תלמד, ואם תרצה — אני כאן לעשות את זה בשבילך 🏆'}
+];
+const ULTRAMSG_BASE="https://api.ultramsg.com/instance169955";
+const ULTRAMSG_TOKEN_2="slhhpfslyuey11fp";
+const FB_DB="https://nadlanpro-5b041-default-rtdb.firebaseio.com";
 function sv(k,v){try{localStorage.setItem(PX+k,JSON.stringify(v))}catch(e){}}
 function lv(k,d){try{const v=localStorage.getItem(PX+k);return v?JSON.parse(v):d}catch(e){return d}}
 
@@ -1130,6 +1157,53 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     else{const nb=buyers.map(b=>b.id===id?{...b,logs:[...(b.logs||[]),{text,time:nowStr()}]}:b);setBuyers(nb);sv("buyers",nb);if(sel&&sel.id===id)setSel(nb.find(b=>b.id===id))}
   }
 
+  // ━━━ 10-TOUCHES SEQUENCE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const[touchPanelOpen,setTouchPanelOpen]=useState(null);
+  const[touchStatus,setTouchStatus]=useState({});
+  const[sendingTouch,setSendingTouch]=useState(null);
+  async function loadTouchStatus(buyerId){
+    try{
+      const r=await fetch(FB_DB+"/buyers/"+buyerId+"/touches.json");
+      const d=await r.json();
+      setTouchStatus(prev=>({...prev,[buyerId]:d||{}}));
+    }catch(e){setTouchStatus(prev=>({...prev,[buyerId]:{}}))}
+  }
+  function toggleTouchPanel(buyerId){
+    if(touchPanelOpen===buyerId){setTouchPanelOpen(null);return}
+    setTouchPanelOpen(buyerId);
+    loadTouchStatus(buyerId);
+  }
+  async function sendTouch(buyerId,buyerPhone,touchId){
+    const touch=touchSequence.find(t=>t.id===touchId);
+    if(!touch)return;
+    if(!buyerPhone){toast("⚠️ אין טלפון ללקוח");return}
+    setSendingTouch({buyerId,touchId});
+    try{
+      const phone=buyerPhone.replace(/^0/,"972").replace(/[-\s+]/g,"");
+      const mediaUrl=/^https?:\/\//i.test(touch.mediaUrl)?touch.mediaUrl:(window.location.origin+"/"+touch.mediaUrl);
+      let d;
+      if(touch.mediaType==="video"||touch.mediaType==="image"){
+        const endpoint=ULTRAMSG_BASE+"/messages/"+(touch.mediaType==="video"?"video":"image");
+        const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:ULTRAMSG_TOKEN_2,to:phone+"@c.us",[touch.mediaType==="video"?"video":"image"]:mediaUrl,caption:touch.text})});
+        d=await r.json();
+      }else{
+        const r=await fetch(ULTRAMSG_BASE+"/messages/document",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:ULTRAMSG_TOKEN_2,to:phone+"@c.us",document:mediaUrl,filename:"המדריך-למכירת-נכס.pdf",caption:touch.text})});
+        d=await r.json();
+      }
+      if(!d||!d.sent){toast("❌ שגיאה: "+(d&&d.error||"unknown"));setSendingTouch(null);return}
+
+      const sentAt=new Date().toISOString();
+      await fetch(FB_DB+"/buyers/"+buyerId+"/touches/"+touchId+".json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({completed:true,sentAt})});
+      setTouchStatus(prev=>({...prev,[buyerId]:{...(prev[buyerId]||{}),[touchId]:{completed:true,sentAt}}}));
+      addLog(buyerId,"📞 מגע "+touchId+" — "+touch.title+" נשלח","b");
+      toast("✅ מגע "+touchId+" נשלח בהצלחה");
+    }catch(err){
+      console.error("Touch send error:",err);
+      toast("❌ שגיאה בשליחה");
+    }
+    setSendingTouch(null);
+  }
+
   // ━━━ 3-TOUCH MARKETING SEQUENCE ━━━━━━━━━━━━━━━━━━━━━━━━
   const[seqModal,setSeqModal]=useState(null);
   const[seqEditMsg,setSeqEditMsg]=useState("");
@@ -1385,7 +1459,31 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
         <Btn sm ch="שלח דירה" c={BL} onClick={()=>setSendModal(true)} icon="🏠"/>
         <Btn sm ch="📤 שלח כמה דירות" c={PU} onClick={()=>{setSelectedProps([]);setSendMultiOpen(true)}} icon="🏘️"/>
         <Btn sm ghost ch="📅 יומן" onClick={()=>addCal("פגישה — "+sel.name)}/>
+        <button className="touches-main-btn" onClick={()=>toggleTouchPanel(sel.id)}>
+          📞 מגעים <span className="touch-progress">{Object.values(touchStatus[sel.id]||{}).filter(t=>t&&t.completed).length}/10</span>
+        </button>
       </div>
+
+      {/* 10 Touches Panel */}
+      {touchPanelOpen===sel.id&&<div className="touch-panel">
+        <div className="touch-panel-header">
+          <h4>📞 רצף 10 מגעים</h4>
+          <button className="touch-close" onClick={()=>setTouchPanelOpen(null)}>✕</button>
+        </div>
+        <div className="touch-grid">
+          {touchSequence.map(touch=>{
+            const st=(touchStatus[sel.id]||{})[touch.id];
+            const completed=st&&st.completed;
+            const sending=sendingTouch&&sendingTouch.buyerId===sel.id&&sendingTouch.touchId===touch.id;
+            return <button key={touch.id} className={"touch-btn"+(completed?" completed":"")+(sending?" sending":"")} disabled={!!sendingTouch} onClick={()=>sendTouch(sel.id,sel.phone,touch.id)}>
+              <span className="touch-icon">{sending?"⏳":touch.icon}</span>
+              <span className="touch-number">מגע {touch.id}</span>
+              <span className="touch-title">{touch.title}</span>
+              {completed&&<span className="touch-check">✓</span>}
+            </button>
+          })}
+        </div>
+      </div>}
 
       {/* Logs */}
       <Lbl t="תיעוד" icon="📝"/>

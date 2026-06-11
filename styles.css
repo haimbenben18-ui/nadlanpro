@@ -152,3 +152,22 @@ input:focus,textarea:focus,select:focus{border-color:var(--gold) !important;box-
 /* ───── Auth / Lock button ───── */
 .lock-btn{transition:opacity .2s ease}
 .lock-btn:hover{opacity:0.8 !important}
+
+/* ───── 10-Touches Sequence ───── */
+.touches-main-btn{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(99,102,241,0.1));border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:8px 16px;color:#60a5fa;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;font-family:inherit}
+.touches-main-btn:hover{background:linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2))}
+.touch-progress{background:rgba(59,130,246,0.2);padding:2px 8px;border-radius:20px;font-size:0.7rem}
+.touch-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:10px}
+.touch-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.touch-panel-header h4{color:var(--text-white);font-size:0.95rem;margin:0}
+.touch-close{background:none;border:none;color:var(--text-gray);font-size:1.1rem;cursor:pointer}
+.touch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.touch-btn{background:var(--card-bg,rgba(30,30,40,0.6));border:1px solid var(--border);border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all 0.2s ease;position:relative;font-family:inherit}
+.touch-btn:hover{border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.08)}
+.touch-btn.completed{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.08)}
+.touch-btn.completed .touch-number{color:#22c55e}
+.touch-icon{font-size:1.4rem}
+.touch-number{font-size:0.7rem;color:var(--text-gray);font-weight:600}
+.touch-title{font-size:0.72rem;color:var(--text-white);text-align:center;font-weight:500}
+.touch-check{position:absolute;top:4px;left:4px;background:#22c55e;color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700}
+.touch-btn.sending{opacity:0.6;pointer-events:none}
