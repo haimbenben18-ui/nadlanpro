@@ -885,6 +885,53 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
   function addPLog(id,text){const np=prospects.map(p=>p.id===id?{...p,logs:[...p.logs,{text,time:nowStr()}]}:p);setProspects(np);sv("prospects",np);if(viewP&&viewP.id===id)setViewP(np.find(p=>p.id===id))}
   function delProspect(id){const np=prospects.filter(p=>p.id!==id);setProspects(np);sv("prospects",np);setViewP(null);toast("🗑 נמחק")}
 
+  // ━━━ 10-TOUCHES SEQUENCE (prospects / seller recruit) ━━━━━━━━━━━━━━━━━━
+  const[touchPanelOpen,setTouchPanelOpen]=useState(null);
+  const[touchStatus,setTouchStatus]=useState({});
+  const[sendingTouch,setSendingTouch]=useState(null);
+  async function loadTouchStatus(prospectId){
+    try{
+      const r=await fetch(FB_DB+"/prospects/"+prospectId+"/touches.json");
+      const d=await r.json();
+      setTouchStatus(prev=>({...prev,[prospectId]:d||{}}));
+    }catch(e){setTouchStatus(prev=>({...prev,[prospectId]:{}}))}
+  }
+  function toggleTouchPanel(prospectId){
+    if(touchPanelOpen===prospectId){setTouchPanelOpen(null);return}
+    setTouchPanelOpen(prospectId);
+    loadTouchStatus(prospectId);
+  }
+  async function sendTouch(prospectId,phone,touchId){
+    const touch=touchSequence.find(t=>t.id===touchId);
+    if(!touch)return;
+    if(!phone){toast("⚠️ אין מספר טלפון");return}
+    setSendingTouch({prospectId,touchId});
+    try{
+      const ph=phone.replace(/^0/,"972").replace(/[-\s+]/g,"");
+      const mediaUrl=/^https?:\/\//i.test(touch.mediaUrl)?touch.mediaUrl:(window.location.origin+"/"+touch.mediaUrl);
+      let d;
+      if(touch.mediaType==="video"||touch.mediaType==="image"){
+        const endpoint=ULTRAMSG_BASE+"/messages/"+(touch.mediaType==="video"?"video":"image");
+        const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:ULTRAMSG_TOKEN_2,to:ph+"@c.us",[touch.mediaType==="video"?"video":"image"]:mediaUrl,caption:touch.text})});
+        d=await r.json();
+      }else{
+        const r=await fetch(ULTRAMSG_BASE+"/messages/document",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:ULTRAMSG_TOKEN_2,to:ph+"@c.us",document:mediaUrl,filename:"המדריך-למכירת-נכס.pdf",caption:touch.text})});
+        d=await r.json();
+      }
+      if(!d||!d.sent){toast("❌ שגיאה: "+(d&&d.error||"unknown"));setSendingTouch(null);return}
+
+      const sentAt=new Date().toISOString();
+      await fetch(FB_DB+"/prospects/"+prospectId+"/touches/"+touchId+".json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({completed:true,sentAt})});
+      setTouchStatus(prev=>({...prev,[prospectId]:{...(prev[prospectId]||{}),[touchId]:{completed:true,sentAt}}}));
+      addPLog(prospectId,"📞 מגע "+touchId+" — "+touch.title+" נשלח");
+      toast("✅ מגע "+touchId+" נשלח בהצלחה");
+    }catch(err){
+      console.error("Touch send error:",err);
+      toast("❌ שגיאה בשליחה");
+    }
+    setSendingTouch(null);
+  }
+
   if(viewP){return <div style={{padding:S.pg}} className="fade">
     <button onClick={()=>setViewP(null)} style={{background:"none",border:"none",color:G,fontSize:15,cursor:"pointer",fontFamily:"inherit",marginBottom:18,fontWeight:700,padding:0}}>← חזור</button>
     <div style={{...S.card,border:"1px solid "+OR+"44"}}>
@@ -903,7 +950,32 @@ function Recruit({prospects,setProspects,landingConfig,setLandingConfig}){
         {viewP.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(viewP.phone||'')}/>}
         <Btn sm ch="🌐 שלח דף נחיתה" c={BL} ghost onClick={()=>{if(confirm("לשלוח דף נחיתה ל-"+(viewP.phone||"")+"?"))sendLandingPage(viewP)}}/>
         {viewP.phone&&<Btn sm ch="🚀 רצף שיווקי" c={OR} onClick={()=>startRecruitSequence(viewP)}/>}
+        <button className="touches-main-btn" onClick={()=>toggleTouchPanel(viewP.id)}>
+          📞 מגעים <span className="touch-progress">{Object.values(touchStatus[viewP.id]||{}).filter(t=>t&&t.completed).length}/10</span>
+        </button>
       </div>
+
+      {/* 10 Touches Panel */}
+      {touchPanelOpen===viewP.id&&<div className="touch-panel">
+        <div className="touch-panel-header">
+          <h4>📞 רצף 10 מגעים</h4>
+          <button className="touch-close" onClick={()=>setTouchPanelOpen(null)}>✕</button>
+        </div>
+        <div className="touch-grid">
+          {touchSequence.map(touch=>{
+            const st=(touchStatus[viewP.id]||{})[touch.id];
+            const completed=st&&st.completed;
+            const sending=sendingTouch&&sendingTouch.prospectId===viewP.id&&sendingTouch.touchId===touch.id;
+            return <button key={touch.id} className={"touch-btn"+(completed?" completed":"")+(sending?" sending":"")} disabled={!!sendingTouch} onClick={()=>sendTouch(viewP.id,viewP.phone,touch.id)}>
+              <span className="touch-icon">{sending?"⏳":touch.icon}</span>
+              <span className="touch-number">מגע {touch.id}</span>
+              <span className="touch-title">{touch.title}</span>
+              {completed&&<span className="touch-check">✓</span>}
+            </button>
+          })}
+        </div>
+      </div>}
+
       <Lbl t="תיעוד" icon="📝"/>
       {viewP.logs&&viewP.logs.map((l,i)=><div key={i} style={{padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:13}}><span style={{color:"#555"}}>{l.time}</span> — <span style={{color:"#bbb"}}>{l.text}</span></div>)}
       <div style={{display:"flex",gap:8,marginTop:10}}><input placeholder="הוסף תיעוד..." id="plog" style={{...S.inp,flex:1}} onKeyDown={e=>{if(e.key==="Enter"&&e.target.value){addPLog(viewP.id,e.target.value);e.target.value=""}}}/></div>
