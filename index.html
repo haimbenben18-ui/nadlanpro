@@ -4430,7 +4430,25 @@ function App(){
   </div>
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+class ErrorBoundary extends React.Component{
+  constructor(p){super(p);this.state={err:null}}
+  static getDerivedStateFromError(e){return{err:e}}
+  componentDidCatch(e,info){console.error("App crash:",e,info)}
+  render(){
+    if(this.state.err){
+      return React.createElement('div',{style:{padding:"40px 24px",textAlign:"center",fontFamily:"Heebo,sans-serif",color:"#eaeaea",background:"#08090d",minHeight:"100vh",direction:"rtl"}},
+        React.createElement('div',{style:{fontSize:48,marginBottom:16}},"⚠️"),
+        React.createElement('div',{style:{fontSize:20,fontWeight:700,color:"#c3a652",marginBottom:12}},"שגיאה בטעינת האפליקציה"),
+        React.createElement('pre',{style:{background:"#151720",borderRadius:12,padding:16,fontSize:12,color:"#dc2626",overflowX:"auto",textAlign:"left",marginBottom:16,maxHeight:300,overflowY:"auto"}},
+          String(this.state.err)
+        ),
+        React.createElement('button',{onClick:()=>window.location.reload(),style:{background:"#c3a652",color:"#08090d",border:"none",borderRadius:10,padding:"12px 28px",fontFamily:"Heebo,sans-serif",fontSize:16,fontWeight:700,cursor:"pointer"}},"רענן")
+      )
+    }
+    return this.props.children
+  }
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(ErrorBoundary,null,React.createElement(App)));
 </script>
 </body>
 </html>
