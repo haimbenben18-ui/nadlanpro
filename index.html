@@ -2053,11 +2053,308 @@ function Archive({sellers,setSellers,buyers,setBuyers}){
   </div>
 }
 
+// ━━━ MY CLIENTS — past-client retention tool ━━━━━━━━━━━━
+const CLOSED_CLIENTS_RAW=`
+מייזלס גיא|972526398574|סמטת יודפת 4 באר שבע|באר שבע|תיווך מכירה|2026-04-28|1
+מאיר איפרגן|972525103988|יד ושם 24 באר שבע|באר שבע|תיווך קנייה|2026-03-24|1
+אברהם מרקו|972524150326|יהודה הלוי 30 באר שבע|באר שבע|תיווך קנייה|2026-02-21|1
+חדד חנן וליז|972525756522|יהודה הלוי 30 באר שבע|באר שבע|תיווך מכירה|2026-02-21|1
+אריה ללוז|972543237438|מאיר גרוסמן 35 באר שבע|באר שבע|תיווך קנייה|2026-02-16|1
+ביטון אביב אברהם|972502655261|יוסף בן מתתיהו 9 באר שבע|באר שבע|תיווך השכרה/משכיר|2026-01-27|2
+דורון וגל ליברט|972503787910|יד ושם 24 באר שבע|באר שבע|תיווך מכירה|2026-01-24|2
+אוחנה תמיר ישראל|972509553505|מגידו 38 באר שבע|באר שבע|תיווך קנייה|2025-07-29|1
+רוני מלינקר|972525694436|יודפת 6 דימונה|דימונה|תיווך מכירה|2025-07-27|1
+קאנדלקאר שרונה|972509045605|יודפת 6 דימונה|דימונה|תיווך קנייה|2025-07-20|1
+תומר פולק|972545226691|שרעבי 6 באר שבע|באר שבע|תיווך השכרה/משכיר|2025-07-19|3
+ירון מינה|972504667899|רבי עקיבא 70 באר שבע|באר שבע|תיווך מכירה|2025-06-29|1
+דנינו אליס|972535485648|רבי עקיבא 70 באר שבע|באר שבע|תיווך קנייה|2025-06-29|1
+שנהב כרמל|972543323426|אברהם אבינו 38 באר שבע|באר שבע|תיווך מכירה|2025-06-29|1
+סביון דקל|972544630297|אברהם אבינו 38 באר שבע|באר שבע|תיווך קנייה|2025-06-28|1
+זוהר אלבז|972525052092|דרך מצדה 59 באר שבע|באר שבע|תיווך קנייה|2025-04-19|1
+ליזו ברוכים|972545704987|מבצע עובדה 30/5 באר שבע|באר שבע|תיווך מכירה|2025-04-16|1
+אוחנה מתן|972545605040|יד ושם 24 באר שבע|באר שבע|תיווך קנייה|2025-03-30|1
+דוד ומרי אדמון|972527412589|יד ושם 24 באר שבע|באר שבע|תיווך מכירה|2025-03-30|1
+איזגילוב סרפימה|972506043007|משעול סוכות 4/5 באר שבע|באר שבע|תיווך קנייה|2025-03-30|1
+ארתור טנקלביץ|972544589929|משה סתוי 18/9 באר שבע|באר שבע|תיווך קנייה|2025-02-24|1
+אלה ארדי|972545587800|משה סתוי 18/9 באר שבע|באר שבע|תיווך מכירה|2025-02-24|1
+עידו תורן|972548045216|גוש עציון 48/1 באר שבע|באר שבע|תיווך מכירה|2025-02-16|1
+אליה מיכאלי|972542576690|יד ושם 24/5 באר שבע|באר שבע|תיווך מכירה|2025-01-29|1
+מנדי צובוטרו|97254663256|השלום 20/1 באר שבע|באר שבע|תיווך קנייה|2025-01-29|1
+איריס אמסלם|972526858872|השלום 20/1 באר שבע|באר שבע|תיווך מכירה|2025-01-28|1
+חן לביא|972506821122|עוזיהו המלך 5 באר שבע|באר שבע|תיווך מכירה|2025-01-26|1
+מיכאלי אור|972526222770|עוזיהו המלך 5 באר שבע|באר שבע|תיווך קנייה|2025-01-26|1
+מנחם גבלי|972586431389|אלעזר בן יאיר 19/7 באר שבע|באר שבע|תיווך מכירה|2025-01-26|1
+אליס סרוסי|972585120891|אלעזר בן יאיר 19/7 באר שבע|באר שבע|תיווך קנייה|2025-01-26|1
+סיטי מדיה בעמ|972523986654|יד ושם 24/511 באר שבע|באר שבע|תיווך מכירה|2024-12-30|1
+שלמה זרובבל|972545763888|אביה השופט 1/5 באר שבע|באר שבע|תיווך קנייה|2024-12-30|1
+ראובן מירלשוילי|972542178767|רחבת חיל 15/16 באר שבע|באר שבע|תיווך מכירה|2024-12-29|1
+דוב שירץ|972544974285|אברהם אבינו 3/17 באר שבע|באר שבע|תיווך מכירה|2024-12-29|1
+מלי מצליח|972527810242|אברהם אבינו 3/17 באר שבע|באר שבע|תיווך קנייה|2024-12-29|1
+רבקה בילו|972528371193|צבעוני 19 באר שבע|באר שבע|תיווך מכירה|2024-12-11|1
+מדר עמיחי וכלנית|972584138246|צבעוני 19 באר שבע|באר שבע|תיווך קנייה|2024-12-11|1
+צבי זוהר דגן|972545793444|אליהו הנביא 11/1 באר שבע|באר שבע|תיווך מכירה|2024-11-27|1
+דן רווח|972508573234|גיורא יוספטל 26/4 באר שבע|באר שבע|תיווך מכירה|2024-11-27|1
+שמעונוביץ ציון|972534564023|גיורא יוספטל 26/4 באר שבע|באר שבע|תיווך קנייה|2024-11-27|1
+תומר קופלנד|972544664982|אוסבלדו ארניה 19/8 באר שבע|באר שבע|תיווך מכירה|2024-10-27|1
+יאיר ברוכים|972545796205|אוסבלדו ארניה 19/8 באר שבע|באר שבע|תיווך קנייה|2024-10-27|1
+שי אדמוני|972542101406|שרעבי 6/21 באר שבע|באר שבע|תיווך מכירה|2024-10-20|1
+עינב עמליה|972544976345|בן יהודה 13/17 באר שבע|באר שבע|תיווך מכירה|2024-09-28|1
+שמואלי ארז|972544689109|טנא שלמה 32/12 באר שבע|באר שבע|תיווך מכירה|2024-09-28|1
+סימה כהן|972503202126|אברהם מאפו 15/11 באר שבע|באר שבע|תיווך מכירה|2024-09-28|1
+חנית טוקר|972504057353|וינגייט 76/23 באר שבע|באר שבע|תיווך קנייה|2024-09-17|1
+זיו אסודרי עדי|972529597441|וינגייט 76/23 באר שבע|באר שבע|תיווך מכירה|2024-09-17|1
+שלום ואסתר בן סימון|972548182791|משה שרת 14/36 באר שבע|באר שבע|תיווך מכירה|2024-08-28|1
+יובל תמיר|972529527333|זבוטינסקי 58/64 באר שבע|באר שבע|תיווך מכירה|2024-08-27|1
+בית יוסף יאיר|972502052180|זבוטינסקי 58/64 באר שבע|באר שבע|תיווך קנייה|2024-08-27|1
+טלה עומרי|972522283026|האיסיים 7/5 באר שבע|באר שבע|תיווך מכירה|2024-07-28|1
+דמיטרי שניצר|972545516304|דרך השלום 97/2 באר שבע|באר שבע|תיווך מכירה|2024-07-28|1
+אבי מויאל|972507998222|ששת הימים 1146/11 אילת|אילת|תיווך השכרה/משכיר|2024-06-26|1
+אבנר ביטון|972544302563|יעקב אבינו 12/2 באר שבע|באר שבע|ניהול נכסים|2024-06-26|2
+שרון אמונה|972507388001|יעקב אבינו 12/2 באר שבע|באר שבע|תיווך השכרה/שוכר|2024-06-26|1
+רפאל מרס|972543344413|הנדיב 8/3 באר שבע|באר שבע|תיווך קנייה|2024-06-24|1
+צרפתי זק יעקב|972506548846|הנדיב 8/3 באר שבע|באר שבע|תיווך מכירה|2024-06-24|1
+דניאל שטוקמייסטר|972544798164|קדש 32/33 באר שבע|באר שבע|תיווך קנייה|2024-05-29|1
+קורדון מיכאל|972507733988|אברבנאל 22/11 באר שבע|באר שבע|תיווך קנייה|2024-05-01|1
+משה וחנית פלס|972524031665|האוזנר 10/1 באר שבע|באר שבע|תיווך קנייה|2024-04-29|1
+כרמי גיל|972524789654|אברהם אבינו 10/27 באר שבע|באר שבע|תיווך קנייה|2024-04-16|1
+חגי מרגלית נועם|972523553447|אלכסנדר ינאי 23/8 באר שבע|באר שבע|תיווך קנייה|2024-03-16|1
+שטרית טל משה|972527486532|אלכסנדר ינאי 28/1 באר שבע|באר שבע|תיווך מכירה|2024-02-28|1
+עמית לזר יחזקאל|972502054224|אלכסנדר ינאי 28/1 באר שבע|באר שבע|תיווך קנייה|2024-02-28|1
+לזר יואב מנשה|972502057780|סוסו הכהן 8 באר שבע|באר שבע|תיווך קנייה|2024-02-27|1
+ברוריה לילוף|972545625083|סוקולוב 2/28 באר שבע|באר שבע|תיווך קנייה|2024-02-18|1
+מגן רגב|972507107075|שמעון ברנפלד 7 באר שבע|באר שבע|תיווך קנייה|2024-01-22|1
+גינזבורג אלכסנדר|972544783138|אהרון מסקין 12 באר שבע|באר שבע|תיווך מכירה|2023-12-30|1
+אלירן שוורץ|972527003130|דרך שמשון 10/16 באר שבע|באר שבע|תיווך קנייה|2023-11-27|1
+לוי יצחק בנימין|972525874213|דרך שמשון 10/16 באר שבע|באר שבע|תיווך מכירה|2023-11-27|1
+מקבל שירלי|972507488738|דרך המשחררים 73א באר שבע|באר שבע|תיווך קנייה|2023-09-17|1
+חנן|972537956210|רבי עקיבא 78 באר שבע|באר שבע|תיווך מכירה|2023-08-30|1
+אפרת צעדי|972584442057|רבי עקיבא 78 באר שבע|באר שבע|תיווך קנייה|2023-08-30|1
+זיפרני רבקה|972506374002|דרך מצדה 130 באר שבע|באר שבע|תיווך קנייה|2023-07-08|2
+`.trim();
+
+const MALE_FIRST_NAMES=new Set(["גיא","מאיר","אברהם","חנן","אריה","ישראל","ירון","עידו","מנחם","שלמה","ראובן","דוב","צבי","דן","יאיר","שי","ארז","שלום","אבי","אבנר","רפאל","יעקב","משה","חגי","יחזקאל","יואב","מנשה","לוי","יצחק","בנימין","אלכסנדר","מיכאל","דוד","יוסף","אריאל","עומרי","עמיחי","תומר","ארתור","דמיטרי","אלירן"]);
+const FEMALE_FIRST_NAMES=new Set(["שרונה","אליס","מרי","סרפימה","אלה","איריס","רבקה","מלי","כלנית","אסתר","אמונה","סימה","חנית","ברוריה","שירלי","אפרת","עינב","עמליה"]);
+function guessGender(fullName){
+  const tokens=(fullName||"").trim().split(/\s+/);
+  if(tokens.some(t=>/^ו[א-ת]{2,}$/.test(t)))return"couple";
+  for(const t of tokens)if(FEMALE_FIRST_NAMES.has(t))return"female";
+  for(const t of tokens)if(MALE_FIRST_NAMES.has(t))return"male";
+  return"unknown";
+}
+function parseClosedClientsSeed(){
+  return CLOSED_CLIENTS_RAW.split("\n").map(l=>l.trim()).filter(Boolean).map((line,i)=>{
+    const[name,phone,neighborhood,city,dealType,lastDate,dealsCount]=line.split("|").map(s=>s.trim());
+    return{
+      id:"seed_"+i,name,phone,neighborhood,city,dealType,lastDate,
+      dealsCount:parseInt(dealsCount,10)||1,
+      gender:guessGender(name),
+      notes:"",
+      logs:[{text:"נטען מרשימת לקוחות עבר",time:nowStr()}],
+    };
+  });
+}
+const CLOSED_CLIENTS_SEED=parseClosedClientsSeed();
+
+function clientHeat(c){
+  if(!c.lastDate)return{label:"קר",color:"#9ca3af"};
+  const years=(Date.now()-new Date(c.lastDate).getTime())/(365*86400000);
+  if(years<=1)return{label:"חם",color:GR};
+  if(years<=3)return{label:"פושר",color:OR};
+  return{label:"קר",color:"#9ca3af"};
+}
+function fmtLastDate(dateStr){
+  if(!dateStr)return"—";
+  try{return new Date(dateStr).toLocaleDateString("he-IL")}catch(e){return dateStr}
+}
+function genderForm(gender,forms){
+  if(gender==="female")return forms.f;
+  if(gender==="couple")return forms.c;
+  if(gender==="male")return forms.m;
+  return forms.u!==undefined?forms.u:forms.m;
+}
+function buildClientGreeting(c){
+  const h=new Date().getHours();
+  const tod=h<5?"לילה טוב":h<12?"בוקר טוב":h<18?"צהריים טובים":"ערב טוב";
+  const line=genderForm(c.gender,{
+    m:"רק רציתי לבדוק מה שלומך ולוודא שאתה מסודר מבחינת הנדל\"ן.",
+    f:"רק רציתי לבדוק מה שלומך ולוודא שאת מסודרת מבחינת הנדל\"ן.",
+    c:"רק רציתי לבדוק מה שלומכם ולוודא שאתם מסודרים מבחינת הנדל\"ן.",
+    u:"רק רציתי לבדוק מה שלומך ולוודא שהכל מסודר מבחינת הנדל\"ן.",
+  });
+  return tod+" "+(c.name||"")+"! 😊\n\nחיים בן סימון כאן מ-RE/MAX, "+line+"\nאם יש משהו שאני יכול לעזור בו — אני כאן בשבילך!\n\n📞 054-4740691";
+}
+function buildValueTemplates(c){
+  const nb=c.neighborhood||"האזור שלך";
+  const willing=genderForm(c.gender,{m:"תרצה",f:"תרצי",c:"תרצו",u:"תרצה/י"});
+  const able=genderForm(c.gender,{m:"תוכל",f:"תוכלי",c:"תוכלו",u:"תוכל/י"});
+  return[
+    {label:"📈 עדכון מחירי שוק בשכונה",text:"שלום "+(c.name||"")+", עדכון קצר משוק הנדל\"ן ב"+nb+" 📈\nהמחירים באזור מתעדכנים בתדירות גבוהה לאחרונה.\nאשמח לעדכן אותך בהערכת שווי מדויקת ועדכנית לנכס, במידה ו"+willing+".\n\nחיים בן סימון, RE/MAX 📞 054-4740691"},
+    {label:"💡 טיפ לבעל דירה",text:"היי "+(c.name||"")+", טיפ קצר לבעלי דירות 🏠\nתחזוקה שוטפת, תיעוד משפטי מסודר וצילום מקצועי מעלים משמעותית את ערך הנכס ואת מהירות המכירה.\nאם עולה שאלה לגבי הנכס — אני כאן בשבילך.\n\nחיים בן סימון, RE/MAX 📞 054-4740691"},
+    {label:"🙏 בקשת הפניה עדינה",text:"היי "+(c.name||"")+", מקווה שהכל טוב אצלך! 😊\nאם יש לך חבר/ה או מכיר/ה שמתלבט/ת לגבי קנייה או מכירה של דירה — אשמח מאוד אם "+able+" לחבר בינינו.\nזו המחמאה הכי גדולה שאפשר לקבל 🙏\n\nתודה מראש, חיים בן סימון RE/MAX"},
+  ];
+}
+function NoteModal({client,onClose,onSave}){
+  const[note,setNote]=useState("");
+  function save(){if(!note.trim()){toast("⚠️ נא להזין הערה");return}onSave(client.id,note.trim());onClose()}
+  return <Modal title={"📝 הערה עבור "+client.name} color={G} onClose={onClose}>
+    <Inp ph="מה סוכם בשיחה?" val={note} set={setNote} rows={4} mb={16}/>
+    <Btn full ch="💾 שמור הערה" c={G} icon="💾" onClick={save}/>
+  </Modal>
+}
+function normPhone(phone){return(phone||"").replace(/^0/,"972").replace(/[-\s+]/g,"")}
+async function sendBroadcast(recipients,text,img,onProgress){
+  let ok=0,fail=0;
+  for(let i=0;i<recipients.length;i++){
+    const c=recipients[i];
+    const p=normPhone(c.phone);
+    const d=p?(img?await ultraSendMedia(p,"image",img.url,text):await ultraSendText(p,text)):{sent:false};
+    if(d&&d.sent)ok++;else fail++;
+    onProgress&&onProgress(i+1,recipients.length,ok,fail);
+    if(i<recipients.length-1)await new Promise(res=>setTimeout(res,1500));
+  }
+  return{ok,fail};
+}
+function BroadcastModal({allClients,filteredClients,onClose}){
+  const[audience,setAudience]=useState(filteredClients.length!==allClients.length?"filtered":"all");
+  const[text,setText]=useState("");
+  const[img,setImg]=useState(null);
+  const[step,setStep]=useState("compose");
+  const[progress,setProgress]=useState({sent:0,total:0,ok:0,fail:0});
+  const recipients=(audience==="all"?allClients:filteredClients).filter(c=>c.phone);
+  async function doSend(){
+    setStep("sending");setProgress({sent:0,total:recipients.length,ok:0,fail:0});
+    const res=await sendBroadcast(recipients,text,img,(sent,total,ok,fail)=>setProgress({sent,total,ok,fail}));
+    setStep("done");
+    toast("✅ נשלח ל-"+res.ok+" מתוך "+recipients.length);
+  }
+  return <Modal title={"📣 שליחה בתפוצה"} color={BL} onClose={onClose}>
+    {step==="compose"&&<>
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <Pill ch={"כל הלקוחות ("+allClients.length+")"} active={audience==="all"} onClick={()=>setAudience("all")} c={BL}/>
+        <Pill ch={"לפי הסינון ("+filteredClients.length+")"} active={audience==="filtered"} onClick={()=>setAudience("filtered")} c={BL}/>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        <Pill ch="🕯️ שבת שלום" onClick={()=>setText("שבת שלום ומבורך! 🕯️\nמאחל לך ולכל המשפחה שבת נעימה ורגועה.\n\nחיים בן סימון, RE/MAX")} c={G}/>
+        <Pill ch="🎉 חג שמח" onClick={()=>setText("חג שמח! 🎉\nמאחל לך ולכל המשפחה חג שמח ומלא שמחה.\n\nחיים בן סימון, RE/MAX")} c={G}/>
+        <Pill ch="📊 עדכון חודשי" onClick={()=>setText("עדכון חודשי משוק הנדל\"ן 📊\nמחירי הדירות באזור ממשיכים להתעדכן. אשמח לעדכן אתכם בפרטים ובהערכת שווי לנכס, במידה ותרצו.\n\nחיים בן סימון, RE/MAX 📞 054-4740691")} c={G}/>
+      </div>
+      <Inp label="הודעה" ph="כתוב הודעה חופשית..." val={text} set={setText} rows={6} mb={14}/>
+      <div style={{marginBottom:16}}>
+        <Lbl t="צירוף תמונה / כתבה (אופציונלי)" icon="📎"/>
+        <ImgUp images={img?[img]:[]} onAdd={m=>setImg(Array.isArray(m)?m[0]:m)} onRemove={()=>setImg(null)}/>
+      </div>
+      <Btn full ch={"תצוגה מקדימה ("+recipients.length+" נמענים)"} c={BL} icon="👁️" dis={!text.trim()||recipients.length===0} onClick={()=>setStep("preview")}/>
+    </>}
+    {step==="preview"&&<>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid var(--border)",borderRadius:14,padding:16,marginBottom:16,whiteSpace:"pre-wrap",fontSize:14,lineHeight:1.6,color:"var(--text-white)"}}>{text}</div>
+      {img&&<img src={img.url} style={{maxWidth:"100%",borderRadius:12,marginBottom:16}}/>}
+      <div style={{color:"var(--text-gray)",fontSize:13,marginBottom:16}}>ההודעה תישלח ל-<b style={{color:G}}>{recipients.length}</b> לקוחות, עם השהייה קצרה בין הודעה להודעה כדי לא להיחסם.</div>
+      <div style={{display:"flex",gap:10}}>
+        <Btn full ch="✅ אשר ושלח עכשיו" c={GR} icon="🚀" onClick={doSend}/>
+        <Btn ghost ch="חזרה לעריכה" onClick={()=>setStep("compose")}/>
+      </div>
+    </>}
+    {step==="sending"&&<div style={{textAlign:"center",padding:"20px 0"}}>
+      <div className="spinner" style={{margin:"0 auto 16px"}}/>
+      <div style={{color:"var(--text-white)",fontWeight:700}}>שולח {progress.sent} מתוך {progress.total}...</div>
+      <div style={{color:"var(--text-gray)",fontSize:13,marginTop:6}}>✅ {progress.ok} נשלחו בהצלחה{progress.fail?" · ❌ "+progress.fail+" נכשלו":""}</div>
+    </div>}
+    {step==="done"&&<div style={{textAlign:"center",padding:"20px 0"}}>
+      <div style={{fontSize:40,marginBottom:12}}>✅</div>
+      <div style={{color:"var(--text-white)",fontWeight:700,marginBottom:6}}>השליחה הושלמה!</div>
+      <div style={{color:"var(--text-gray)",fontSize:13,marginBottom:16}}>{progress.ok} נשלחו בהצלחה{progress.fail?" · "+progress.fail+" נכשלו":""}</div>
+      <Btn full ch="סגור" c={G} onClick={onClose}/>
+    </div>}
+  </Modal>
+}
+function ClientCard({c,onNote}){
+  const heat=clientHeat(c);const[tplOpen,setTplOpen]=useState(false);
+  const vip=c.dealsCount>=2;
+  return <div style={{...S.card,...(vip?{border:"1px solid var(--border-gold)",background:"linear-gradient(135deg,var(--surface),rgba(195,166,82,0.04))"}:{})}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          <div style={{fontWeight:800,color:"var(--text-white)",fontSize:16}}>{c.name}</div>
+          {vip&&<span style={{background:"rgba(195,166,82,0.15)",color:G,border:"1px solid var(--border-gold)",borderRadius:8,padding:"2px 10px",fontSize:11,fontWeight:800}}>⭐ VIP</span>}
+          <span style={{background:heat.color+"18",color:heat.color,border:"1px solid "+heat.color+"44",borderRadius:8,padding:"2px 10px",fontSize:12,fontWeight:700}}>{heat.label}</span>
+        </div>
+        <div style={{color:"var(--text-gray)",fontSize:13,marginTop:4}}>{c.phone||"—"}{c.neighborhood?" · "+c.neighborhood:""}</div>
+        <div style={{color:"var(--text-dim)",fontSize:12,marginTop:2}}>{c.dealType||""} · {c.dealsCount||1} עסקאות · מגע אחרון: {fmtLastDate(c.lastDate)}</div>
+        {c.notes&&<div style={{color:"var(--text-dim)",fontSize:12,marginTop:6,lineHeight:1.5,whiteSpace:"pre-wrap"}}>{c.notes}</div>}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
+      <Btn sm ch="💬 וואטסאפ" c={GR} icon="💬" dis={!c.phone} onClick={()=>ultraSendText(normPhone(c.phone),buildClientGreeting(c)).then(d=>toast(d&&d.sent?"✅ נשלח":"❌ שגיאה בשליחה"))}/>
+      {c.phone?<a href={"tel:"+c.phone} className="icon-btn icon-btn-tel" style={{width:38,height:38,fontSize:15,textDecoration:"none"}} title="חיוג">📞</a>:null}
+      <div style={{position:"relative"}}>
+        <Btn sm ch="📋 תבנית מוכנה" c={PU} icon="📋" onClick={()=>setTplOpen(v=>!v)}/>
+        {tplOpen&&<div style={{position:"absolute",top:"110%",right:0,background:"#1c1a28",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,zIndex:200,minWidth:220,overflow:"hidden",boxShadow:"0 12px 40px rgba(0,0,0,.5)"}}>
+          {buildValueTemplates(c).map((t,i)=><div key={i} onClick={()=>{ultraSendText(normPhone(c.phone),t.text).then(d=>toast(d&&d.sent?"✅ נשלח":"❌ שגיאה בשליחה"));setTplOpen(false)}} style={{padding:"12px 16px",cursor:"pointer",color:"var(--text-white)",fontSize:13,fontWeight:600,borderBottom:i<2?"1px solid rgba(255,255,255,0.06)":"none"}}>{t.label}</div>)}
+        </div>}
+      </div>
+      <Btn sm ghost ch="📝 הוסף הערה" c={G} icon="📝" onClick={onNote}/>
+    </div>
+  </div>
+}
+function MyClients({closedClients,setClosedClients}){
+  const[search,setSearch]=useState("");const[heatFilter,setHeatFilter]=useState("all");
+  const[noteClient,setNoteClient]=useState(null);const[broadcastOpen,setBroadcastOpen]=useState(false);
+
+  const q=search.trim().toLowerCase();
+  const filtered=closedClients.filter(c=>{
+    if(q&&!(c.name+" "+(c.phone||"")+" "+(c.neighborhood||"")).toLowerCase().includes(q))return false;
+    if(heatFilter!=="all"&&clientHeat(c).label!==heatFilter)return false;
+    return true;
+  }).sort((a,b)=>new Date(b.lastDate||0)-new Date(a.lastDate||0));
+
+  const heatCounts=closedClients.reduce((acc,c)=>{const l=clientHeat(c).label;acc[l]=(acc[l]||0)+1;return acc},{});
+
+  function addNote(id,text){
+    const nl=closedClients.map(c=>c.id===id?{...c,notes:c.notes?c.notes+"\n"+text:text,lastDate:new Date().toISOString().slice(0,10),logs:[...(c.logs||[]),{text,time:nowStr()}]}:c);
+    setClosedClients(nl);
+    toast("📝 הערה נשמרה");
+  }
+
+  return <>
+    <div style={{padding:S.pg}} className="fade">
+      <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>⭐ לקוחות שלי</div>
+      <div style={{color:"var(--text-gray)",fontSize:14,marginBottom:14}}>כלי פשוט לשמירת קשר עם לקוחות עבר</div>
+
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        <Tag c={G} ch={"סה\"כ "+closedClients.length}/>
+        <Tag c={GR} ch={"🟢 חם "+(heatCounts["חם"]||0)}/>
+        <Tag c={OR} ch={"🟠 פושר "+(heatCounts["פושר"]||0)}/>
+        <Tag c={"#9ca3af"} ch={"⚪ קר "+(heatCounts["קר"]||0)}/>
+      </div>
+
+      <div style={{display:"flex",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+        <input placeholder="🔍 חיפוש לפי שם / טלפון / שכונה..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.inp,flex:"1 1 200px"}}/>
+        <select value={heatFilter} onChange={e=>setHeatFilter(e.target.value)} style={{...S.inp,flex:"0 0 140px",background:"#111827"}}>
+          <option value="all">כל הדירוגים</option>
+          <option value="חם">🟢 חם</option>
+          <option value="פושר">🟠 פושר</option>
+          <option value="קר">⚪ קר</option>
+        </select>
+      </div>
+
+      <div style={{marginBottom:18}}>
+        <Btn ch="שליחה בתפוצה" c={BL} icon="📣" onClick={()=>setBroadcastOpen(true)}/>
+      </div>
+
+      {filtered.length===0&&<Empty icon="⭐" text="אין לקוחות תואמים"/>}
+      {filtered.map(c=><ClientCard key={c.id} c={c} onNote={()=>setNoteClient(c)}/>)}
+    </div>
+
+    {noteClient&&<NoteModal client={noteClient} onClose={()=>setNoteClient(null)} onSave={addNote}/>}
+    {broadcastOpen&&<BroadcastModal allClients={closedClients} filteredClients={filtered} onClose={()=>setBroadcastOpen(false)}/>}
+  </>
+}
+
 // ━━━ APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const TABS=[
   {k:"home",l:"בית",i:"🏠"},{k:"recruit",l:"גיוס",i:"📤"},{k:"daily",l:"יומי",i:"📅"},
   {k:"crm",l:"לקוחות",i:"👥"},{k:"broker",l:"מתווך",i:"🤝"},{k:"agents",l:"רשת",i:"📒"},{k:"autoagents",l:"אוטומציה",i:"🤖"},{k:"report",l:"דיווח",i:"📊"},
-  {k:"archive",l:"לקוחות עבר",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
+  {k:"myclients",l:"לקוחות שלי",i:"⭐"},{k:"archive",l:"לקוחות עבר",i:"📦"},{k:"settings",l:"⚙️",i:"⚙️"},
 ];
 
 const LANDING_URL="https://nadlanpro.vercel.app/landing.html";
@@ -4235,7 +4532,7 @@ function App(){
   const[loginErr,setLoginErr]=useState(false);
   const[loginShowPw,setLoginShowPw]=useState(false);
   function tryFooterLogin(e){if(e)e.preventDefault();if(login(loginPw)){setLoginModal(false);setLoginPw("");setLoginErr(false);setLoginShowPw(false);toast("✅ מחובר")}else{setLoginErr(true);setTimeout(()=>setLoginErr(false),1500)}}
-  const PRIVATE_TABS=["home","recruit","daily","crm","broker","agents","autoagents","report","archive","settings"];
+  const PRIVATE_TABS=["home","recruit","daily","crm","broker","agents","autoagents","report","myclients","archive","settings"];
   // Guard: if not authed and trying to access private tab, reset to landing
   useEffect(()=>{if(!authed&&PRIVATE_TABS.includes(tab)){setTab("landing")}},[authed,tab]);
   const[buyers,_setBuyers]=useState([]);
@@ -4250,6 +4547,7 @@ function App(){
   const[agentGroups,_setAgentGroups]=useState([]);
   const[customAgentTexts,_setCustomAgentTexts]=useState({});
   const[landingConfig,_setLandingConfig]=useState({});
+  const[closedClients,_setClosedClients]=useState([]);
   const[autoBanner,setAutoBanner]=useState(null); // {time} when due
 
   function addFbGroup(g){
@@ -4272,6 +4570,7 @@ function App(){
   function setAgentGroups(v){_setAgentGroups(v);sv("agentGroups",v);try{db.collection("data").doc("agentGroups").set({items:v})}catch(e){console.error("agentGroups write err",e)}}
   function setCustomAgentTexts(v){_setCustomAgentTexts(v);sv("customAgentTexts",v);try{db.collection("data").doc("customAgentTexts").set({items:v})}catch(e){console.error("customAgentTexts write err",e)}}
   function setLandingConfig(v){_setLandingConfig(v);sv("landingConfig",v);try{db.collection("landing_page").doc("config").set(v)}catch(e){console.error("landingConfig write err",e)}}
+  function setClosedClients(v){_setClosedClients(v);sv("clients_closed",v);fsWrite("clients_closed",v)}
 
   useEffect(()=>{
     let unsubs=[];
@@ -4285,6 +4584,7 @@ function App(){
           await db.collection("data").doc("brokerProps").set({items:[]});
           await db.collection("data").doc("prospects").set({items:[]});
           await db.collection("data").doc("agentsContacts").set({items:[]});
+          await db.collection("data").doc("clients_closed").set({items:CLOSED_CLIENTS_SEED});
           await db.collection("data").doc("_init").set({done:true,time:new Date().toISOString()});
         }else{
           const sellersDoc=await db.collection("data").doc("sellers").get();
@@ -4302,9 +4602,14 @@ function App(){
             await db.collection("data").doc("agentGroups").set({items:DEFAULT_AGENT_GROUPS});
             console.log("Seeded agentGroups from defaults");
           }
+          const closedClientsDoc=await db.collection("data").doc("clients_closed").get();
+          if(!closedClientsDoc.exists||!(closedClientsDoc.data()&&closedClientsDoc.data().items&&closedClientsDoc.data().items.length)){
+            await db.collection("data").doc("clients_closed").set({items:CLOSED_CLIENTS_SEED});
+            console.log("Seeded clients_closed from provided list");
+          }
         }
       }catch(e){console.error("Firestore init error:",e)}
-      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["agentGroups",d=>_setAgentGroups(Array.isArray(d)?d:[])],["customAgentTexts",d=>_setCustomAgentTexts(d&&typeof d==="object"&&!Array.isArray(d)?d:{})]];
+      const collections=[["buyers",_setBuyers],["sellers",_setSellers],["tasks",_setTasks],["brokerProps",_setBrokerProps],["prospects",_setProspects],["agentsContacts",_setAgentsContacts],["agentAuto",d=>_setAgentAuto(d||{})],["agentGroups",d=>_setAgentGroups(Array.isArray(d)?d:[])],["customAgentTexts",d=>_setCustomAgentTexts(d&&typeof d==="object"&&!Array.isArray(d)?d:{})],["clients_closed",_setClosedClients]];
       // Landing-page config lives at landing_page/config (flat doc, no items wrapper).
       const landingUnsub=db.collection("landing_page").doc("config").onSnapshot(doc=>{
         if(doc.exists){const data=doc.data()||{};_setLandingConfig(data);sv("landingConfig",data)}
@@ -4404,6 +4709,7 @@ function App(){
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups} customAgentTexts={customAgentTexts||{}} setCustomAgentTexts={setCustomAgentTexts}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
+      {tab==="myclients"&&<MyClients closedClients={closedClients} setClosedClients={setClosedClients}/>}
       {tab==="archive"&&<Archive sellers={sellers} setSellers={setSellers} buyers={buyers} setBuyers={setBuyers}/>}
       {tab==="settings"&&<Settings onClose={()=>setTab("home")}/>}
 

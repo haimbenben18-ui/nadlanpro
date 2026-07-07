@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "3456"],
       "port": 3456
+    },
+    {
+      "name": "nadlanpro-ps",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".claude/static-server.ps1", "-Port", "3457"],
+      "port": 3457
     }
   ]
 }
