@@ -4753,7 +4753,14 @@ function App(){
             <div style={{fontWeight:800,fontSize:"1.4rem",letterSpacing:"-0.02em",background:"linear-gradient(135deg,#c3a652,#e8c84a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.1}}>NadlanPro</div>
             <div style={{fontSize:"0.78rem",color:"var(--text-dim)",marginTop:3,fontWeight:400}}>CRM · חיים בן סימון</div>
           </div>
-          <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {(agentAuto&&agentAuto.autoSendEnabled!==false)?
+              <button onClick={()=>{setAgentAuto({...agentAuto,autoSendEnabled:false});toast("⏸ אוטומציית המתווכים הושהתה")}} title="עצירת חירום — משהה מיידית את השליחה האוטומטית למתווכים" style={{background:"rgba(220,38,38,0.12)",border:"1px solid rgba(220,38,38,0.35)",borderRadius:22,padding:"5px 12px",fontSize:11,color:RE,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>⏸ עצור אוטומציה</button>
+              :
+              <button onClick={()=>{setAgentAuto({...agentAuto,autoSendEnabled:true});toast("▶️ אוטומציית המתווכים הופעלה")}} title="הפעלת השליחה האוטומטית למתווכים" style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 12px",fontSize:11,color:GR,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>▶️ מושהית</button>
+            }
+            <div style={{background:"var(--green-soft)",border:"1px solid rgba(22,163,74,0.25)",borderRadius:22,padding:"5px 14px",fontSize:11,color:GR,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{width:7,height:7,background:GR,borderRadius:"50%",display:"inline-block",animation:"pdot 2s infinite"}}/>פעיל</div>
+          </div>
         </div>
       </div>
 
