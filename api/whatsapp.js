@@ -1,4 +1,8 @@
 import crypto from 'crypto';
+import { fsGetDoc, fsSetDoc } from './_lib/firestore.js';
+import { israelNow, todayKey, canSendNow, pickDueSlot } from './_lib/schedule.js';
+import { ultraSend } from './_lib/ultramsg.js';
+import { buildAgentShortMsg } from './_lib/messages.js';
 
 const TELEGRAM_CHAT_ID = "5941736529";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -40,116 +44,6 @@ async function fbDelete(path) {
   await fetch(`${FIREBASE_URL}/${path}.json`, { method: 'DELETE' });
 }
 
-// ═══ Firestore REST (for agent automation, which the web app stores in Firestore) ═══
-const FIRESTORE_PROJECT = process.env.FIRESTORE_PROJECT || "nadlanpro-5b041";
-const FIRESTORE_KEY     = process.env.FIRESTORE_API_KEY || "AIzaSyBAD_k4u-8hXNb4VMMiDOoPvJ17wVZW9ew";
-function fsDecodeValue(v) {
-  if (!v) return null;
-  if (v.stringValue   !== undefined) return v.stringValue;
-  if (v.integerValue  !== undefined) return parseInt(v.integerValue, 10);
-  if (v.doubleValue   !== undefined) return v.doubleValue;
-  if (v.booleanValue  !== undefined) return v.booleanValue;
-  if (v.nullValue     !== undefined) return null;
-  if (v.timestampValue!== undefined) return v.timestampValue;
-  if (v.arrayValue)   return (v.arrayValue.values || []).map(fsDecodeValue);
-  if (v.mapValue)     return fsDecodeFields(v.mapValue.fields || {});
-  return null;
-}
-function fsDecodeFields(fields) {
-  const o = {};
-  for (const [k, v] of Object.entries(fields || {})) o[k] = fsDecodeValue(v);
-  return o;
-}
-function fsEncodeValue(v) {
-  if (v === null || v === undefined) return { nullValue: null };
-  if (typeof v === "boolean") return { booleanValue: v };
-  if (typeof v === "number")  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-  if (typeof v === "string")  return { stringValue: v };
-  if (Array.isArray(v))       return { arrayValue: { values: v.map(fsEncodeValue) } };
-  if (typeof v === "object")  return { mapValue: { fields: fsEncodeFields(v) } };
-  return { stringValue: String(v) };
-}
-function fsEncodeFields(obj) {
-  const f = {};
-  for (const [k, v] of Object.entries(obj)) f[k] = fsEncodeValue(v);
-  return f;
-}
-async function fsGetDoc(docPath) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents/${docPath}?key=${FIRESTORE_KEY}`;
-  const r = await fetch(url);
-  if (!r.ok) return null;
-  const j = await r.json();
-  return j && j.fields ? fsDecodeFields(j.fields) : null;
-}
-async function fsSetDoc(docPath, obj) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents/${docPath}?key=${FIRESTORE_KEY}`;
-  const r = await fetch(url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fields: fsEncodeFields(obj) }),
-  });
-  return r.ok;
-}
-
-// ═══ UltraMsg ═══
-const ULTRAMSG_INSTANCE = process.env.ULTRAMSG_INSTANCE || "instance169955";
-const ULTRAMSG_TOKEN    = process.env.ULTRAMSG_TOKEN    || "slhhpfslyuey11fp";
-async function ultraSend(recipient, text) {
-  // Groups (e.g. 12345@g.us) pass through unchanged. Phones get normalised.
-  const isGroup = /@g\.us$/i.test(recipient || "");
-  const to = isGroup ? recipient : (recipient || "").replace(/^0/, "972").replace(/[-\s+]/g, "");
-  if (!to) return { sent: false, reason: "no_recipient" };
-  try {
-    const r = await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ token: ULTRAMSG_TOKEN, to, body: text }),
-    });
-    const d = await r.json();
-    return d.sent ? { sent: true } : { sent: false, reason: d.error || "unknown" };
-  } catch (e) {
-    return { sent: false, reason: e.message };
-  }
-}
-
-// ═══ Agent automation — shared helpers ═══
-function israelNow() {
-  const s = new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" });
-  return new Date(s);
-}
-function todayKey() { return israelNow().toISOString().slice(0, 10); }
-function pickCurrentSlot(sendTimes) {
-  const now = israelNow();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  let best = null;
-  for (const t of (sendTimes || ["09:00", "14:00"])) {
-    const [h, m] = t.split(":").map(Number);
-    const tMin = h * 60 + m;
-    if (nowMin >= tMin && nowMin - tMin <= 240) {
-      if (!best || tMin > best.tMin) best = { t, tMin };
-    }
-  }
-  return best ? best.t : null;
-}
-function buildAgentShortMsg(prop) {
-  const city  = prop.city || "באר שבע";
-  const addr  = prop.address || prop.name || "";
-  const rooms = prop.rooms || "";
-  const size  = prop.size ? `${prop.size} מ"ר` : "";
-  const floor = prop.floor || "";
-  const priceN = Number(prop.price);
-  const price = (prop.price && !isNaN(priceN)) ? `${priceN.toLocaleString()} ₪` : "";
-  let m = "דירה למכירה\n";
-  m += `📍 ${addr}${city ? `, ${city}` : ""}\n`;
-  const parts = [];
-  if (rooms) parts.push(`🛏️ ${rooms} חד'`);
-  if (floor) parts.push(`🏢 ק' ${floor}`);
-  if (size)  parts.push(`📐 ${size}`);
-  if (parts.length) m += `${parts.join(" | ")}\n`;
-  if (price) m += `💰 ${price}\n`;
-  m += "📞 חיים 0544740691";
-  return m;
-}
 async function loadAgentAutomationContext() {
   const auto       = (await fsGetDoc("data/agentAuto"))      || {};
   const sellersDoc = (await fsGetDoc("data/sellers"))        || {};
@@ -175,31 +69,7 @@ async function loadAgentAutomationContext() {
   return { config, props, targetAgents, targetGroups };
 }
 
-// ═══ שעות פעילות ושבת/חגים ═══
-function isWorkingHours() {
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-  const current = now.getHours() * 60 + now.getMinutes();
-  return current >= 499 && current <= 1200;
-}
-
-function isShabbatOrHoliday() {
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-  const day = now.getDay();
-  if (day === 6) return true;
-  if (day === 5 && now.getHours() >= 16) return true;
-  const mmdd = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const holidays = [
-    '09-22','09-23','09-24','10-01','10-02','10-06','10-07','10-13','10-14',
-    '12-14','12-15','12-16','12-17','12-18','12-19','12-20','12-21','12-22',
-    '03-03','03-04','03-31','04-01','04-06','04-07','04-21','04-22','04-13',
-    '05-21','05-22','07-26','09-11','09-12','09-13','09-20','09-21',
-  ];
-  return holidays.includes(mmdd);
-}
-
-function canSendExternal() {
-  return isWorkingHours() && !isShabbatOrHoliday();
-}
+// ═══ שעות פעילות, שבת וחגים — ראו _lib/schedule.js (canSendNow) ═══
 
 // ═══ Cloudinary ═══
 async function uploadCloudinary(imageUrl) {
@@ -349,9 +219,12 @@ function detectIntent(text) {
   if (/^(עזרה|עזור|מה אתה יודע|פקודות)$/.test(t)) return { cmd: 'עזרה' };
   if (/^(ביטול|בטל|עזוב|בלי|לא)$/.test(t))   return { cmd: 'ביטול' };
 
-  // Agent-automation approval / skip — explicit human consent only.
+  // Agent-automation — manual force-send / skip-this-round overrides.
   if (/^(שלח\s+(ל)?מתווכים|אשר\s+שליחה)$/.test(t))   return { cmd: 'send_agents' };
   if (/^(דלג|דלג\s+היום|skip)$/i.test(t))             return { cmd: 'skip_agents' };
+  // Agent-automation — pause / resume the automatic sending entirely.
+  if (/^(השהה\s+אוטומציה|עצור\s+אוטומציה|כבה\s+אוטומציה)$/.test(t)) return { cmd: 'auto_off' };
+  if (/^(הפעל\s+אוטומציה|הדלק\s+אוטומציה)$/.test(t))                return { cmd: 'auto_on' };
 
   // עברית טבעית — דירה מוכר/מתווך
   // מזהה: [פועל אופציונלי] דיר(ה/ת) מוכר/מתווך [שאר]
@@ -647,10 +520,16 @@ export default async function handler(req, res) {
           ]);
           const sc = sellers ? Object.keys(sellers).length : 0;
           const ac = agents  ? Object.keys(agents).length  : 0;
+          const gate = await canSendNow();
+          const autoDoc = (await fsGetDoc("data/agentAuto")) || {};
+          const autoConfig = (autoDoc.items && typeof autoDoc.items === "object" && !Array.isArray(autoDoc.items)) ? autoDoc.items : {};
+          const autoEnabled = autoConfig.autoSendEnabled !== false;
+          const reasonHe = { outside_hours: 'מחוץ לשעות (08:00-20:00)', shabbat: 'שבת/ערב שבת', holiday: 'חג' };
           await sendTelegram(chatId, [
             '📊 *סטטוס NadlanPro*', '',
             `🤖 מוטי: ${active !== false ? '🟢 פעיל' : '🔴 כבוי'}`,
-            `⏰ שליחה החוצה: ${canSendExternal() ? '✅ מותר' : '🚫 מחוץ לשעות'}`,
+            `⏰ שליחה החוצה: ${gate.ok ? '✅ מותר' : `🚫 חסום — ${reasonHe[gate.reason] || gate.reason}`}`,
+            `🔁 אוטומציית מתווכים: ${autoEnabled ? '🟢 פעילה' : '⏸ בהשהיה'}`,
             `🏠 נכסי מוכר: ${sc}`,
             `🤝 נכסי מתווך: ${ac}`,
             `📦 סה"כ: ${sc + ac}`, '',
@@ -669,8 +548,11 @@ export default async function handler(req, res) {
             '😴 "כבה" / "כיבוי"',
             '❌ "ביטול" / "בטל"', '',
             '🤖 *אוטומציית מתווכים:*',
-            '✅ "שלח למתווכים" — מאשר שליחה לכל המתווכים',
-            '❌ "דלג" — דילוג על השליחה הנוכחית', '',
+            'שולחת אוטומטית כמה פעמים ביום (בלי לחכות לאישור), 08:00-20:00, לא בשישי אחה"צ/שבת/חג.',
+            '🚀 "שלח למתווכים" — שליחה ידנית מיידית של כל התור',
+            '⏭ "דלג" — דילוג על סבב השליחה הקרוב',
+            '⏸ "השהה אוטומציה" — עצירת השליחה האוטומטית',
+            '▶️ "הפעל אוטומציה" — חזרה לשליחה אוטומטית', '',
             '💡 *איך להוסיף דירה:*',
             '1. שלח "דירה מוכר"',
             '2. שלח טקסט חופשי עם הפרטים + תמונות',
@@ -693,8 +575,8 @@ export default async function handler(req, res) {
             await sendTelegram(chatId, '⚠️ לא נבחרו מתווכים ולא הופעלו קבוצות. עבור לטאב "אוטומציה" באתר.');
             break;
           }
-          const slot = pickCurrentSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
-          await sendTelegram(chatId, `🚀 מתחיל שליחה ל-${ctx.targetAgents.length} מתווכים ו-${ctx.targetGroups.length} קבוצות, ${ctx.props.length} דירות לכל יעד...`);
+          const slot = pickDueSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
+          await sendTelegram(chatId, `🚀 שליחה ידנית — מתחיל שליחה ל-${ctx.targetAgents.length} מתווכים ו-${ctx.targetGroups.length} קבוצות, ${ctx.props.length} דירות לכל יעד...`);
           let okCount = 0;
           for (let i = 0; i < recipients.length; i++) {
             const r = recipients[i];
@@ -705,7 +587,7 @@ export default async function handler(req, res) {
             }
             if (i < recipients.length - 1) await new Promise(rs => setTimeout(rs, 3000));
           }
-          // Persist lastSent so the cron / web app see it as handled today.
+          // Persist lastSent so the cron sees this slot as already handled today.
           const dayKey  = todayKey();
           const slotKey = `${dayKey}_${slot}`;
           const newLastSent = { ...(ctx.config.lastSent || {}), [slotKey]: {
@@ -718,12 +600,28 @@ export default async function handler(req, res) {
 
         case 'skip_agents': {
           const ctx = await loadAgentAutomationContext();
-          const slot = pickCurrentSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
+          const slot = pickDueSlot(ctx.config.sendTimes) || israelNow().toTimeString().slice(0,5);
           const dayKey  = todayKey();
           const slotKey = `${dayKey}_${slot}`;
           const newSkipped = { ...(ctx.config.skippedToday || {}), [slotKey]: { skippedAt: new Date().toISOString() } };
           await fsSetDoc("data/agentAuto", { items: { ...ctx.config, skippedToday: newSkipped } });
-          await sendTelegram(chatId, `⏭ דילגתי על השליחה (${slot}). לא נשלחה שום הודעה.`);
+          await sendTelegram(chatId, `⏭ דילגתי על הסבב הקרוב (${slot}). לא נשלחה שום הודעה.`);
+          break;
+        }
+
+        case 'auto_off': {
+          const doc = (await fsGetDoc("data/agentAuto")) || {};
+          const cfg = (doc.items && typeof doc.items === "object" && !Array.isArray(doc.items)) ? doc.items : {};
+          await fsSetDoc("data/agentAuto", { items: { ...cfg, autoSendEnabled: false } });
+          await sendTelegram(chatId, '⏸ אוטומציית המתווכים הושהתה. אפשר עדיין לשלוח ידנית עם "שלח למתווכים".\nלהחזרה: "הפעל אוטומציה".');
+          break;
+        }
+
+        case 'auto_on': {
+          const doc = (await fsGetDoc("data/agentAuto")) || {};
+          const cfg = (doc.items && typeof doc.items === "object" && !Array.isArray(doc.items)) ? doc.items : {};
+          await fsSetDoc("data/agentAuto", { items: { ...cfg, autoSendEnabled: true } });
+          await sendTelegram(chatId, '▶️ אוטומציית המתווכים חזרה לפעולה — שליחה אוטומטית לפי השעות המוגדרות.');
           break;
         }
 

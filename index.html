@@ -1305,7 +1305,14 @@ function AddTaskModal({client,onClose,onAdd}){
 }
 
 // ━━━ CRM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts}){
+function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProps,setHotProps,tasks,setTasks,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts,agentAuto,setAgentAuto}){
+  function isInAutomation(p,src){return((agentAuto&&agentAuto.items)||[]).some(it=>it.propId===p.id&&it.propSrc===src)}
+  function toggleAutomation(p,src){
+    const items=(agentAuto&&agentAuto.items)||[];
+    const idx=items.findIndex(it=>it.propId===p.id&&it.propSrc===src);
+    if(idx>=0){setAgentAuto({...agentAuto,items:items.filter((_,i)=>i!==idx)});toast("🗑 הוסר מאוטומציית המתווכים")}
+    else{setAgentAuto({...agentAuto,items:[...items,{id:Date.now(),propId:p.id,propSrc:src}]});toast("🤖 נוסף לאוטומציית המתווכים")}
+  }
   const[tab,setTab]=useState(initialTab||"sellers");
   useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab]);const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");const[msgCache,setMsgCache]=useState({});const[taskModal,setTaskModal]=useState(null);const[distOpen,setDistOpen]=useState(false);
   // seller form
@@ -1707,7 +1714,7 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
     {tab==="sellers"&&<div>{fS.length===0&&<Empty icon="🏡" text="אין מוכרים"/>}{fS.map(s=>{const tc=getTouchCount(s);return <div key={s.id} style={S.card}>
       {s.images&&s.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{s.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div style={{flex:1}}><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{s.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{s.phone}</div><div style={{color:"#666",fontSize:14}}>{s.address}{s.rooms?" · "+s.rooms+" חד":""}</div>{tc>0&&<div style={{fontSize:12,color:"var(--gold)",marginTop:4,fontWeight:600}}>🎯 נגיעות: {tc}/3</div>}</div><div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}><Tag c={OR} ch={fmtP(s.price)}/>{s.exclusiveEnd&&<Tag c="#555" ch={"עד "+s.exclusiveEnd}/>}{s.status&&s.status!=="חדש"&&<span style={{fontSize:11,color:"var(--gold)",fontWeight:600}}>{s.status}</span>}</div></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/><Btn sm ch="✏️" c={G} onClick={()=>openEditSeller(s)}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={OR} onClick={()=>{setSel(s);setMode("view")}}/><Btn sm ch="✏️" c={G} onClick={()=>openEditSeller(s)}/>{s.phone&&<Btn sm c={GR} ch="💬" onClick={()=>openWA(s.phone)}/>}{s.phone&&<Btn sm ch="📞" c={BL} onClick={()=>window.location.href='tel:'+(s.phone||'')}/>}{s.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(s.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(s.phone,urls)}}/>}<Btn sm ch="➕ משימה" c={PU} ghost onClick={()=>setTaskModal({name:s.name,phone:s.phone||"",type:"seller"})}/><Btn sm ch={isInAutomation(s,"s")?"🤖 באוטומציה ✓":"🤖 לאוטומציה"} c={isInAutomation(s,"s")?GR:"#888"} ghost={!isInAutomation(s,"s")} onClick={()=>toggleAutomation(s,"s")}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updS(s.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delS(s.id)}/></div>
       {s.phone&&(()=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");const cached=msgCache[pn]||[];return cached.length>0?<div style={{marginTop:6}}>{cached.slice(0,2).map((m,i)=><div key={i} style={{fontSize:11,color:"#555",paddingRight:8,marginTop:3,borderRight:"2px solid rgba(201,168,76,0.25)"}}>← {m.text.substring(0,55)}{m.text.length>55?"...":""}</div>)}</div>:null;})()}
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>})}</div>}
@@ -1789,7 +1796,14 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
 }
 
 // ━━━ BROKER PROPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts}){
+function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agentsContacts,fbGroups,addFbGroup,delFbGroup,customAgentTexts,agentAuto,setAgentAuto}){
+  function isInAutomation(p,src){return((agentAuto&&agentAuto.items)||[]).some(it=>it.propId===p.id&&it.propSrc===src)}
+  function toggleAutomation(p,src){
+    const items=(agentAuto&&agentAuto.items)||[];
+    const idx=items.findIndex(it=>it.propId===p.id&&it.propSrc===src);
+    if(idx>=0){setAgentAuto({...agentAuto,items:items.filter((_,i)=>i!==idx)});toast("🗑 הוסר מאוטומציית המתווכים")}
+    else{setAgentAuto({...agentAuto,items:[...items,{id:Date.now(),propId:p.id,propSrc:src}]});toast("🤖 נוסף לאוטומציית המתווכים")}
+  }
   const[mode,setMode]=useState("list");const[sel,setSel]=useState(null);const[search,setSearch]=useState("");
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[ba,setBa]=useState("");const[bc,setBc]=useState("באר שבע");const[br2,setBr2]=useState("");const[bs,setBs]=useState("");const[bf,setBf]=useState("");const[bprice,setBprice]=useState("");const[bnotes,setBnotes]=useState("");const[bimgs,setBimgs]=useState([]);const[bvid,setBvid]=useState("");const[bagent,setBagent]=useState("");
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);const[galleryOpen,setGalleryOpen]=useState(null);
@@ -1940,7 +1954,7 @@ function BrokerPage({brokerProps,setBrokerProps,buyers,hotProps,setHotProps,agen
     {fP.map(p=><div key={p.id} style={S.card}>
       {p.images&&p.images.length>0&&<div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto"}}>{p.images.map(img=><img key={img.id} src={img.url} style={{width:112,height:84,objectFit:"cover",borderRadius:12,flexShrink:0}}/>)}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{p.address||p.name}</div><div style={{color:"#777",fontSize:14}}>{p.rooms||"?"}חד · {fmtP(p.price)}</div><div style={{color:TE,fontSize:12}}>מתווך: {p.agentName||"—"}</div></div><Tag c={TE} ch={fmtP(p.price)}/></div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updProp(p.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn sm ch="כרטיסייה" c={TE} onClick={()=>{setSel(p);setMode("view")}}/>{p.phone&&<Btn sm ch="📷" c={PU} ghost onClick={async()=>{const urls=(p.images||[]).filter(i=>i&&i.type!=="video"&&i.url).map(i=>i.url);if(urls.length===0){toast("⚠️ אין תמונות לנכס זה");return}await sendWhatsAppImagesOnly(p.phone,urls)}}/>}<Btn sm ch={isInAutomation(p,"b")?"🤖 באוטומציה ✓":"🤖 לאוטומציה"} c={isInAutomation(p,"b")?GR:"#888"} ghost={!isInAutomation(p,"b")} onClick={()=>toggleAutomation(p,"b")}/><Btn sm ghost ch="📦" c={"#888"} onClick={()=>{updProp(p.id,"archived",true);toast("📦 הועבר לארכיון")}}/><Btn sm ghost c={RE} ch="מחק" onClick={()=>delProp(p.id)}/></div>
     </div>)}
   </div>
 }
@@ -3687,9 +3701,12 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
   const allProps=[...(sellers||[]).map(s=>({...s,_src:"s"})),...(brokerProps||[]).map(p=>({...p,_src:"b"}))];
   const items=agentAuto.items||[];
   const queue=items.map(it=>{const p=allProps.find(p=>p.id===it.propId&&p._src===it.propSrc);return p?{...p,_qId:it.id}:null}).filter(Boolean);
-  const sendTimes=agentAuto.sendTimes||["09:00","14:00"];
+  const sendTimes=agentAuto.sendTimes||["08:30","11:30","14:30","17:30"];
   const selectedAgents=agentAuto.selectedAgents||[];
   const lastSent=agentAuto.lastSent||{};
+  const autoSendEnabled=agentAuto.autoSendEnabled!==false;
+  const propsPerSlot=Number.isInteger(agentAuto.propsPerSlot)&&agentAuto.propsPerSlot>0?agentAuto.propsPerSlot:2;
+  const rotationIndex=Number.isInteger(agentAuto.rotationIndex)?agentAuto.rotationIndex:0;
   const[showPicker,setShowPicker]=useState(false);
   const[showAgents,setShowAgents]=useState(false);
   const[preview,setPreview]=useState(null);
@@ -3732,6 +3749,22 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
   function setTimes(idx,val){
     const t=[...sendTimes];t[idx]=val;patch({sendTimes:t});
   }
+  function addTimeSlot(){
+    if(sendTimes.length>=8){toast("⚠️ עד 8 שעות שליחה ביום");return}
+    const last=sendTimes[sendTimes.length-1]||"08:30";
+    const[h,m]=last.split(":").map(Number);
+    const nextMin=Math.min(h*60+m+180,20*60); // +3 שעות, לא יאוחר מ-20:00
+    const nh=String(Math.floor(nextMin/60)).padStart(2,"0");
+    const nm=String(nextMin%60).padStart(2,"0");
+    patch({sendTimes:[...sendTimes,`${nh}:${nm}`]});
+  }
+  function removeTimeSlot(idx){
+    if(sendTimes.length<=1){toast("⚠️ חייבת להישאר לפחות שעה אחת");return}
+    patch({sendTimes:sendTimes.filter((_,i)=>i!==idx)});
+  }
+  function toggleAutoSend(){patch({autoSendEnabled:!autoSendEnabled})}
+  function setPropsPerSlot(v){const n=Math.max(1,Math.min(10,parseInt(v,10)||1));patch({propsPerSlot:n})}
+  function resetRotation(){patch({rotationIndex:0});toast("🔄 הסבב אותחל — הפעם הבאה תתחיל מהדירה הראשונה בתור")}
   function openPreview(timeStr,singleProp){
     const propsToUse=singleProp?[singleProp]:queue;
     if(propsToUse.length===0){toast("⚠️ אין דירות באוטומציה — הוסף דירה קודם");return}
@@ -3813,23 +3846,49 @@ function AgentAutomation({sellers,brokerProps,agentsContacts,agentAuto,setAgentA
 
   return <div style={{padding:S.pg}} className="fade">
     <div style={{fontFamily:"'Frank Ruhl Libre',serif",fontSize:24,fontWeight:900,color:G,marginBottom:6}}>🤖 אוטומציית מתווכים</div>
-    <div style={{color:"#777",fontSize:14,marginBottom:18}}>שליחה אוטומטית של דירות לרשת המתווכים — באישור שלך בלבד</div>
+    <div style={{color:"#777",fontSize:14,marginBottom:18}}>שליחה אוטומטית של דירות בסבב לרשת המתווכים — 08:00-20:00, לא בשישי אחה"צ/שבת/חג</div>
+
+    {/* Auto-send on/off */}
+    <div style={{...S.card,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+      <div>
+        <Lbl t="שליחה אוטומטית" icon={autoSendEnabled?"🟢":"⏸"}/>
+        <div style={{color:"#999",fontSize:12.5,marginTop:2}}>{autoSendEnabled?"פעילה — שולחת לבד בכל שעה שהוגדרה למטה, בלי לחכות לאישור":"בהשהיה — לא תישלח שום הודעה אוטומטית עד שתפעיל מחדש"}</div>
+      </div>
+      <Btn sm ch={autoSendEnabled?"⏸ השהה":"▶️ הפעל"} c={autoSendEnabled?"#888":GR} onClick={toggleAutoSend}/>
+    </div>
 
     {/* Send times */}
     <div style={S.card}>
-      <Lbl t="שעות שליחה" icon="⏰"/>
-      <div style={{display:"flex",gap:10,marginBottom:10}}>
-        {sendTimes.map((t,i)=><div key={i} style={{flex:1}}>
-          <input type="time" value={t} onChange={e=>setTimes(i,e.target.value)} style={S.inp}/>
+      <Lbl t={"שעות שליחה ("+sendTimes.length+")"} icon="⏰"/>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
+        {sendTimes.map((t,i)=><div key={i} style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input type="time" value={t} onChange={e=>setTimes(i,e.target.value)} style={{...S.inp,flex:1}}/>
+          <button onClick={()=>removeTimeSlot(i)} title="הסר שעה" style={{background:"transparent",border:"none",color:RE,fontSize:18,cursor:"pointer",padding:"2px 8px"}}>🗑</button>
         </div>)}
       </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {sendTimes.map((t,i)=>{
-          const k=today+"_"+t;
-          const sent=lastSent[k];
-          return <Btn key={i} sm ch={"📤 שלח עכשיו ("+t+")"+(sent?" ✓":"")} c={sent?GR:OR} onClick={()=>openPreview(t)}/>;
-        })}
+      <Btn sm ghost ch="➕ הוסף שעה" c={BL} onClick={addTimeSlot}/>
+      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <div style={{color:"#999",fontSize:12.5,marginBottom:8}}>שליחה ידנית מיידית (לא ממתינה לשעה):</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {sendTimes.map((t,i)=>{
+            const k=today+"_"+t;
+            const sent=lastSent[k];
+            return <Btn key={i} sm ch={"📤 שלח עכשיו ("+t+")"+(sent?" ✓":"")} c={sent?GR:OR} onClick={()=>openPreview(t)}/>;
+          })}
+        </div>
       </div>
+    </div>
+
+    {/* Rotation */}
+    <div style={S.card}>
+      <Lbl t="סבב שליחה" icon="🔁"/>
+      <div style={{color:"#999",fontSize:12.5,marginBottom:10}}>כל סבב שולח את הדירות הבאות בתור (לא את כל התור בכל פעם), וממשיך מאיפה שעצר — כדי שהקבוצות לא יקבלו הצפה חוזרת.</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,flexWrap:"wrap"}}>
+        <span style={{color:"#bbb",fontSize:13.5}}>כמה דירות בכל סבב:</span>
+        <input type="number" min="1" max="10" value={propsPerSlot} onChange={e=>setPropsPerSlot(e.target.value)} style={{...S.inp,width:70,textAlign:"center"}}/>
+      </div>
+      {queue.length>0&&<div style={{color:"#999",fontSize:12.5,marginBottom:10}}>מיקום נוכחי בתור: דירה #{(rotationIndex%queue.length)+1} מתוך {queue.length}{queue[rotationIndex%queue.length]?(" — "+(queue[rotationIndex%queue.length].address||queue[rotationIndex%queue.length].name||"")):""}</div>}
+      <Btn sm ghost ch="🔄 אתחל סבב מההתחלה" c={"#888"} onClick={resetRotation}/>
     </div>
 
     {/* Agents selection */}
@@ -4649,11 +4708,15 @@ function App(){
     return()=>unsubs.forEach(u=>u());
   },[]);
 
-  // Check if a send-time has passed today and was not yet sent — show banner.
+  // האוטומציה שולחת לבד (ראה AgentAutomation) — הבאנר הזה הוא רק "פעמון אזהרה":
+  // אם עברו יותר מ-30 דק' מסבב שהיה אמור לצאת והוא עדיין לא נשלח ולא דולג,
+  // כנראה שמשהו לא תקין (קרון נכשל / אוטומציה בהשהיה) וכדאי לבדוק.
   useEffect(()=>{
     if(!loaded)return;
-    const times=(agentAuto&&agentAuto.sendTimes)||["09:00","14:00"];
+    if(agentAuto&&agentAuto.autoSendEnabled===false){setAutoBanner(null);return}
+    const times=(agentAuto&&agentAuto.sendTimes)||["08:30","11:30","14:30","17:30"];
     const lastSent=(agentAuto&&agentAuto.lastSent)||{};
+    const skipped=(agentAuto&&agentAuto.skippedToday)||{};
     const now=new Date();
     const today=now.toISOString().slice(0,10);
     const nowMin=now.getHours()*60+now.getMinutes();
@@ -4662,7 +4725,7 @@ function App(){
       const[h,m]=t.split(":").map(Number);
       const tMin=h*60+m;
       const key=today+"_"+t;
-      if(nowMin>=tMin&&!lastSent[key]){due=t}
+      if(nowMin>=tMin+30&&nowMin<=tMin+180&&!lastSent[key]&&!skipped[key]){due=t}
     }
     setAutoBanner(due?{time:due}:null);
   },[loaded,agentAuto,tab]);
@@ -4695,7 +4758,7 @@ function App(){
       </div>
 
       {autoBanner&&<div style={{background:"linear-gradient(135deg,#c3a652,#a8882e)",color:"#08090d",padding:"14px 20px",borderRadius:"0 0 12px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",boxShadow:"0 4px 16px rgba(195,166,82,0.3)",fontWeight:600}}>
-        <div style={{fontSize:14,fontWeight:700}}>⏰ הגיע זמן שליחה למתווכים ({autoBanner.time}) — לשלוח עכשיו?</div>
+        <div style={{fontSize:14,fontWeight:700}}>⚠️ סבב השליחה של {autoBanner.time} עדיין לא יצא אוטומטית — כדאי לבדוק</div>
         <div style={{display:"flex",gap:8}}>
           <button onClick={()=>{setTab("autoagents");setAutoBanner(null)}} style={{background:"#08090d",border:"none",borderRadius:10,padding:"8px 14px",color:"#c3a652",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>פתח אוטומציה</button>
           <button onClick={()=>setAutoBanner(null)} style={{background:"transparent",border:"1px solid rgba(8,9,13,0.35)",borderRadius:10,padding:"8px 12px",color:"#08090d",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>סגור</button>
@@ -4704,8 +4767,8 @@ function App(){
       {tab==="home"&&<Dashboard buyers={buyers} setBuyers={v=>{setBuyers(v);sv("buyers",v)}} sellers={sellers} tasks={tasks} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} brokerProps={brokerProps} setTab={setTab} setCrmInitTab={setCrmInitTab}/>}
       {tab==="recruit"&&<Recruit prospects={prospects} setProspects={setProspects} landingConfig={landingConfig||{}} setLandingConfig={setLandingConfig}/>}
       {tab==="daily"&&<DailyPlan tasks={tasks} setTasks={setTasks}/>}
-      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}}/>}
-      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}}/>}
+      {tab==="crm"&&<CRM buyers={buyers} setBuyers={setBuyers} sellers={sellers} setSellers={setSellers} brokerProps={brokerProps} initialTab={crmInitTab} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} tasks={tasks} setTasks={setTasks} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto}/>}
+      {tab==="broker"&&<BrokerPage brokerProps={brokerProps} setBrokerProps={setBrokerProps} buyers={buyers} hotProps={hotProps} setHotProps={v=>{setHotProps(v);sv("hotProps",v)}} agentsContacts={agentsContacts} fbGroups={fbGroups} addFbGroup={addFbGroup} delFbGroup={delFbGroup} customAgentTexts={customAgentTexts||{}} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto}/>}
       {tab==="agents"&&<AgentsList agentsContacts={agentsContacts} setAgentsContacts={setAgentsContacts} sellers={sellers} brokerProps={brokerProps}/>}
       {tab==="autoagents"&&<AgentAutomation sellers={sellers} brokerProps={brokerProps} agentsContacts={agentsContacts} agentAuto={agentAuto||{}} setAgentAuto={setAgentAuto} agentGroups={agentGroups||[]} setAgentGroups={setAgentGroups} customAgentTexts={customAgentTexts||{}} setCustomAgentTexts={setCustomAgentTexts}/>}
       {tab==="report"&&<WeeklyReport sellers={sellers}/>}
