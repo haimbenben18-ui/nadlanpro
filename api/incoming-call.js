@@ -18,7 +18,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { fsGetDoc } from './_lib/firestore.js';
-import { fbGet, fbSet } from './_lib/firebase.js';
+import { fbGet, fbSet, fbPush } from './_lib/firebase.js';
 import { normalizePhone } from './_lib/phone.js';
 
 const TELEGRAM_CHAT_ID = "5941736529";
@@ -75,14 +75,24 @@ export default async function handler(req, res) {
       return res.status(200).json({ status: 'already_pending' });
     }
 
-    // ── מספר לא מוכר — פותחים שיחה בטלגרם ──
-    await fbSet(`sessions/${TELEGRAM_CHAT_ID}`, {
-      active: true,
-      type: 'buyer_call',
-      step: 'confirm',
-      phone,
-      created_at: new Date().toISOString(),
-    });
+    // ── מספר לא מוכר — שמירה ב-incoming_calls + פתיחת שיחה בטלגרם ──
+    const callTime = new Date().toISOString();
+    await Promise.all([
+      // נשמר ב-incoming_calls/ — האפליקציה קוראת משם ומציגה התראה
+      fbPush('incoming_calls', {
+        phone,
+        time: callTime,
+        status: 'pending',
+      }),
+      // סשן לטלגרם
+      fbSet(`sessions/${TELEGRAM_CHAT_ID}`, {
+        active: true,
+        type: 'buyer_call',
+        step: 'confirm',
+        phone,
+        created_at: callTime,
+      }),
+    ]);
     await sendTelegram(`📞 שיחה נכנסת ממספר לא מוכר: *${phone}*\n\nלהוסיף כקונה חדש? (כן / לא)`);
 
     return res.status(200).json({ status: 'prompted', phone });

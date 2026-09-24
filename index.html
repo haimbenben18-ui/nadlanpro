@@ -1319,6 +1319,41 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
   const[sn,setSn]=useState("");const[sp,setSp]=useState("");const[sa,setSa]=useState("");const[sc,setSc]=useState("באר שבע");const[sr,setSr]=useState("");const[ss,setSs]=useState("");const[sf,setSf]=useState("");const[sprice,setSprice]=useState("");const[sred,setSred]=useState("");const[ses,setSes]=useState("");const[see,setSee]=useState("");const[snotes,setSnotes]=useState("");const[simgs,setSimgs]=useState([]);const[svid,setSvid]=useState("");
   // buyer form
   const[bn,setBn]=useState("");const[bp,setBp]=useState("");const[bb,setBb]=useState("");const[bnotes,setBnotes]=useState("");const[bg,setBg]=useState("B");
+  // ━━━ שיחות נכנסות ממספרים לא מוכרים ━━━
+  const[incomingCalls,setIncomingCalls]=useState([]);
+  const[incomingModal,setIncomingModal]=useState(null); // {key,phone} — פתיחת טופס קונה
+  const[icName,setIcName]=useState("");const[icBudget,setIcBudget]=useState("");const[icNotes,setIcNotes]=useState("");
+  useEffect(()=>{
+    // קריאה מ-Firebase RTDB כל 30 שניות בזמן שהטאב buyers פתוח
+    function fetchCalls(){
+      fetch(FB_DB+"/incoming_calls.json").then(r=>r.json()).then(data=>{
+        if(!data){setIncomingCalls([]);return}
+        const arr=Object.entries(data)
+          .map(([key,val])=>({key,...val}))
+          .filter(c=>c.status==="pending")
+          .sort((a,b)=>b.time?.localeCompare(a.time||"")||0);
+        setIncomingCalls(arr);
+      }).catch(()=>{});
+    }
+    if(tab==="buyers"){fetchCalls();const t=setInterval(fetchCalls,30000);return()=>clearInterval(t)}
+  },[tab]);
+  function dismissCall(key){
+    fetch(FB_DB+"/incoming_calls/"+key+".json",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:"dismissed"})});
+    setIncomingCalls(prev=>prev.filter(c=>c.key!==key));
+  }
+  function openAddFromCall(call){
+    setIncomingModal(call);setIcName("");setIcBudget("");setIcNotes("");
+  }
+  function saveCallAsBuyer(){
+    if(!incomingModal)return;
+    const nowHe=new Date().toLocaleString("he-IL",{timeZone:"Asia/Jerusalem"});
+    const nb={id:Date.now(),name:icName||"קונה לא מזוהה",phone:incomingModal.phone,budget:icBudget,notes:icNotes,grade:bg,sentProperties:[],status:"חדש",actions:[],logs:[{text:"📞 נוסף משיחה נכנסת",time:nowHe}],created:nowHe,archived:false};
+    setBuyers(prev=>{const upd=[...prev,nb];sv("buyers",upd);return upd});
+    fetch(FB_DB+"/incoming_calls/"+incomingModal.key+".json",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:"added"})});
+    setIncomingCalls(prev=>prev.filter(c=>c.key!==incomingModal.key));
+    setIncomingModal(null);
+    toast("✅ קונה נוסף בהצלחה");
+  }
   // publish
   const[pubOpen,setPubOpen]=useState(false);const[pubPlat,setPubPlat]=useState("whatsapp");const[pubResult,setPubResult]=useState(null);const[pubLoading,setPubLoading]=useState(false);
   // send property modal
@@ -1719,6 +1754,37 @@ function CRM({buyers,setBuyers,sellers,setSellers,brokerProps,initialTab,hotProp
       {s.phone&&<InlineMsgBox phone={s.phone} name={s.name} onSent={text=>{const pn=s.phone.replace(/^0/,"972").replace(/[-\s+]/g,"");setMsgCache(c=>({...c,[pn]:[{text,time:nowStr()},...(c[pn]||[])].slice(0,5)}));addLog(s.id,"📤 הודעה ישירה: "+text.substring(0,40),"s")}}/>}
     </div>})}</div>}
 
+    {tab==="buyers"&&incomingCalls.length>0&&<div style={{marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <span style={{fontSize:18}}>📞</span>
+        <span style={{fontWeight:800,color:OR,fontSize:15}}>שיחות נכנסות ממספרים לא מוכרים</span>
+        <span style={{background:OR+"33",color:OR,borderRadius:20,padding:"2px 10px",fontSize:13,fontWeight:700}}>{incomingCalls.length}</span>
+      </div>
+      {incomingCalls.map(call=><div key={call.key} style={{background:"rgba(251,146,60,0.07)",border:"1px solid "+OR+"44",borderRadius:14,padding:"12px 14px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+        <div>
+          <div style={{fontWeight:700,color:"#ede8f5",fontSize:15}}>{call.phone}</div>
+          <div style={{color:"#888",fontSize:12,marginTop:2}}>{call.time?new Date(call.time).toLocaleString("he-IL",{timeZone:"Asia/Jerusalem"}):"—"}</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>openAddFromCall(call)} style={{background:"linear-gradient(135deg,"+OR+",#e06910)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>➕ הוסף כקונה</button>
+          <button onClick={()=>window.location.href='tel:'+call.phone} style={{background:"rgba(26,86,219,0.15)",border:"1px solid #1a56db44",borderRadius:10,padding:"8px 12px",color:BL,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>📞</button>
+          <button onClick={()=>dismissCall(call.key)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"8px 12px",color:"#666",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>✕</button>
+        </div>
+      </div>)}
+    </div>}
+    {incomingModal&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.75)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setIncomingModal(null)}>
+      <div onClick={e=>e.stopPropagation()} className="fade" style={{background:"var(--surface)",border:"1px solid "+OR+"66",borderRadius:18,padding:22,maxWidth:380,width:"100%"}}>
+        <div style={{fontWeight:800,fontSize:17,color:OR,marginBottom:4}}>📞 שיחה נכנסת</div>
+        <div style={{color:"#888",fontSize:13,marginBottom:16}}>{incomingModal.phone} · {incomingModal.time?new Date(incomingModal.time).toLocaleString("he-IL",{timeZone:"Asia/Jerusalem"}):""}</div>
+        <Inp label="שם הקונה" ph="ישראל ישראלי" val={icName} set={setIcName} mb={12}/>
+        <Inp label="תקציב" ph="1,200,000" val={icBudget} set={setIcBudget} mb={12}/>
+        <Inp label="הערות" ph="3 חדרים, רחובות..." val={icNotes} set={setIcNotes} rows={3} mb={16}/>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={saveCallAsBuyer} style={{flex:1,background:"linear-gradient(135deg,"+OR+",#e06910)",border:"none",borderRadius:12,padding:"12px 0",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>✅ שמור כקונה</button>
+          <button onClick={()=>setIncomingModal(null)} style={{background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"12px 16px",color:"#888",fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>ביטול</button>
+        </div>
+      </div>
+    </div>}
     {tab==="buyers"&&<div>{fB.length===0&&<Empty icon="👥" text="אין קונים"/>}{fB.map(b=><div key={b.id} style={S.card}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontWeight:700,color:"#ede8f5",fontSize:16}}>{b.name}</div><div style={{color:"#777",fontSize:14,marginTop:3}}>{b.phone} · {b.budget?fmtP(b.budget):""}</div></div><GradeBadge grade={b.grade} onChange={v=>updB(b.id,"grade",v)}/></div>
       {b.notes&&<div style={{color:"#666",fontSize:13,marginBottom:12,background:"rgba(0,0,0,0.15)",borderRadius:12,padding:"9px 14px"}}>{b.notes.substring(0,100)}</div>}
