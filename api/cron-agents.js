@@ -21,7 +21,7 @@
 import { fsGetDoc, fsSetDoc } from "./_lib/firestore.js";
 import { israelNow, todayKey, canSendNow, pickDueSlot } from "./_lib/schedule.js";
 import { ultraSend } from "./_lib/ultramsg.js";
-import { buildAgentShortMsg } from "./_lib/messages.js";
+import { resolveAgentMsg } from "./_lib/messages.js";
 
 const TELEGRAM_CHAT_ID   = "5941736529";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -64,6 +64,7 @@ export default async function handler(req, res) {
     const brokerDoc  = (await fsGetDoc("data/brokerProps"))    || {};
     const agentsDoc  = (await fsGetDoc("data/agentsContacts")) || {};
     const groupsDoc  = (await fsGetDoc("data/agentGroups"))    || {};
+    const customTextsDoc = (await fsGetDoc("data/customAgentTexts")) || {};
 
     const config = (auto.items && typeof auto.items === "object" && !Array.isArray(auto.items)) ? auto.items : {};
 
@@ -75,6 +76,7 @@ export default async function handler(req, res) {
     const broker  = Array.isArray(brokerDoc.items)  ? brokerDoc.items  : [];
     const agents  = Array.isArray(agentsDoc.items)  ? agentsDoc.items  : [];
     const groups  = Array.isArray(groupsDoc.items)  ? groupsDoc.items  : [];
+    const customTexts = (customTextsDoc.items && typeof customTextsDoc.items === "object" && !Array.isArray(customTextsDoc.items)) ? customTextsDoc.items : {};
 
     const queueRefs = Array.isArray(config.items) ? config.items : [];
     const sendTimes = Array.isArray(config.sendTimes) && config.sendTimes.length ? config.sendTimes : ["08:30", "11:30", "14:30", "17:30"];
@@ -131,7 +133,7 @@ export default async function handler(req, res) {
     for (let i = 0; i < recipients.length; i++) {
       const r = recipients[i];
       for (const p of selectedProps) {
-        const sent = await ultraSend(r.to, buildAgentShortMsg(p));
+        const sent = await ultraSend(r.to, resolveAgentMsg(p, customTexts));
         if (sent.sent) okCount++;
       }
       if (i < recipients.length - 1) await new Promise(rs => setTimeout(rs, 3000));

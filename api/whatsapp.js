@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { fsGetDoc, fsSetDoc } from './_lib/firestore.js';
 import { israelNow, todayKey, canSendNow, pickDueSlot } from './_lib/schedule.js';
 import { ultraSend } from './_lib/ultramsg.js';
-import { buildAgentShortMsg } from './_lib/messages.js';
+import { resolveAgentMsg } from './_lib/messages.js';
 import { normalizePhone } from './_lib/phone.js';
 import { fbGet, fbSet, fbPush, fbDelete } from './_lib/firebase.js';
 
@@ -29,11 +29,13 @@ async function loadAgentAutomationContext() {
   const brokerDoc  = (await fsGetDoc("data/brokerProps"))    || {};
   const agentsDoc  = (await fsGetDoc("data/agentsContacts")) || {};
   const groupsDoc  = (await fsGetDoc("data/agentGroups"))    || {};
+  const customTextsDoc = (await fsGetDoc("data/customAgentTexts")) || {};
   const config  = (auto.items && typeof auto.items === "object" && !Array.isArray(auto.items)) ? auto.items : {};
   const sellers = Array.isArray(sellersDoc.items) ? sellersDoc.items : [];
   const broker  = Array.isArray(brokerDoc.items)  ? brokerDoc.items  : [];
   const agents  = Array.isArray(agentsDoc.items)  ? agentsDoc.items  : [];
   const groups  = Array.isArray(groupsDoc.items)  ? groupsDoc.items  : [];
+  const customTexts = (customTextsDoc.items && typeof customTextsDoc.items === "object" && !Array.isArray(customTextsDoc.items)) ? customTextsDoc.items : {};
   const queue   = Array.isArray(config.items) ? config.items : [];
   const selectedAgents = Array.isArray(config.selectedAgents) ? config.selectedAgents : [];
   const all = [
@@ -45,7 +47,7 @@ async function loadAgentAutomationContext() {
     .filter(Boolean);
   const targetAgents = agents.filter(a => selectedAgents.includes(a.id) && a.phone);
   const targetGroups = groups.filter(g => g.enabled && g.id);
-  return { config, props, targetAgents, targetGroups };
+  return { config, props, targetAgents, targetGroups, customTexts };
 }
 
 // ═══ שעות פעילות, שבת וחגים — ראו _lib/schedule.js (canSendNow) ═══
@@ -643,7 +645,7 @@ export default async function handler(req, res) {
           for (let i = 0; i < recipients.length; i++) {
             const r = recipients[i];
             for (const p of ctx.props) {
-              const m = buildAgentShortMsg(p);
+              const m = resolveAgentMsg(p, ctx.customTexts);
               const res = await ultraSend(r.to, m);
               if (res.sent) okCount++;
             }

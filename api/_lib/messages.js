@@ -24,4 +24,19 @@ function buildAgentShortMsg(prop) {
   return m;
 }
 
-export { buildAgentShortMsg };
+// Same key the web app uses (propKeyOf in index.html) to look up a
+// per-property custom message Haim prepared in advance in the "מותאם אישית"
+// editor (CRM / BrokerPage / AgentAutomation). Both the cron and the manual
+// Telegram "שלח למתווכים" path must prefer this over the generic template —
+// otherwise a prepared custom message silently gets ignored on send.
+function propKeyOf(prop) {
+  return `${prop && prop._src ? prop._src : "s"}_${prop && prop.id}`;
+}
+
+function resolveAgentMsg(prop, customTexts) {
+  const saved = (customTexts || {})[propKeyOf(prop)];
+  if (saved && typeof saved === "string" && saved.trim() !== "") return saved;
+  return buildAgentShortMsg(prop);
+}
+
+export { buildAgentShortMsg, resolveAgentMsg, propKeyOf };
