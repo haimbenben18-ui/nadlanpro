@@ -3,10 +3,11 @@ import { fsGetDoc, fsSetDoc } from './_lib/firestore.js';
 import { israelNow, todayKey, canSendNow, pickDueSlot } from './_lib/schedule.js';
 import { ultraSend } from './_lib/ultramsg.js';
 import { buildAgentShortMsg } from './_lib/messages.js';
+import { normalizePhone } from './_lib/phone.js';
+import { fbGet, fbSet, fbPush, fbDelete } from './_lib/firebase.js';
 
 const TELEGRAM_CHAT_ID = "5941736529";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const FIREBASE_URL = process.env.FIREBASE_URL;
 const CLOUDINARY_CLOUD = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_SECRET = process.env.CLOUDINARY_API_SECRET;
@@ -20,28 +21,6 @@ async function sendTelegram(chatId, text) {
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
   });
   return resp.json();
-}
-
-// ═══ Firebase REST ═══
-async function fbGet(path) {
-  const r = await fetch(`${FIREBASE_URL}/${path}.json`);
-  return r.json();
-}
-async function fbSet(path, data) {
-  await fetch(`${FIREBASE_URL}/${path}.json`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-}
-async function fbPush(path, data) {
-  const r = await fetch(`${FIREBASE_URL}/${path}.json`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return r.json();
-}
-async function fbDelete(path) {
-  await fetch(`${FIREBASE_URL}/${path}.json`, { method: 'DELETE' });
 }
 
 async function loadAgentAutomationContext() {
@@ -114,6 +93,36 @@ async function parseWithClaude(text) {
     return JSON.parse(clean);
   } catch(e) {
     console.error('parseWithClaude error:', e);
+    return null;
+  }
+}
+
+// ═══ Claude — פירסור פרטי קונה (מהיסטוריית שיחת טלפון נכנסת) ═══
+async function parseBuyerWithClaude(text) {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 400,
+        messages: [{ role: 'user', content:
+          `חלץ פרטי קונה פוטנציאלי מהטקסט (סוכם משיחת טלפון). החזר JSON בלבד, ללא markdown וללא הסברים:\n` +
+          `{"name":"","budget":null,"notes":""}\n` +
+          `חוקים: שדה חסר = null או מחרוזת ריקה. budget = מספר שלם בלבד (ללא פסיקים ו-₪). ` +
+          `לתוך notes תכניס כל פרט רלוונטי נוסף שהוזכר — מספר חדרים מבוקש, אזור/שכונה, טווח זמן, וכו'.\n\n` +
+          `טקסט: "${text}"` }],
+      }),
+    });
+    const d = await r.json();
+    const raw = d.content?.[0]?.text || '{}';
+    const clean = raw.replace(/```json\s*/g,'').replace(/```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) {
+    console.error('parseBuyerWithClaude error:', e);
     return null;
   }
 }
@@ -325,6 +334,59 @@ export default async function handler(req, res) {
         await fbDelete(`sessions/${chatId}`);
         await sendTelegram(chatId, '❌ בוטל.');
         return res.status(200).json({ status: 'ok' });
+      }
+
+      // ════ סשן קונה חדש — משיחה נכנסת ממספר לא מוכר (ראה api/incoming-call.js) ════
+      if (session.type === 'buyer_call') {
+        if (session.step === 'confirm') {
+          if (['כן','אישור','yes','ok','הוסף'].includes(lower)) {
+            session.step = 'collecting';
+            session.rawText = '';
+            await fbSet(`sessions/${chatId}`, session);
+            await sendTelegram(chatId,
+              `📋 קונה חדש — ${session.phone}\n\n` +
+              `כתוב לי בחופשיות: שם, תקציב, כמה חדרים מחפש, אזור, וכל פרט שעלה בשיחה.\n` +
+              `אפשר הכל במשפט אחד. בסיום — שלח "סיום"`
+            );
+          } else {
+            await fbDelete(`sessions/${chatId}`);
+            await sendTelegram(chatId, '👍 בסדר, לא נוסף.');
+          }
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        if (session.step === 'collecting') {
+          if (['סיום','done','שמור','save','סיים'].includes(lower)) {
+            const rawText = (session.rawText || '').trim();
+            const parsed = rawText ? await parseBuyerWithClaude(rawText) : null;
+            const name   = (parsed && parsed.name) ? parsed.name : 'קונה מטלפון';
+            const budget = (parsed && parsed.budget != null) ? parsed.budget : '';
+            const notes  = (parsed && parsed.notes) ? parsed.notes : rawText;
+            const nowHe  = new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' });
+
+            const buyersDoc = (await fsGetDoc('data/buyers')) || {};
+            const buyers = Array.isArray(buyersDoc.items) ? buyersDoc.items : [];
+            const newBuyer = {
+              id: Date.now(), name, phone: session.phone, budget, notes,
+              grade: 'B', sentProperties: [], status: 'חדש', actions: [],
+              logs: [{ text: '📞 נוסף אוטומטית משיחה נכנסת', time: nowHe }],
+              created: nowHe, archived: false,
+            };
+            await fsSetDoc('data/buyers', { items: [...buyers, newBuyer] });
+            await fbDelete(`sessions/${chatId}`);
+            await sendTelegram(chatId,
+              `✅ נוסף קונה חדש!\n\n👤 ${name}\n📞 ${session.phone}` +
+              `${budget ? `\n💰 ${Number(budget).toLocaleString()} ₪` : ''}` +
+              `${notes ? `\n📝 ${notes}` : ''}\n\n` +
+              `הכרטיס פתוח באתר, בטאב "קונים".`
+            );
+            return res.status(200).json({ status: 'ok' });
+          }
+          session.rawText = session.rawText ? session.rawText + '\n' + text : text;
+          await fbSet(`sessions/${chatId}`, session);
+          await sendTelegram(chatId, '✅ קיבלתי. עוד פרטים? בסיום — שלח "סיום"');
+          return res.status(200).json({ status: 'ok' });
+        }
       }
 
       // ════ שלב: איסוף ════
